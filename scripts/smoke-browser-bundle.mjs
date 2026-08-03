@@ -65,9 +65,18 @@ if (
 ) {
   throw new Error('bundle still imports npm buffer package');
 }
+if (
+  code.includes('node_modules/events/') ||
+  code.includes('from "events"') ||
+  code.includes("from 'events'") ||
+  code.includes('from "node:events"') ||
+  code.includes("from 'node:events'")
+) {
+  throw new Error('bundle still imports npm events / node:events package');
+}
 
 const mod = await import(pathToFileURL(outfile).href + `?t=${Date.now()}`);
 const result = await mod.run();
 const size = readFileSync(outfile).byteLength;
 console.log('browser bundle smoke ok', result, `bundle=${(size / 1024).toFixed(1)}KB`);
-console.log('  (no process polyfill, no npm buffer, no readable-stream, fflate zip)');
+console.log('  (no process polyfill, no npm buffer/events, no readable-stream, fflate zip)');
