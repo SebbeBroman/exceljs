@@ -2269,7 +2269,7 @@ CSV 解析器使用 [fast-csv](https://www.npmjs.com/package/fast-csv) 编写 CS
 | filename         | 如果未指定流，则此字段指定要写入 XLSX 工作簿的文件的路径。 |
 | useSharedStrings | 指定是否在工作簿中使用共享字符串。默认为 `false` |
 | useStyles        | 指定是否将样式信息添加到工作簿。样式会增加一些性能开销。默认为 `false` |
-| zip              | ExcelJS 内部传递给 [Archiver](https://github.com/archiverjs/node-archiver) 的 [Zip选项](https://www.archiverjs.com/global.html#ZipOptions)。默认值为 `undefined` |
+| zip              | 流式写入的 Zip 选项（fflate）。支持 `level`、`zlib.level`、`store: true` 或 `compression: 'STORE'`。默认值为 `undefined`（压缩级别 6）。 |
 
 如果在选项中未指定 `stream` 或 `filename`，则工作簿编写器将创建一个 StreamBuf 对象，该对象将 XLSX 工作簿的内容存储在内存中。可以通过属性 `workbook.stream` 访问此 StreamBuf 对象，该对象可用于通过 `stream.read()` 直接访问字节，或将内容通过管道传输到另一个流。
 

@@ -1937,41 +1937,25 @@ export namespace stream {
 			useStyles: boolean;
 		}
 
-		interface ArchiverZipOptions {
-			comment: string;
-			forceLocalTime: boolean;
-			forceZip64: boolean;
-			store: boolean;
-			zlib: Partial<ZlibOptions>;
-		}
-
-		interface ZlibOptions {
-			/**
-			 * @default constants.Z_NO_FLUSH
-			 */
-			flush: number;
-			/**
-			 * @default constants.Z_FINISH
-			 */
-			finishFlush: number;
-			/**
-			 * @default 16*1024
-			 */
-			chunkSize: number;
-			windowBits: number;
-			level: number; // compression only
-			memLevel: number; // compression only
-			strategy: number; // compression only
-			dictionary: Buffer | NodeJS.TypedArray | DataView | ArrayBuffer; // deflate/inflate only, empty dictionary by default
+		/**
+		 * Zip compression options for the streaming workbook writer (fflate).
+		 * Compatible with the previous archiver-style shape: `level`, `zlib.level`,
+		 * `store: true`, or `compression: 'STORE' | 'DEFLATE'`.
+		 */
+		interface ZipWriterOptions {
+			level?: number;
+			store?: boolean;
+			compression?: 'STORE' | 'DEFLATE' | string;
+			zlib?: {level?: number};
 		}
 
 		interface WorkbookStreamWriterOptions extends WorkbookWriterOptions {
 
 			/**
-			 * Specifies whether to add style information to the workbook.
-			 * Styles can add some performance overhead. Default is false
+			 * Zip options passed to the streaming zip writer (fflate).
+			 * Default is undefined (compression level 6).
 			 */
-			zip: Partial<ArchiverZipOptions>;
+			zip: Partial<ZipWriterOptions>;
 		}
 
 		class WorkbookWriter extends Workbook {
