@@ -267,9 +267,8 @@ describe('WorkbookReader', () => {
             throw new Error('Promise unexpectedly fulfilled');
           },
           err => {
-            expect(err.message).to.equal(
-              '3:1: text data outside of root node.'
-            );
+            // saxen message (formerly saxes: "3:1: text data outside of root node.")
+            expect(err.message).to.equal('non-whitespace outside of root node');
             // Wait a tick before checking for an unhandled rejection
             return new Promise(setImmediate);
           }

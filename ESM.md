@@ -67,7 +67,7 @@ import { WorkbookWriter } from 'exceljs/stream/xlsx';
 | Package | `"type": "module"`, `exports` map, `sideEffects` |
 | Tree-shaking | Named exports; CSV optional; stream as separate entry |
 | Lazy xforms | Drawings, tables, comments/VML, pivot tables loaded via `import()` when used (`lib/xlsx/lazy-xforms.js`) |
-| Lazy SAX | `saxes` loaded only when parsing XML (`BaseXform#parseStream`) — write-only apps can drop it from the initial chunk |
+| Lazy SAX | `saxen` loaded only when parsing XML (`BaseXform#parseStream`) — write-only apps can drop it from the initial chunk |
 | Lazy CF | Conditional-formatting xforms loaded only when writing CF or parsing sheets |
 | Lazy doc features | `table` / `image` / `pivot-table` loaded on first use (Node sync; browser via `ensureDocFeatures`) |
 | Node | Engines ≥ 18; drop ES5/browserify publish path for this fork |
@@ -80,8 +80,8 @@ With Rollup/Vite (or esbuild `splitting: true`):
 
 | Path | Effect on initial chunk |
 |------|-------------------------|
-| Write plain cells | No CF / drawing / table / comment / pivot trees; no `saxes`; no `doc/table` |
-| `xlsx.load` / round-trip | Loads `saxes` + CF parsers for sheets; other xforms only if present in the file |
+| Write plain cells | No CF / drawing / table / comment / pivot trees; no `saxen`; no `doc/table` |
+| `xlsx.load` / round-trip | Loads `saxen` + CF parsers for sheets; other xforms only if present in the file |
 | Images / tables / notes / pivot / CF | Pulls the matching async chunk on first use |
 
 **Browser + tables/images/pivots:** Node loads those modules sync on first `addTable` / `addImage` / `addPivotTable`. In the browser, either:

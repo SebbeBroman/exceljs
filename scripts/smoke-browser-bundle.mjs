@@ -158,15 +158,16 @@ async function measureSplit(label, entryPoint) {
 const writeSplit = await measureSplit('write-only', writeOnlyEntry);
 const roundTripSplit = await measureSplit('round-trip', entry);
 
-// Sanity: write-only entry should not retain saxes / CF if lazy load works
+// Sanity: write-only entry should not retain saxen / CF if lazy load works
 const writeEntryCode = readFileSync(join(outDir, 'split-write-only', 'entry.js'), 'utf8');
-const saxesInEntry = writeEntryCode.includes('SaxesParser');
+// saxen error string; more reliable than minified identifier names
+const saxInEntry = writeEntryCode.includes('non-whitespace outside of root node');
 const cfInEntry =
   writeEntryCode.includes('conditionalFormattings') && writeEntryCode.includes('cf-rule');
 // table.js exclusive string (styles also mention TableStyleMedium2)
 const tableDocInEntry = writeEntryCode.includes('Invalid Totals Row Function');
 console.log(
-  `  write-only: saxes in entry=${saxesInEntry} cf-ish=${cfInEntry} table-doc=${tableDocInEntry}  optional chunks total~${((writeSplit.totalBytes - writeSplit.entryBytes) / 1024).toFixed(1)}KB`,
+  `  write-only: saxen in entry=${saxInEntry} cf-ish=${cfInEntry} table-doc=${tableDocInEntry}  optional chunks total~${((writeSplit.totalBytes - writeSplit.entryBytes) / 1024).toFixed(1)}KB`,
 );
 console.log(
   `  round-trip entry vs write-only entry delta: ${((roundTripSplit.entryBytes - writeSplit.entryBytes) / 1024).toFixed(1)}KB`,
