@@ -68,23 +68,29 @@ import { WorkbookWriter } from 'exceljs/stream/xlsx';
 | Tree-shaking | Named exports; CSV optional; stream as separate entry |
 | Lazy xforms | Drawings, tables, comments/VML, pivot tables loaded via `import()` when used (`lib/xlsx/lazy-xforms.js`) |
 | Lazy SAX | `saxes` loaded only when parsing XML (`BaseXform#parseStream`) — write-only apps can drop it from the initial chunk |
+| Lazy CF | Conditional-formatting xforms loaded only when writing CF or parsing sheets |
+| Lazy doc features | `table` / `image` / `pivot-table` loaded on first use (Node sync; browser via `ensureDocFeatures`) |
 | Node | Engines ≥ 18; drop ES5/browserify publish path for this fork |
 
 ### Bundle size notes (Vite / code-splitting)
 
-Plain `import { Workbook } from 'exceljs'` still supports full xlsx **API** (images, comments, tables, experimental pivot). The heavy OOXML transformers for those features are **dynamically imported** only when a workbook actually uses them (or when loading a file that contains them).
+Plain `import { Workbook } from 'exceljs'` still supports full xlsx **API** (images, comments, tables, experimental pivot, conditional formatting). Heavy pieces are **dynamically imported** when used.
 
 With Rollup/Vite (or esbuild `splitting: true`):
 
 | Path | Effect on initial chunk |
 |------|-------------------------|
-| Write plain cells | No drawing / table / comment / pivot xform trees; no `saxes` |
-| `xlsx.load` / round-trip | Loads `saxes` (+ xmlchars) async; optional xforms only if present in the file |
-| Images / tables / notes / pivot | Pulls the matching async chunk on first use |
+| Write plain cells | No CF / drawing / table / comment / pivot trees; no `saxes`; no `doc/table` |
+| `xlsx.load` / round-trip | Loads `saxes` + CF parsers for sheets; other xforms only if present in the file |
+| Images / tables / notes / pivot / CF | Pulls the matching async chunk on first use |
 
-**Single-file** minified bundles (no code-splitting) still include dynamic-import targets in the same file, so size is roughly unchanged for a monolithic build — prefer app bundlers that split.
+**Browser + tables/images/pivots:** Node loads those modules sync on first `addTable` / `addImage` / `addPivotTable`. In the browser, either:
+- `await ensureDocFeatures()` once after import (also exported from `exceljs`), or
+- use them only after an async `xlsx.load` / `writeBuffer` that needs them (those paths ensure automatically).
 
-Still in the default static graph (candidates for a later pass): worksheet conditional-formatting xforms (~14KB min), core sheet/style/doc modules (`doc/table.js` ~6KB, etc.). Default theme XML is also dynamically imported on write.
+**Single-file** minified bundles (no code-splitting) still include dynamic-import targets in the same file — prefer app bundlers that split.
+
+Default theme XML is also dynamically imported on write.
 
 ## SvelteKit notes
 

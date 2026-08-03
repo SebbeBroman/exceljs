@@ -21,7 +21,9 @@
   "types": "./index.d.ts",
   "browser": {
     "fs": "./lib/shims/fs-browser.js",
-    "crypto": "./lib/shims/crypto-browser.js"
+    "crypto": "./lib/shims/crypto-browser.js",
+    "node:module": "./lib/shims/node-module-browser.js",
+    "module": "./lib/shims/node-module-browser.js"
   },
   "exports": {
     ".": {

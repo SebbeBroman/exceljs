@@ -192,8 +192,9 @@ describe('WorksheetXform', () => {
     expect(iHyperlinks).to.be.greaterThan(iDataValidations);
   });
 
-  it('conditionalFormattings must be before dataValidations', () => {
+  it('conditionalFormattings must be before dataValidations', async () => {
     const xform = new WorksheetXform();
+    await xform.installCfXforms();
     const model = __json_16;
     const xmlStream = new XmlStream();
     const options = {

@@ -12,8 +12,9 @@
 import Workbook from './lib/doc/workbook.js';
 import ModelContainer from './lib/doc/modelcontainer.js';
 import enums from './lib/doc/enums.js';
+import {ensureDocFeatures} from './lib/doc/doc-features.js';
 
-export {Workbook, ModelContainer};
+export {Workbook, ModelContainer, ensureDocFeatures};
 
 // Stream APIs live at 'exceljs/stream/xlsx' so the main entry stays lean.
 
@@ -34,6 +35,7 @@ export {enums};
 const ExcelJS = {
   Workbook,
   ModelContainer,
+  ensureDocFeatures,
   ValueType: enums.ValueType,
   FormulaType: enums.FormulaType,
   RelationshipType: enums.RelationshipType,

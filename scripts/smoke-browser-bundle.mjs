@@ -28,6 +28,8 @@ const sharedBuild = {
   alias: {
     fs: fsAlias,
     crypto: cryptoAlias,
+    'node:module': join(root, 'lib/shims/node-module-browser.js'),
+    module: join(root, 'lib/shims/node-module-browser.js'),
   },
   logLevel: 'warning',
 };
@@ -156,15 +158,15 @@ async function measureSplit(label, entryPoint) {
 const writeSplit = await measureSplit('write-only', writeOnlyEntry);
 const roundTripSplit = await measureSplit('round-trip', entry);
 
-// Sanity: write-only entry should not retain saxes if lazy parse works
+// Sanity: write-only entry should not retain saxes / CF if lazy load works
 const writeEntryCode = readFileSync(join(outDir, 'split-write-only', 'entry.js'), 'utf8');
-if (writeEntryCode.includes('SaxesParser') || writeEntryCode.includes('saxes')) {
-  console.warn('  warn: write-only entry chunk still mentions saxes (expected in async chunk only)');
-}
-// Check all write-only chunks for saxes in entry
 const saxesInEntry = writeEntryCode.includes('SaxesParser');
+const cfInEntry =
+  writeEntryCode.includes('conditionalFormattings') && writeEntryCode.includes('cf-rule');
+// table.js exclusive string (styles also mention TableStyleMedium2)
+const tableDocInEntry = writeEntryCode.includes('Invalid Totals Row Function');
 console.log(
-  `  write-only: saxes in entry=${saxesInEntry}  optional chunks total~${((writeSplit.totalBytes - writeSplit.entryBytes) / 1024).toFixed(1)}KB`
+  `  write-only: saxes in entry=${saxesInEntry} cf-ish=${cfInEntry} table-doc=${tableDocInEntry}  optional chunks total~${((writeSplit.totalBytes - writeSplit.entryBytes) / 1024).toFixed(1)}KB`
 );
 console.log(
   `  round-trip entry vs write-only entry delta: ${((roundTripSplit.entryBytes - writeSplit.entryBytes) / 1024).toFixed(1)}KB`
