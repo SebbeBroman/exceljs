@@ -81,13 +81,13 @@
     "buffer": "^6.0.3",
     "dayjs": "^1.8.34",
     "events": "^3.3.0",
-    "fast-csv": "^4.3.1",
+    "fast-csv": "^5.0.7",
     "fflate": "^0.8.2",
     "readable-stream": "^3.6.0",
-    "saxes": "^5.0.1",
+    "saxes": "^6.0.0",
     "tmp": "^0.2.0",
     "unzipper": "^0.10.11",
-    "uuid": "^8.3.0"
+    "uuid": "^14.0.1"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
