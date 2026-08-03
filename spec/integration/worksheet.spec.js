@@ -1,7 +1,10 @@
-const path = require('path');
+// @vitest-migrated
+import path from 'node:path';
+import testutils from '../utils/index.js';
+import {fileURLToPath} from 'node:url';
 
-const {expect} = require('chai');
-const testutils = require('../utils/index');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const ExcelJS = verquire('exceljs');
 const Range = verquire('doc/range');
@@ -1195,34 +1198,22 @@ describe('Worksheet', () => {
     ];
 
     for (const file of fileList) {
-      it(`Should set hidden attribute correctly (${file})`, done => {
+      it(`Should set hidden attribute correctly (${file})`, async () => {
         const wb = new ExcelJS.Workbook();
-        wb.xlsx
-          .readFile(
-            path.resolve(__dirname, 'data', 'hidden-test', `${file}.xlsx`)
-          )
-          .then(() => {
-            const ws = wb.getWorksheet(1);
+        await wb.xlsx.readFile(
+          path.resolve(__dirname, 'data', 'hidden-test', `${file}.xlsx`)
+        );
+        const ws = wb.getWorksheet(1);
 
-            //  Check rows
-            expect(ws.getRow(1).hidden, `${file} : Row 1`).to.equal(false);
-            expect(ws.getRow(2).hidden, `${file} : Row 2`).to.equal(true);
-            expect(ws.getRow(3).hidden, `${file} : Row 3`).to.equal(false);
+        //  Check rows
+        expect(ws.getRow(1).hidden, `${file} : Row 1`).to.equal(false);
+        expect(ws.getRow(2).hidden, `${file} : Row 2`).to.equal(true);
+        expect(ws.getRow(3).hidden, `${file} : Row 3`).to.equal(false);
 
-            //  Check columns
-            expect(ws.getColumn(1).hidden, `${file} : Column 1`).to.equal(
-              false
-            );
-            expect(ws.getColumn(2).hidden, `${file} : Column 2`).to.equal(true);
-            expect(ws.getColumn(3).hidden, `${file} : Column 3`).to.equal(
-              false
-            );
-
-            done();
-          })
-          .catch(error => {
-            done(error);
-          });
+        //  Check columns
+        expect(ws.getColumn(1).hidden, `${file} : Column 1`).to.equal(false);
+        expect(ws.getColumn(2).hidden, `${file} : Column 2`).to.equal(true);
+        expect(ws.getColumn(3).hidden, `${file} : Column 3`).to.equal(false);
       });
     }
   });

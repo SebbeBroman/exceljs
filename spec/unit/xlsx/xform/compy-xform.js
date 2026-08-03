@@ -1,3 +1,4 @@
+// @vitest-migrated
 const BaseXform = verquire('xlsx/xform/base-xform');
 
 class CompyXform extends BaseXform {
@@ -74,4 +75,4 @@ class CompyXform extends BaseXform {
   }
 }
 
-module.exports = CompyXform;
+export default CompyXform;

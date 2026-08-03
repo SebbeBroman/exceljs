@@ -1,7 +1,9 @@
-const tools = require('./tools');
+// @vitest-migrated
+import tools from './tools.js';
+import __json_0 from './data/data-validations.json';
 
 const self = {
-  dataValidations: tools.fix(require('./data/data-validations.json')),
+  dataValidations: tools.fix(__json_0),
   createDataValidations(type, operator) {
     const dataValidation = {
       type,
@@ -167,4 +169,4 @@ const self = {
   },
 };
 
-module.exports = self;
+export default self;

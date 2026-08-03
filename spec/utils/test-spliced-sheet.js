@@ -1,6 +1,7 @@
+// @vitest-migrated
 const Enums = verquire('doc/enums');
 
-module.exports = {
+export default {
   rows: {
     removeOnly: {
       addSheet(wb) {

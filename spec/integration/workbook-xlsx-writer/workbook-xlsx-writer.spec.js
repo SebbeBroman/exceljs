@@ -1,7 +1,12 @@
-const fs = require('fs');
-const {promisify} = require('util');
+// @vitest-migrated
+import fs from 'node:fs';
+import testUtils from '../../utils/index.js';
+import {promisify} from 'node:util';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
 
-const testUtils = require('../../utils/index');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const ExcelJS = verquire('exceljs');
 
@@ -267,7 +272,6 @@ describe('WorkbookWriter', () => {
     });
 
     it('A lot of sheets', function() {
-      this.timeout(5000);
 
       let i;
       const wb = new ExcelJS.stream.xlsx.WorkbookWriter({

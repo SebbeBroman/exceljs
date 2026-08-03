@@ -1,3 +1,4 @@
+// @vitest-migrated
 const Excel = verquire('exceljs');
 
 describe('Worksheet', () => {

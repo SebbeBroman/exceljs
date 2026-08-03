@@ -1,7 +1,8 @@
-const {PassThrough} = require('stream');
-const express = require('express');
-const got = require('got');
-const testutils = require('../utils/index');
+// @vitest-migrated
+import express from 'express';
+import got from 'got';
+import testutils from '../utils/index.js';
+import {PassThrough} from 'node:stream';
 
 const Excel = verquire('exceljs');
 
@@ -28,7 +29,6 @@ describe('Express', () => {
   });
 
   it('downloads a workbook', async function() {
-    this.timeout(5000);
     const res = got.stream('http://127.0.0.1:3003/workbook', {
       decompress: false,
     });

@@ -1,4 +1,5 @@
-const testUtils = require('../../utils/index');
+// @vitest-migrated
+import testUtils from '../../utils/index.js';
 
 const ExcelJS = verquire('exceljs');
 
@@ -423,7 +424,6 @@ describe('Workbook', () => {
     });
 
     it('a lot of sheets to xlsx file', function() {
-      this.timeout(10000);
 
       let i;
       const wb = new ExcelJS.Workbook();
@@ -449,7 +449,6 @@ describe('Workbook', () => {
     });
 
     it('csv file', function() {
-      this.timeout(5000);
 
       const wb = testUtils.createTestBook(new ExcelJS.Workbook(), 'csv');
 
@@ -465,7 +464,6 @@ describe('Workbook', () => {
     });
 
     it('CSV file and its configuration', function() {
-      this.timeout(5000);
       const writeOptions = {
         dateFormat: 'DD/MM/YYYY HH:mm:ss',
         dateUTC: false,
@@ -919,7 +917,7 @@ describe('Workbook', () => {
       expect.fail('should fail for given argument');
     } catch (e) {
       expect(e.message).to.equal(
-        'Can\'t read the data of \'the loaded zip file\'. Is it in a supported JavaScript type (String, Blob, ArrayBuffer, etc) ?'
+        'zip data must be a Buffer, ArrayBuffer, or Uint8Array'
       );
     }
   });

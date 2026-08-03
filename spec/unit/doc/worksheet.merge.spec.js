@@ -1,4 +1,5 @@
-const testUtils = require('../../utils/index');
+// @vitest-migrated
+import testUtils from '../../utils/index.js';
 
 const Excel = verquire('exceljs');
 const Dimensions = verquire('doc/range');

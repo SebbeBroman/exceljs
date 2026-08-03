@@ -1,5 +1,6 @@
-const {join} = require('path');
-const {readFileSync} = require('fs');
+// @vitest-migrated
+import {join} from 'node:path';
+import {readFileSync} from 'node:fs';
 
 const ExcelJS = verquire('exceljs');
 

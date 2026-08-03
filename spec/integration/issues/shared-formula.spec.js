@@ -1,3 +1,4 @@
+// @vitest-migrated
 const Enums = verquire('doc/enums');
 const ExcelJS = verquire('exceljs');
 

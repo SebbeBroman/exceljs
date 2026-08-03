@@ -56,10 +56,12 @@
     "ESM.md"
   ],
   "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:unit": "vitest run spec/unit",
+    "test:integration": "vitest run spec/integration",
     "test:esm": "node scripts/smoke-esm.mjs",
     "test:browser-bundle": "node scripts/smoke-browser-bundle.mjs",
-    "test:unit": "mocha --require spec/config/setup --require spec/config/setup-unit spec/unit --recursive",
-    "test:integration": "mocha --require spec/config/setup spec/integration --recursive",
     "lint": "eslint --format node_modules/eslint-friendly-formatter .",
     "convert:esm": "node scripts/cjs-to-esm.mjs"
   },
@@ -84,7 +86,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
-    "chai": "^4.2.0",
-    "mocha": "^10.2.0"
+    "jszip": "^3.10.1",
+    "vitest": "^3.2.7"
   }
 }

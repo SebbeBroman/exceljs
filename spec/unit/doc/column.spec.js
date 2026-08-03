@@ -1,4 +1,5 @@
-const {createSheetMock} = require('../../utils/index');
+// @vitest-migrated
+import {createSheetMock} from '../../utils/index.js';
 
 const Column = verquire('doc/column');
 

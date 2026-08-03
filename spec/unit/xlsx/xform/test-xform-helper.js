@@ -1,6 +1,7 @@
-const {PassThrough} = require('stream');
-const {cloneDeep, each} = require('../../../utils/under-dash');
-const CompyXform = require('./compy-xform');
+// @vitest-migrated
+import CompyXform from './compy-xform.js';
+import {PassThrough} from 'node:stream';
+import {cloneDeep, each} from '../../../utils/under-dash.js';
 
 const parseSax = verquire('utils/parse-sax');
 const XmlStream = verquire('utils/xml-stream');
@@ -207,4 +208,4 @@ function testXform(expectations) {
   });
 }
 
-module.exports = testXform;
+export default testXform;

@@ -1,4 +1,5 @@
-const testUtils = require('../../utils/index');
+// @vitest-migrated
+import testUtils from '../../utils/index.js';
 
 const _ = verquire('utils/under-dash');
 const Excel = verquire('exceljs');

@@ -1,5 +1,7 @@
+// @vitest-migrated
+import util from 'node:util';
+
 const _ = verquire('utils/under-dash');
-const util = require('util');
 
 describe('under-dash', () => {
   describe('isEqual', () => {

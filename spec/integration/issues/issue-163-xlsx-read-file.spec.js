@@ -1,3 +1,4 @@
+// @vitest-migrated
 const ExcelJS = verquire('exceljs');
 
 describe('github issues', () => {

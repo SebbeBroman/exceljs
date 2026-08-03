@@ -1,5 +1,7 @@
+// @vitest-migrated
+import fs from 'node:fs';
+
 const ExcelJS = verquire('exceljs');
-const fs = require('fs');
 
 describe('github issues: Date field with cache style', () => {
   const rows = [];

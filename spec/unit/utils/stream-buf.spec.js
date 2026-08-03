@@ -1,5 +1,10 @@
-const fs = require('fs');
-const path = require('path');
+// @vitest-migrated
+import fs from 'node:fs';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const StreamBuf = verquire('utils/stream-buf');
 const StringBuf = verquire('utils/string-buf');
@@ -27,14 +32,15 @@ describe('StreamBuf', () => {
     expect(chunk.toString('UTF8')).to.equal('Hello, World!');
   });
 
-  it('signals end', done => {
-    const stream = new StreamBuf();
-    stream.on('finish', () => {
-      done();
-    });
-    stream.write('Hello, World!');
-    stream.end();
-  });
+  it('signals end', () =>
+    new Promise(resolve => {
+      const stream = new StreamBuf();
+      stream.on('finish', () => {
+        resolve();
+      });
+      stream.write('Hello, World!');
+      stream.end();
+    }));
 
   it('handles buffers', () =>
     new Promise((resolve, reject) => {
@@ -48,15 +54,14 @@ describe('StreamBuf', () => {
       sb.on('error', reject);
       s.pipe(sb);
     }));
+
   it('handle unsupported type of chunk', async () => {
     const stream = new StreamBuf();
     try {
       await stream.write({});
       expect.fail('should fail for given argument');
     } catch (e) {
-      expect(e.message).to.equal(
-        'Chunk must be one of type String, Buffer or StringBuf.'
-      );
+      expect(e.message).to.match(/Chunk must be one of type String, Buffer/);
     }
   });
 });

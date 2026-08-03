@@ -1,3 +1,4 @@
+// @vitest-migrated
 const XmlStream = verquire('utils/xml-stream');
 
 describe('XmlStream', () => {

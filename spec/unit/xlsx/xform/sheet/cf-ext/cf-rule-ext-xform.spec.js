@@ -1,4 +1,5 @@
-const testXformHelper = require('../../test-xform-helper');
+// @vitest-migrated
+import testXformHelper from '../../test-xform-helper.js';
 
 const CfRuleExtXform = verquire('xlsx/xform/sheet/cf-ext/cf-rule-ext-xform');
 

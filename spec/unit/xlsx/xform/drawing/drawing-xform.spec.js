@@ -1,6 +1,15 @@
-const fs = require('fs');
+// @vitest-migrated
+import __req_0 from './data/drawing.1.0.js';
+import __req_1 from './data/drawing.1.1.js';
+import __req_2 from './data/drawing.1.3.js';
+import __req_3 from './data/drawing.1.4.js';
+import fs from 'node:fs';
+import testXformHelper from '../test-xform-helper.js';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
 
-const testXformHelper = require('../test-xform-helper');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const DrawingXform = verquire('xlsx/xform/drawing/drawing-xform');
 
@@ -19,11 +28,11 @@ const expectations = [
     create() {
       return new DrawingXform({tag: 'xdr:from'});
     },
-    initialModel: require('./data/drawing.1.0.js'),
-    preparedModel: require('./data/drawing.1.1.js'),
+    initialModel: __req_0,
+    preparedModel: __req_1,
     xml: fs.readFileSync(`${__dirname}/data/drawing.1.2.xml`).toString(),
-    parsedModel: require('./data/drawing.1.3.js'),
-    reconciledModel: require('./data/drawing.1.4.js'),
+    parsedModel: __req_2,
+    reconciledModel: __req_3,
     tests: ['prepare', 'render', 'renderIn', 'parse', 'reconcile'],
     options,
   },

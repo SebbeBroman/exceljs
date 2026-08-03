@@ -1,3 +1,4 @@
+// @vitest-migrated
 const StringBuf = verquire('utils/string-buf');
 
 describe('StringBuf', () => {

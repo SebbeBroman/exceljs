@@ -1,3 +1,4 @@
+// @vitest-migrated
 const CellMatrix = verquire('utils/cell-matrix');
 
 describe('CellMatrix', () => {

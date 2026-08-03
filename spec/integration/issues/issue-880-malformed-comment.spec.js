@@ -1,4 +1,5 @@
-const fs = require('fs');
+// @vitest-migrated
+import fs from 'node:fs';
 
 const ExcelJS = verquire('exceljs');
 
@@ -22,5 +23,5 @@ describe('github issues', () => {
             wstream.end();
           });
       });
-  }).timeout(6000);
+  });
 });

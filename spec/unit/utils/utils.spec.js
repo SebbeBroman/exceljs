@@ -1,3 +1,4 @@
+// @vitest-migrated
 const utils = verquire('utils/utils');
 
 describe('utils', () => {

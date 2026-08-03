@@ -1,3 +1,4 @@
+// @vitest-migrated
 const colCache = verquire('utils/col-cache');
 const Cell = verquire('doc/cell');
 const Enums = verquire('doc/enums');

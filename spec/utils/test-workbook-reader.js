@@ -1,5 +1,12 @@
-const tools = require('./tools');
-const testValues = tools.fix(require('./data/sheet-values.json'));
+// @vitest-migrated
+import tools from './tools.js';
+import __json_0 from './data/sheet-values.json';
+import __json_1 from './data/sheet-values.json';
+import __json_2 from './data/styles.json';
+import __json_3 from './data/sheet-properties.json';
+import __json_4 from './data/page-setup.json';
+
+const testValues = tools.fix(__json_0);
 
 const utils = verquire('utils/utils');
 const ExcelJS = verquire('exceljs');
@@ -16,11 +23,11 @@ const streamedValues = {
   F1: {sharedString: 1},
   G1: {sharedString: 2},
 };
-module.exports = {
-  testValues: tools.fix(require('./data/sheet-values.json')),
-  styles: tools.fix(require('./data/styles.json')),
-  properties: tools.fix(require('./data/sheet-properties.json')),
-  pageSetup: tools.fix(require('./data/page-setup.json')),
+export default {
+  testValues: tools.fix(__json_1),
+  styles: tools.fix(__json_2),
+  properties: tools.fix(__json_3),
+  pageSetup: tools.fix(__json_4),
 
   checkBook(filename) {
     const wb = new ExcelJS.stream.xlsx.WorkbookReader();

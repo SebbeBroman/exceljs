@@ -1,3 +1,4 @@
+// @vitest-migrated
 const ExcelJS = verquire('exceljs');
 
 const TEST_567_XLSX_FILE_NAME = './spec/integration/data/test-pr-567.xlsx';

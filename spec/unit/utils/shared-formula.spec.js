@@ -1,3 +1,4 @@
+// @vitest-migrated
 const {slideFormula} = verquire('utils/shared-formula');
 
 describe('shared-formula', () => {

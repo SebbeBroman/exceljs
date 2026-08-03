@@ -1,3 +1,4 @@
+// @vitest-migrated
 const SharedStrings = verquire('utils/shared-strings');
 
 describe('SharedStrings', () => {

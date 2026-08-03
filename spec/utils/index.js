@@ -1,18 +1,27 @@
-const verquire = require('./verquire');
-
-const _ = require('./under-dash');
-const tools = require('./tools');
-
-const testWorkbookReader = require('./test-workbook-reader');
+// @vitest-migrated
+import __req_0 from './test-data-validation-sheet.js';
+import __req_1 from './test-conditional-formatting-sheet.js';
+import __req_2 from './test-values-sheet.js';
+import __req_3 from './test-spliced-sheet.js';
+import _ from './under-dash.js';
+import tools from './tools.js';
+import testWorkbookReader from './test-workbook-reader.js';
+import __json_0 from './data/views.json';
+import __json_1 from './data/sheet-values.json';
+import __json_2 from './data/styles.json';
+import __json_3 from './data/sheet-properties.json';
+import __json_4 from './data/page-setup.json';
+import __json_5 from './data/header-footer.json';
+import __json_6 from './data/conditional-formatting.json';
 
 const Row = verquire('doc/row');
 const Column = verquire('doc/column');
 
 const testSheets = {
-  dataValidations: require('./test-data-validation-sheet'),
-  conditionalFormatting: require('./test-conditional-formatting-sheet'),
-  values: require('./test-values-sheet'),
-  splice: require('./test-spliced-sheet'),
+  dataValidations: __req_0,
+  conditionalFormatting: __req_1,
+  values: __req_2,
+  splice: __req_3,
 };
 
 function getOptions(docType, options) {
@@ -48,16 +57,83 @@ function getOptions(docType, options) {
   return Object.assign(result, options);
 }
 
-module.exports = {
-  views: tools.fix(require('./data/views.json')),
-  testValues: tools.fix(require('./data/sheet-values.json')),
-  styles: tools.fix(require('./data/styles.json')),
-  properties: tools.fix(require('./data/sheet-properties.json')),
-  pageSetup: tools.fix(require('./data/page-setup.json')),
+function createSheetMock() {
+  return {
+    _keys: {},
+    _cells: {},
+    rows: [],
+    columns: [],
+    properties: {
+      outlineLevelCol: 0,
+      outlineLevelRow: 0,
+    },
+
+    addColumn(colNumber, defn) {
+      const newColumn = new Column(this, colNumber, defn);
+      this.columns[colNumber - 1] = newColumn;
+      return newColumn;
+    },
+    getColumn(colNumber) {
+      let column = this.columns[colNumber - 1] || this._keys[colNumber];
+      if (!column) {
+        column = this.columns[colNumber - 1] = new Column(this, colNumber);
+      }
+      return column;
+    },
+    getRow(rowNumber) {
+      let row = this.rows[rowNumber - 1];
+      if (!row) {
+        row = this.rows[rowNumber - 1] = new Row(this, rowNumber);
+      }
+      return row;
+    },
+    getCell(rowNumber, colNumber) {
+      return this.getRow(rowNumber).getCell(colNumber);
+    },
+    getColumnKey(key) {
+      return this._keys[key];
+    },
+    setColumnKey(key, value) {
+      this._keys[key] = value;
+    },
+    deleteColumnKey(key) {
+      delete this._keys[key];
+    },
+    eachColumnKey(f) {
+      _.each(this._keys, f);
+    },
+    eachRow(opt, f) {
+      if (!f) {
+        f = opt;
+        opt = {};
+      }
+      if (opt && opt.includeEmpty) {
+        const n = this.rows.length;
+        for (let i = 1; i <= n; i++) {
+          f(this.getRow(i), i);
+        }
+      } else {
+        this.rows.forEach((r, i) => {
+          if (r) {
+            f(r, i + 1);
+          }
+        });
+      }
+    },
+  };
+}
+
+const testUtils = {
+  views: tools.fix(__json_0),
+  testValues: tools.fix(__json_1),
+  styles: tools.fix(__json_2),
+  properties: tools.fix(__json_3),
+  pageSetup: tools.fix(__json_4),
   conditionalFormatting: tools.fix(
-    require('./data/conditional-formatting.json')
+    __json_6
   ),
-  headerFooter: tools.fix(require('./data/header-footer.json')),
+  headerFooter: tools.fix(__json_5),
+  createSheetMock,
 
   createTestBook(workbook, docType, sheets) {
     const options = getOptions(docType);
@@ -102,70 +178,7 @@ module.exports = {
   },
 
   checkTestBookReader: testWorkbookReader.checkBook,
-
-  createSheetMock() {
-    return {
-      _keys: {},
-      _cells: {},
-      rows: [],
-      columns: [],
-      properties: {
-        outlineLevelCol: 0,
-        outlineLevelRow: 0,
-      },
-
-      addColumn(colNumber, defn) {
-        const newColumn = new Column(this, colNumber, defn);
-        this.columns[colNumber - 1] = newColumn;
-        return newColumn;
-      },
-      getColumn(colNumber) {
-        let column = this.columns[colNumber - 1] || this._keys[colNumber];
-        if (!column) {
-          column = this.columns[colNumber - 1] = new Column(this, colNumber);
-        }
-        return column;
-      },
-      getRow(rowNumber) {
-        let row = this.rows[rowNumber - 1];
-        if (!row) {
-          row = this.rows[rowNumber - 1] = new Row(this, rowNumber);
-        }
-        return row;
-      },
-      getCell(rowNumber, colNumber) {
-        return this.getRow(rowNumber).getCell(colNumber);
-      },
-      getColumnKey(key) {
-        return this._keys[key];
-      },
-      setColumnKey(key, value) {
-        this._keys[key] = value;
-      },
-      deleteColumnKey(key) {
-        delete this._keys[key];
-      },
-      eachColumnKey(f) {
-        _.each(this._keys, f);
-      },
-      eachRow(opt, f) {
-        if (!f) {
-          f = opt;
-          opt = {};
-        }
-        if (opt && opt.includeEmpty) {
-          const n = this.rows.length;
-          for (let i = 1; i <= n; i++) {
-            f(this.getRow(i), i);
-          }
-        } else {
-          this.rows.forEach((r, i) => {
-            if (r) {
-              f(r, i + 1);
-            }
-          });
-        }
-      },
-    };
-  },
 };
+
+export {createSheetMock};
+export default testUtils;

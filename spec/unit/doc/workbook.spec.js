@@ -1,5 +1,6 @@
-const simpleWorkbookModel = require('../data/simpleWorkbook.json');
-const testUtils = require('../../utils/index');
+// @vitest-migrated
+import simpleWorkbookModel from '../data/simpleWorkbook.json';
+import testUtils from '../../utils/index.js';
 
 const Excel = verquire('exceljs');
 

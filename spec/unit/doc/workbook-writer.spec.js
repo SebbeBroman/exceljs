@@ -1,4 +1,5 @@
-const Stream = require('stream');
+// @vitest-migrated
+import Stream from 'node:stream';
 
 const Excel = verquire('exceljs');
 

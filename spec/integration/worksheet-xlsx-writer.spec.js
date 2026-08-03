@@ -1,4 +1,5 @@
-const testutils = require('../utils/index');
+// @vitest-migrated
+import testutils from '../utils/index.js';
 
 const ExcelJS = verquire('exceljs');
 

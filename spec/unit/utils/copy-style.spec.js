@@ -1,4 +1,5 @@
-const testUtils = require('../../utils/index');
+// @vitest-migrated
+import testUtils from '../../utils/index.js';
 
 const {copyStyle} = verquire('utils/copy-style');
 

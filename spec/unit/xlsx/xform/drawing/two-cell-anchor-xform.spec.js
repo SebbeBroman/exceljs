@@ -1,3 +1,4 @@
+// @vitest-migrated
 const TwoCellAnchorXform = verquire('xlsx/xform/drawing/two-cell-anchor-xform');
 
 describe('TwoCellAnchorXform', () => {

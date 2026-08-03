@@ -1,3 +1,4 @@
+// @vitest-migrated
 const ExcelJS = verquire('exceljs');
 
 describe('pull request  2244', () => {

@@ -1,3 +1,4 @@
+// @vitest-migrated
 const WorksheetWriter = verquire('stream/xlsx/worksheet-writer');
 const StreamBuf = verquire('utils/stream-buf');
 

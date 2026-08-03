@@ -1,7 +1,9 @@
-const tools = require('./tools');
+// @vitest-migrated
+import __req_0 from './data/conditional-formatting.json';
+import tools from './tools.js';
 
 const self = {
-  conditionalFormattings: tools.fix(require('./data/conditional-formatting')),
+  conditionalFormattings: tools.fix(__req_0),
   getConditionalFormatting(type) {
     return self.conditionalFormattings[type] || null;
   },
@@ -33,4 +35,4 @@ const self = {
   },
 };
 
-module.exports = self;
+export default self;

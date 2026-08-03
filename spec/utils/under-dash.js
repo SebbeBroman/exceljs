@@ -1,3 +1,6 @@
+// @vitest-migrated
+import libUnderDash from '../../lib/utils/under-dash.js';
+
 const _ = Object.assign(
   {
     get: function get(obj, path, dflt) {
@@ -43,7 +46,22 @@ const _ = Object.assign(
       return clone;
     },
   },
-  verquire('utils/under-dash')
+  libUnderDash
 );
 
-module.exports = _;
+export default _;
+// Named re-exports for `import {each, cloneDeep} from ...` (migrated CJS destructure)
+export const each = (...args) => _.each(...args);
+export const get = (...args) => _.get(...args);
+export const has = (...args) => _.has(...args);
+export const cloneDeep = (...args) => _.cloneDeep(...args);
+export const isEqual = (...args) => _.isEqual(...args);
+export const isObject = (...args) => _.isObject(...args);
+export const isUndefined = (...args) => _.isUndefined(...args);
+export const some = (...args) => _.some(...args);
+export const every = (...args) => _.every(...args);
+export const map = (...args) => _.map(...args);
+export const keyBy = (...args) => _.keyBy(...args);
+export const strcmp = (...args) => _.strcmp(...args);
+export const escapeHtml = (...args) => _.escapeHtml(...args);
+export const deepMerge = (...args) => _.deepMerge(...args);

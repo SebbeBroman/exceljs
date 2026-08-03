@@ -1,4 +1,5 @@
-const testXformHelper = require('../test-xform-helper');
+// @vitest-migrated
+import testXformHelper from '../test-xform-helper.js';
 
 const WorkbookPropertiesXform = verquire(
   'xlsx/xform/book/workbook-properties-xform'

@@ -1,13 +1,19 @@
-const tools = require('./tools');
+// @vitest-migrated
+import tools from './tools.js';
+import __json_0 from './data/sheet-values.json';
+import __json_1 from './data/styles.json';
+import __json_2 from './data/sheet-properties.json';
+import __json_3 from './data/page-setup.json';
+import __json_4 from './data/header-footer.json';
 
 const ExcelJS = verquire('exceljs');
 
 const self = {
-  testValues: tools.fix(require('./data/sheet-values.json')),
-  styles: tools.fix(require('./data/styles.json')),
-  properties: tools.fix(require('./data/sheet-properties.json')),
-  pageSetup: tools.fix(require('./data/page-setup.json')),
-  headerFooter: tools.fix(require('./data/header-footer.json')),
+  testValues: tools.fix(__json_0),
+  styles: tools.fix(__json_1),
+  properties: tools.fix(__json_2),
+  pageSetup: tools.fix(__json_3),
+  headerFooter: tools.fix(__json_4),
 
   addSheet(wb, options) {
     // call it sheet1 so this sheet can be used for csv testing
@@ -372,4 +378,4 @@ const self = {
   },
 };
 
-module.exports = self;
+export default self;

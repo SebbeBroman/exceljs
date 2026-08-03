@@ -1,3 +1,4 @@
+// @vitest-migrated
 const Range = verquire('doc/range');
 
 describe('Range', () => {

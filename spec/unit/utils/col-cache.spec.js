@@ -1,3 +1,4 @@
+// @vitest-migrated
 const colCache = verquire('utils/col-cache');
 
 describe('colCache', () => {

@@ -1,16 +1,13 @@
-'use strict';
+// @vitest-migrated
+import __req_0 from '../../../utils/data/sheet-properties.json';
+import __req_1 from '../../../utils/data/page-setup.json';
+import tools from '../../../utils/tools.js';
 
-const chai = require('chai');
+'use strict';
 
 process.env.EXCEL_NATIVE = 'yes';
 
-const verquire = require('../../../utils/verquire');
-
-const tools = require('../../../utils/tools');
-
 const Excel = verquire('exceljs');
-
-const {expect} = chai;
 
 const TEST_XLSX_FILE_NAME = './spec/out/wb.test.xlsx';
 const RT_ARR = [
@@ -30,10 +27,10 @@ describe('pr related issues', () => {
   describe('pr 896 add xml:space="preserve" for all whitespaces', () => {
     it('should store cell text and comment with leading new line', () => {
       const properties = tools.fix(
-        require('../../../utils/data/sheet-properties.json')
+        __req_0
       );
       const pageSetup = tools.fix(
-        require('../../../utils/data/page-setup.json')
+        __req_1
       );
 
       const wb = new Excel.Workbook();

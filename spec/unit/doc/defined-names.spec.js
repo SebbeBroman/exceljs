@@ -1,3 +1,4 @@
+// @vitest-migrated
 const DefinedNames = verquire('doc/defined-names');
 
 describe('DefinedNames', () => {

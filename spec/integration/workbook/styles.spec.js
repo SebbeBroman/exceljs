@@ -1,5 +1,8 @@
-const stream = require('stream');
-const testUtils = require('../../utils/index');
+// @vitest-migrated
+import stream from 'node:stream';
+import testUtils from '../../utils/index.js';
+import richTextSample from '../data/rich-text-sample.js';
+import richTextSampleA1 from '../data/rich-text-sample-a1.json';
 
 const ExcelJS = verquire('exceljs');
 
@@ -7,8 +10,6 @@ const TEST_XLSX_FILE_NAME = './spec/out/wb.test.xlsx';
 
 // =============================================================================
 // Sample Data
-const richTextSample = require('../data/rich-text-sample');
-const richTextSampleA1 = require('../data/rich-text-sample-a1.json');
 
 // =============================================================================
 // Tests

@@ -1,4 +1,5 @@
-const testXformHelper = require('../test-xform-helper');
+// @vitest-migrated
+import testXformHelper from '../test-xform-helper.js';
 
 const SheetPropertiesXform = verquire(
   'xlsx/xform/sheet/sheet-properties-xform'
@@ -107,7 +108,7 @@ const expectations = [
       pageSetup: {fitToPage: true},
     },
     xml:
-      '<sheetPr><tabColor rgb="FFFF0000"/><outlinePr summaryBelow="0"/><pageSetUpPr fitToPage="1"/></sheetPr>',
+      '<sheetPr><tabColor rgb="FFFF0000"/><pageSetUpPr fitToPage="1"/><outlinePr summaryBelow="0"/></sheetPr>',
     parsedModel: {
       tabColor: {argb: 'FFFF0000'},
       outlineProperties: {summaryBelow: false},
