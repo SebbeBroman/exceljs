@@ -21,8 +21,7 @@
   "types": "./index.d.ts",
   "browser": {
     "fs": "./lib/shims/fs-browser.js",
-    "crypto": "./lib/shims/crypto-browser.js",
-    "tmp": "./lib/shims/empty.js"
+    "crypto": "./lib/shims/crypto-browser.js"
   },
   "exports": {
     ".": {
@@ -82,7 +81,6 @@
     "fflate": "^0.8.2",
     "readable-stream": "^3.6.0",
     "saxes": "^6.0.0",
-    "tmp": "^0.2.0",
     "uuid": "^14.0.1"
   },
   "devDependencies": {
