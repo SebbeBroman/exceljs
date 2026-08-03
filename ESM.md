@@ -73,8 +73,9 @@ import { WorkbookWriter } from 'exceljs/stream/xlsx';
 ### Client-side (browser)
 
 The core `Workbook` + `xlsx.load` / `xlsx.writeBuffer` path is **process-free**:
-it does not use `readable-stream` or bare `process` (no `vite-plugin-node-polyfills` needed).
-Zip is handled by **[fflate](https://github.com/101arrowz/fflate)** (not JSZip).
+it does not use `readable-stream`, the npm `buffer` polyfill, or bare `process`
+(no `vite-plugin-node-polyfills` needed). Binary data is `Uint8Array` (wrapped as
+Node `Buffer` when available). Zip is **[fflate](https://github.com/101arrowz/fflate)** (not JSZip).
 
 ```js
 import { Workbook } from 'exceljs';

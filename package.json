@@ -76,7 +76,6 @@
     "workbook"
   ],
   "dependencies": {
-    "buffer": "^6.0.3",
     "dayjs": "^1.8.34",
     "events": "^3.3.0",
     "fast-csv": "^5.0.7",

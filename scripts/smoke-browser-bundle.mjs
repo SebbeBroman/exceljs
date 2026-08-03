@@ -49,7 +49,7 @@ await esbuild.build({
     fs: join(root, 'lib/shims/fs-browser.js'),
     crypto: join(root, 'lib/shims/crypto-browser.js'),
   },
-  // No process/buffer inject — Buffer comes from the `buffer` package imports in source.
+  // No process/buffer inject — binary data uses Uint8Array helpers (no npm `buffer` package).
   logLevel: 'warning',
 });
 
@@ -58,9 +58,16 @@ const code = readFileSync(outfile, 'utf8');
 if (code.includes('from "readable-stream"') || code.includes("from 'readable-stream'")) {
   throw new Error('bundle still imports readable-stream');
 }
+if (
+  code.includes('node_modules/buffer/') ||
+  code.includes('from "buffer"') ||
+  code.includes("from 'buffer'")
+) {
+  throw new Error('bundle still imports npm buffer package');
+}
 
 const mod = await import(pathToFileURL(outfile).href + `?t=${Date.now()}`);
 const result = await mod.run();
 const size = readFileSync(outfile).byteLength;
 console.log('browser bundle smoke ok', result, `bundle=${(size / 1024).toFixed(1)}KB`);
-console.log('  (no process polyfill, no readable-stream, fflate zip)');
+console.log('  (no process polyfill, no npm buffer, no readable-stream, fflate zip)');

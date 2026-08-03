@@ -1,4 +1,5 @@
-declare interface Buffer extends ArrayBuffer { }
+/** Binary payload: Node Buffer or Uint8Array (browser). */
+export type ExcelJSBuffer = Uint8Array;
 
 export declare enum RelationshipType {
 	None = 0,
@@ -888,7 +889,7 @@ export interface Image {
 	extension: 'jpeg' | 'png' | 'gif';
 	base64?: string;
 	filename?: string;
-	buffer?: Buffer;
+	buffer?: ExcelJSBuffer;
 }
 export interface IAnchor {
 	col: number;
@@ -1487,12 +1488,12 @@ export interface Xlsx {
 	 * load from an array buffer
 	 * @param buffer
 	 */
-	load(buffer: Buffer, options?: Partial<XlsxReadOptions>): Promise<Workbook>;
+	load(buffer: ExcelJSBuffer | ArrayBuffer, options?: Partial<XlsxReadOptions>): Promise<Workbook>;
 
 	/**
 	 * write to a buffer
 	 */
-	writeBuffer(options?: Partial<XlsxWriteOptions>): Promise<Buffer>;
+	writeBuffer(options?: Partial<XlsxWriteOptions>): Promise<ExcelJSBuffer>;
 
 	/**
 	 * write to a file
@@ -1599,7 +1600,7 @@ export interface Csv {
 	/**
 	 * write to a buffer
 	 */
-	writeBuffer(options?: Partial<CsvWriteOptions>): Promise<Buffer>;
+	writeBuffer(options?: Partial<CsvWriteOptions>): Promise<ExcelJSBuffer>;
 
 	/**
 	 * write to a file
@@ -1616,7 +1617,7 @@ export interface Media {
 	type: string;	// image,background
 	name: string;
 	extension: string;
-	buffer: Buffer;
+	buffer: ExcelJSBuffer;
 }
 
 export interface Address {
