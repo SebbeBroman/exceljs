@@ -16,6 +16,13 @@
   "engines": {
     "node": ">=18"
   },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "11.20.0",
+      "onFail": "download"
+    }
+  },
   "main": "./excel.js",
   "module": "./excel.js",
   "types": "./index.d.ts",
@@ -53,19 +60,23 @@
     "LICENSE",
     "README.md",
     "README_zh.md",
-    "index.ts",
     "index.d.ts",
     "ESM.md"
   ],
   "scripts": {
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:unit": "vitest run spec/unit",
-    "test:integration": "vitest run spec/integration",
+    "test": "vp test run",
+    "test:watch": "vp test",
+    "test:unit": "vp test run spec/unit",
+    "test:integration": "vp test run spec/integration",
     "test:esm": "node scripts/smoke-esm.mjs",
     "test:browser-bundle": "node scripts/smoke-browser-bundle.mjs",
-    "lint": "eslint --format node_modules/eslint-friendly-formatter .",
-    "convert:esm": "node scripts/cjs-to-esm.mjs"
+    "check": "vp check",
+    "lint": "vp lint .",
+    "lint:fix": "vp lint . --fix",
+    "format": "vp fmt",
+    "format:check": "vp fmt --check",
+    "benchmark": "node --expose-gc benchmark.js",
+    "prepare": "vp config"
   },
   "keywords": [
     "xlsx",
@@ -86,7 +97,9 @@
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
+    "esbuild": "^0.25.8",
     "jszip": "^3.10.1",
-    "vitest": "^3.2.7"
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
   }
 }

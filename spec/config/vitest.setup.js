@@ -4,7 +4,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {expect as viExpect, beforeAll, afterAll, beforeEach, afterEach} from 'vitest';
+import {expect as viExpect, beforeAll, afterAll, beforeEach, afterEach} from 'vite-plus/test';
 import {createChaiExpect} from './chai-expect.js';
 import verquire from '../utils/verquire.js';
 // Enable optional CSV API on Workbook (exceljs/csv entry)

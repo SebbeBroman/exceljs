@@ -1,14 +1,14 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
-    "target": "es5",
-    "sourceMap": true,
-    "types": [
-      "node",
-      "mocha"
-    ]
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022"],
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "types": ["node"]
   },
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["index.d.ts"],
+  "exclude": ["node_modules", "build", "dist"]
 }

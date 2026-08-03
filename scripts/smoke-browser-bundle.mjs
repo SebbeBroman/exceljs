@@ -52,7 +52,7 @@ export async function run() {
   if (v !== 'hello browser') throw new Error('round-trip failed: ' + v);
   return { ok: true, bytes: buf.length || buf.byteLength };
 }
-`
+`,
 );
 
 const writeOnlyEntry = join(outDir, 'entry-write-only.js');
@@ -69,7 +69,7 @@ export async function run() {
   const buf = await wb.xlsx.writeBuffer();
   return { ok: true, bytes: buf.length || buf.byteLength };
 }
-`
+`,
 );
 
 // --- Single-file minified (everything that dynamic-import can still pull in is included) ---
@@ -108,7 +108,7 @@ const size = readFileSync(outfile).byteLength;
 const gzip = gzipSync(readFileSync(outfile)).byteLength;
 console.log('browser bundle smoke ok', result);
 console.log(
-  `  single-file minify: ${(size / 1024).toFixed(1)}KB  gzip ${(gzip / 1024).toFixed(1)}KB`
+  `  single-file minify: ${(size / 1024).toFixed(1)}KB  gzip ${(gzip / 1024).toFixed(1)}KB`,
 );
 console.log('  (no process polyfill, no npm buffer/events, no readable-stream, fflate zip)');
 
@@ -150,7 +150,7 @@ async function measureSplit(label, entryPoint) {
   }
   chunks.sort((a, b) => b.b - a.b);
   console.log(
-    `  split/${label}: entry ${(entryBytes / 1024).toFixed(1)}KB  total ${(totalBytes / 1024).toFixed(1)}KB  (${files.length} files)`
+    `  split/${label}: entry ${(entryBytes / 1024).toFixed(1)}KB  total ${(totalBytes / 1024).toFixed(1)}KB  (${files.length} files)`,
   );
   return {entryBytes, totalBytes, chunks};
 }
@@ -166,8 +166,8 @@ const cfInEntry =
 // table.js exclusive string (styles also mention TableStyleMedium2)
 const tableDocInEntry = writeEntryCode.includes('Invalid Totals Row Function');
 console.log(
-  `  write-only: saxes in entry=${saxesInEntry} cf-ish=${cfInEntry} table-doc=${tableDocInEntry}  optional chunks total~${((writeSplit.totalBytes - writeSplit.entryBytes) / 1024).toFixed(1)}KB`
+  `  write-only: saxes in entry=${saxesInEntry} cf-ish=${cfInEntry} table-doc=${tableDocInEntry}  optional chunks total~${((writeSplit.totalBytes - writeSplit.entryBytes) / 1024).toFixed(1)}KB`,
 );
 console.log(
-  `  round-trip entry vs write-only entry delta: ${((roundTripSplit.entryBytes - writeSplit.entryBytes) / 1024).toFixed(1)}KB`
+  `  round-trip entry vs write-only entry delta: ${((roundTripSplit.entryBytes - writeSplit.entryBytes) / 1024).toFixed(1)}KB`,
 );

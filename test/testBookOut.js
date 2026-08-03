@@ -218,7 +218,7 @@ ws.getCell('D2').numFmt = 'd-mmm-yyyy';
 ws.getCell('D2').font = fonts.comicSansUdB16;
 ws.getCell('D2').border = borders.doubleRed;
 
-// eslint-disable-next-line prefer-template
+// oxlint-disable-next-line prefer-template
 ws.getCell('E2').value = ['Hello', 'World'].join(', ') + '!';
 
 ws.getCell('F2').value = true;
@@ -319,8 +319,8 @@ ws.getCell('H14').value = 'Baz';
 
 // hidden stuff
 ws.getRow(16).hidden = true;
-ws.getCell('I15').value = 'You Can\'t See Me!';
-ws.getCell('A16').value = 'You Can\'t See Me!';
+ws.getCell('I15').value = "You Can't See Me!";
+ws.getCell('A16').value = "You Can't See Me!";
 
 const A18 = ws.getCell('A18');
 A18.value = 'Wrap Text - Wrapping Wrapping Wrappity Wrap Wrap Wrap';

@@ -8,7 +8,7 @@ const XmlStream = verquire('utils/xml-stream');
 const BooleanXform = verquire('xlsx/xform/simple/boolean-xform');
 
 function getExpectation(expectation, name) {
-  if (!expectation.hasOwnProperty(name)) {
+  if (!Object.hasOwn(expectation, name)) {
     throw new Error(`Expectation missing required field: ${name}`);
   }
   return cloneDeep(expectation[name]);

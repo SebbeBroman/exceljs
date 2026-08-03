@@ -33,7 +33,8 @@ assert(ws2.getCell('B1').value === 42, 'B1 round-trip failed');
 // CSV should not work until side-entry is loaded
 let csvBlocked = false;
 try {
-  wb.csv;
+  // Accessing the getter should throw until exceljs/csv is imported
+  void wb.csv;
 } catch (e) {
   csvBlocked = /CSV support is not loaded/.test(e.message);
 }

@@ -4,8 +4,8 @@
 'use strict';
 
 function unexpectedError(done) {
-  return function(error) {
-    // eslint-disable-next-line no-console
+  return function (error) {
+    // oxlint-disable-next-line no-console
     console.error('Error Caught', error.message, error.stack);
     expect(true).toEqual(false);
     done();
@@ -78,9 +78,7 @@ describe('ExcelJS', () => {
     wb.csv
       .writeBuffer()
       .then(buffer => {
-        expect(buffer.toString()).toEqual(
-          '"Hello, World!",What time is it?\n7,12pm'
-        );
+        expect(buffer.toString()).toEqual('"Hello, World!",What time is it?\n7,12pm');
         done();
       })
       .catch(error => {

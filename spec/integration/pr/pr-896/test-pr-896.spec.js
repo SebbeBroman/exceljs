@@ -3,7 +3,6 @@ import __req_0 from '../../../utils/data/sheet-properties.json';
 import __req_1 from '../../../utils/data/page-setup.json';
 import tools from '../../../utils/tools.js';
 
-'use strict';
 
 process.env.EXCEL_NATIVE = 'yes';
 

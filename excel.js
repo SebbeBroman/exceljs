@@ -19,14 +19,8 @@ export {Workbook, ModelContainer, ensureDocFeatures};
 // Stream APIs live at 'exceljs/stream/xlsx' so the main entry stays lean.
 
 // Enum values as named exports (matches index.d.ts usage patterns)
-export const {
-  ValueType,
-  FormulaType,
-  RelationshipType,
-  DocumentType,
-  ReadingOrder,
-  ErrorValue,
-} = enums;
+export const {ValueType, FormulaType, RelationshipType, DocumentType, ReadingOrder, ErrorValue} =
+  enums;
 
 export {enums};
 

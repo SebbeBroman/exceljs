@@ -8,12 +8,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.20.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Browser smoke bundle via esbuild (no Grunt/Babel)
+      - run: pnpm run test:browser-bundle
       - uses: chrysanthos/simple-asset-size-reporter@1.0.2
         with:
-          repo-token: "${{ secrets.GITHUB_TOKEN }}"
-          files: '["dist/*.js"]'
-          with-same: "false"
-          build-assets: "npm run install-build"
+          repo-token: '${{ secrets.GITHUB_TOKEN }}'
+          files: '["build/browser-smoke/bundle.mjs"]'
+          with-same: 'false'
+          build-assets: 'pnpm install --frozen-lockfile && pnpm run test:browser-bundle'
