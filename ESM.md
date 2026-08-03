@@ -66,7 +66,25 @@ import { WorkbookWriter } from 'exceljs/stream/xlsx';
 | Module system | All of `lib/` converted CJS → ESM (`import` / `export`) |
 | Package | `"type": "module"`, `exports` map, `sideEffects` |
 | Tree-shaking | Named exports; CSV optional; stream as separate entry |
+| Lazy xforms | Drawings, tables, comments/VML, pivot tables loaded via `import()` when used (`lib/xlsx/lazy-xforms.js`) |
+| Lazy SAX | `saxes` loaded only when parsing XML (`BaseXform#parseStream`) — write-only apps can drop it from the initial chunk |
 | Node | Engines ≥ 18; drop ES5/browserify publish path for this fork |
+
+### Bundle size notes (Vite / code-splitting)
+
+Plain `import { Workbook } from 'exceljs'` still supports full xlsx **API** (images, comments, tables, experimental pivot). The heavy OOXML transformers for those features are **dynamically imported** only when a workbook actually uses them (or when loading a file that contains them).
+
+With Rollup/Vite (or esbuild `splitting: true`):
+
+| Path | Effect on initial chunk |
+|------|-------------------------|
+| Write plain cells | No drawing / table / comment / pivot xform trees; no `saxes` |
+| `xlsx.load` / round-trip | Loads `saxes` (+ xmlchars) async; optional xforms only if present in the file |
+| Images / tables / notes / pivot | Pulls the matching async chunk on first use |
+
+**Single-file** minified bundles (no code-splitting) still include dynamic-import targets in the same file, so size is roughly unchanged for a monolithic build — prefer app bundlers that split.
+
+Still in the default static graph (candidates for a later pass): worksheet conditional-formatting xforms (~14KB min), core sheet/style/doc modules (`doc/table.js` ~6KB, etc.). Default theme XML is also dynamically imported on write.
 
 ## SvelteKit notes
 
