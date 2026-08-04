@@ -23,40 +23,42 @@
       "onFail": "download"
     }
   },
-  "main": "./excel.js",
-  "module": "./excel.js",
+  "main": "./dist/excel.js",
+  "module": "./dist/excel.js",
   "types": "./index.d.ts",
   "browser": {
-    "fs": "./lib/shims/fs-browser.js",
-    "crypto": "./lib/shims/crypto-browser.js",
-    "node:module": "./lib/shims/node-module-browser.js",
-    "module": "./lib/shims/node-module-browser.js"
+    "fs": "./dist/lib/shims/fs-browser.js",
+    "crypto": "./dist/lib/shims/crypto-browser.js",
+    "node:module": "./dist/lib/shims/node-module-browser.js",
+    "module": "./dist/lib/shims/node-module-browser.js"
   },
   "exports": {
     ".": {
       "types": "./index.d.ts",
-      "browser": "./excel.js",
-      "import": "./excel.js",
-      "default": "./excel.js"
+      "browser": "./dist/excel.js",
+      "import": "./dist/excel.js",
+      "default": "./dist/excel.js"
     },
     "./csv": {
       "types": "./index.d.ts",
-      "import": "./lib/csv-entry.js",
-      "default": "./lib/csv-entry.js"
+      "import": "./dist/lib/csv-entry.js",
+      "default": "./dist/lib/csv-entry.js"
     },
     "./stream/xlsx": {
       "types": "./index.d.ts",
-      "import": "./lib/stream-xlsx-entry.js",
-      "default": "./lib/stream-xlsx-entry.js"
+      "import": "./dist/lib/stream-xlsx-entry.js",
+      "default": "./dist/lib/stream-xlsx-entry.js"
     },
     "./package.json": "./package.json"
   },
   "sideEffects": [
-    "./lib/csv-entry.js"
+    "./dist/lib/csv-entry.js",
+    "./lib/csv-entry.ts"
   ],
   "files": [
+    "dist",
     "lib",
-    "excel.js",
+    "excel.ts",
     "LICENSE",
     "README.md",
     "README_zh.md",
@@ -64,19 +66,22 @@
     "ESM.md"
   ],
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
     "test": "vp test run",
     "test:watch": "vp test",
     "test:unit": "vp test run spec/unit",
     "test:integration": "vp test run spec/integration",
-    "test:esm": "node scripts/smoke-esm.mjs",
-    "test:browser-bundle": "node scripts/smoke-browser-bundle.mjs",
+    "test:esm": "pnpm build && node scripts/smoke-esm.mjs",
+    "test:browser-bundle": "pnpm build && node scripts/smoke-browser-bundle.mjs",
     "check": "vp check",
     "lint": "vp lint .",
     "lint:fix": "vp lint . --fix",
     "format": "vp fmt",
     "format:check": "vp fmt --check",
     "benchmark": "node --expose-gc benchmark.js",
-    "prepare": "vp config"
+    "prepare": "vp config",
+    "prepublishOnly": "pnpm typecheck && pnpm build"
   },
   "keywords": [
     "xlsx",
@@ -86,7 +91,8 @@
     "esm",
     "tree-shaking",
     "spreadsheet",
-    "workbook"
+    "workbook",
+    "typescript"
   ],
   "dependencies": {
     "dayjs": "^1.8.34",
@@ -99,6 +105,7 @@
     "@types/node": "^20.11.0",
     "esbuild": "^0.25.8",
     "jszip": "^3.10.1",
+    "typescript": "~5.8.3",
     "vite": "catalog:",
     "vite-plus": "catalog:"
   }

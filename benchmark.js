@@ -1,5 +1,5 @@
 /* oxlint-disable no-console, no-unused-vars */
-import ExcelJS from './lib/exceljs.nodejs.js';
+import ExcelJS from './lib/exceljs.nodejs.ts';
 
 const runs = 3;
 

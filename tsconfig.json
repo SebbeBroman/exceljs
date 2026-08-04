@@ -5,10 +5,28 @@
     "moduleResolution": "NodeNext",
     "lib": ["ES2022"],
     "strict": true,
-    "noEmit": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "exactOptionalPropertyTypes": false,
+    "noPropertyAccessFromIndexSignature": false,
+    "noUncheckedIndexedAccess": false,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
     "skipLibCheck": true,
-    "types": ["node"]
+    "resolveJsonModule": true,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": true,
+    "noEmit": true,
+    "allowJs": true,
+    "checkJs": false,
+    "types": ["node"],
+    "rootDir": ".",
+    "baseUrl": "."
   },
-  "include": ["index.d.ts"],
-  "exclude": ["node_modules", "build", "dist"]
+  "include": ["lib/**/*", "excel.js", "excel.ts", "index.d.ts"],
+  "exclude": ["node_modules", "build", "dist", "spec", "test", "scripts"]
 }

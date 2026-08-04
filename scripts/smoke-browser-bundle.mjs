@@ -13,8 +13,8 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const outDir = join(root, 'build', 'browser-smoke');
 mkdirSync(outDir, {recursive: true});
 
-const fsAlias = join(root, 'lib/shims/fs-browser.js');
-const cryptoAlias = join(root, 'lib/shims/crypto-browser.js');
+const fsAlias = join(root, 'lib/shims/fs-browser.ts');
+const cryptoAlias = join(root, 'lib/shims/crypto-browser.ts');
 
 const sharedBuild = {
   bundle: true,
@@ -22,14 +22,16 @@ const sharedBuild = {
   platform: 'browser',
   mainFields: ['browser', 'module', 'main'],
   conditions: ['browser', 'import', 'default'],
+  // Resolve TS sources (NodeNext imports keep .js extensions)
+  resolveExtensions: ['.ts', '.js', '.mjs', '.json'],
   define: {
     global: 'globalThis',
   },
   alias: {
     fs: fsAlias,
     crypto: cryptoAlias,
-    'node:module': join(root, 'lib/shims/node-module-browser.js'),
-    module: join(root, 'lib/shims/node-module-browser.js'),
+    'node:module': join(root, 'lib/shims/node-module-browser.ts'),
+    module: join(root, 'lib/shims/node-module-browser.ts'),
   },
   logLevel: 'warning',
 };
@@ -38,7 +40,7 @@ const entry = join(outDir, 'entry.js');
 writeFileSync(
   entry,
   `
-import { Workbook } from '../../excel.js';
+import { Workbook } from '../../excel.ts';
 
 export async function run() {
   const wb = new Workbook();
@@ -59,7 +61,7 @@ const writeOnlyEntry = join(outDir, 'entry-write-only.js');
 writeFileSync(
   writeOnlyEntry,
   `
-import { Workbook } from '../../excel.js';
+import { Workbook } from '../../excel.ts';
 
 export async function run() {
   const wb = new Workbook();

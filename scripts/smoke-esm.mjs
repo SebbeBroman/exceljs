@@ -4,7 +4,7 @@
 import {writeFileSync, readFileSync, unlinkSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import ExcelJS, {Workbook, ValueType} from '../excel.js';
+import ExcelJS, {Workbook, ValueType} from '../dist/excel.js';
 
 const assert = (cond, msg) => {
   if (!cond) throw new Error(msg || 'assertion failed');
@@ -40,7 +40,7 @@ try {
 }
 assert(csvBlocked, 'csv should be gated until exceljs/csv is imported');
 
-const {enableCsv} = await import('../lib/csv-entry.js');
+const {enableCsv} = await import('../dist/lib/csv-entry.js');
 enableCsv();
 const csvPath = join(tmpdir(), `exceljs-esm-smoke-${Date.now()}.csv`);
 await wb.csv.writeFile(csvPath);

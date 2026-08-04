@@ -1,6 +1,10 @@
 # ESM / tree-shaking (SvelteKit / Vite)
 
-This fork converts the library to native **ES modules** aimed at modern bundlers (Vite, SvelteKit, Rollup, esbuild).
+This fork converts the library to native **ES modules** aimed at modern bundlers (Vite, SvelteKit, Rollup, esbuild), with **strict TypeScript** sources under `lib/` and `excel.ts`.
+
+- Development / tests load TypeScript directly (Vitest + Vite)
+- `pnpm build` emits JavaScript to `dist/` for Node consumers and publish
+- Public API types remain in hand-written `index.d.ts` (plus `pnpm typecheck` for the implementation)
 
 ## Install (local fork)
 

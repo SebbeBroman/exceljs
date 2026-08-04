@@ -8,7 +8,10 @@ import {expect as viExpect, beforeAll, afterAll, beforeEach, afterEach} from 'vi
 import {createChaiExpect} from './chai-expect.js';
 import verquire from '../utils/verquire.js';
 // Enable optional CSV API on Workbook (exceljs/csv entry)
-import '../../lib/csv-entry.js';
+import '../../lib/csv-entry.ts';
+// Preload lazy doc features so sync APIs (addTable/addImage/…) work under Vitest.
+// createRequire cannot load .ts sources; dynamic import via Vite can.
+import {ensureDocFeatures} from '../../lib/doc/doc-features.ts';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
@@ -29,3 +32,6 @@ globalThis.after = afterAll;
 // beforeEach/afterEach already global via vitest globals; ensure present
 globalThis.beforeEach = beforeEach;
 globalThis.afterEach = afterEach;
+
+// Top-level await: Vitest setup files may be async ESM
+await ensureDocFeatures();

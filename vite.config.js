@@ -7,14 +7,15 @@ const root = path.dirname(fileURLToPath(import.meta.url));
 /**
  * Vite+ config for this ESM library.
  *
- * - Publish is source-only (`excel.js` + `lib/`) — no `vp build` / `vp pack` required
- * - Tests: Vitest via `vp test` (`vite-plus/test`)
+ * - Source is strict TypeScript under lib/ and excel.ts
+ * - `pnpm build` emits JS to `dist/` for Node consumers and publish
+ * - Tests: Vitest via `vp test` (loads TS sources directly)
  * - Lint/format: Oxlint + Oxfmt via `vp check` / `vp lint` / `vp fmt`
  */
 export default defineConfig({
   staged: {
     // Keep pre-commit scoped to maintained surface
-    '{lib,scripts}/**/*.{js,mjs},excel.js,vite.config.js,package.json,index.d.ts,benchmark.js':
+    '{lib,scripts}/**/*.{ts,js,mjs},excel.ts,vite.config.js,package.json,index.d.ts,benchmark.js':
       'vp check --fix',
   },
 
@@ -87,7 +88,7 @@ export default defineConfig({
         },
       },
     ],
-    // Pure JS library with a hand-written index.d.ts — skip TS type-aware lint
+    // Hand-written public index.d.ts; full check via `pnpm typecheck` (tsc --strict)
     options: {
       typeAware: false,
       typeCheck: false,
