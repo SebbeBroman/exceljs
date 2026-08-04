@@ -266,6 +266,12 @@ class CellXform extends BaseXform<CellXformModel> {
       return;
     }
 
+    // Fast path: plain number cell — single XML chunk (address is A1-style, value is numeric)
+    if (model.type === Enums.ValueType.Number && !model.styleId) {
+      xmlStream.writeXml(`<c r="${model.address}"><v>${model.value as number}</v></c>`);
+      return;
+    }
+
     xmlStream.openNode('c');
     xmlStream.addAttribute('r', model.address);
 

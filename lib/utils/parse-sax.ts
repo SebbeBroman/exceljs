@@ -38,14 +38,19 @@ export default async function* parseSax(
     const raw = getAttrs();
     const attributes = Object.create(null) as Record<string, string>;
     for (const key in raw) {
-      // saxen does not auto-decode entities; saxes did.
-      attributes[key] = decodeEntities(raw[key]);
+      const v = raw[key];
+      // Hot path: cell attrs (r/t/s) almost never contain entities — skip decode.
+      attributes[key] = v.indexOf('&') === -1 ? v : decodeEntities(v);
     }
     events.push({eventType: 'opentag', value: {name, attributes}});
   });
 
   parser.on('text', (value, decodeEntities) => {
-    events.push({eventType: 'text', value: decodeEntities(value)});
+    // Shared-string / inline text often has no entities either.
+    events.push({
+      eventType: 'text',
+      value: value.indexOf('&') === -1 ? value : decodeEntities(value),
+    });
   });
 
   parser.on('closeTag', name => {

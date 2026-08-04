@@ -55,10 +55,12 @@ describe('optimizeOps', () => {
       {op: 'cell', sheet: 'S', address: 'A1', value: 'new'},
     ];
     const out = optimizeOps(ops);
-    const cells = out.filter(o => o.op === 'cell');
-    expect(cells).to.have.length(2);
-    const a1 = cells.find(o => o.op === 'cell' && o.address === 'A1');
-    expect(a1 && a1.op === 'cell' && a1.value).to.equal('new');
+    // Style-free cells coalesce to dense rows after LWW.
+    const rowsOp = out.find(o => o.op === 'rows');
+    expect(rowsOp && rowsOp.op === 'rows').to.equal(true);
+    if (rowsOp && rowsOp.op === 'rows') {
+      expect(rowsOp.values[0]).to.deep.equal(['new', 1]);
+    }
   });
 
   it('last-write-wins across cells map and cell ops', () => {
@@ -68,10 +70,39 @@ describe('optimizeOps', () => {
       {op: 'cell', sheet: 'S', address: 'A1', value: 'z'},
     ];
     const out = optimizeOps(ops);
-    const cellsMap = out.find(o => o.op === 'cells');
-    expect(cellsMap && cellsMap.op === 'cells' && cellsMap.map).to.deep.equal({B1: 'y'});
-    const a1 = out.find(o => o.op === 'cell' && o.address === 'A1');
-    expect(a1 && a1.op === 'cell' && a1.value).to.equal('z');
+    const rowsOp = out.find(o => o.op === 'rows');
+    expect(rowsOp && rowsOp.op === 'rows').to.equal(true);
+    if (rowsOp && rowsOp.op === 'rows') {
+      expect(rowsOp.values[0]).to.deep.equal(['z', 'y']);
+    }
+  });
+
+  it('coalesces style-free cell-by-cell ops into dense rows', () => {
+    const ops: BuilderOp[] = [
+      {op: 'sheet', name: 'S'},
+      {op: 'cell', sheet: 'S', address: 'A1', value: 1},
+      {op: 'cell', sheet: 'S', address: 'B1', value: 2},
+      {op: 'cell', sheet: 'S', address: 'A2', value: 3},
+    ];
+    const out = optimizeOps(ops);
+    expect(out.some(o => o.op === 'cell')).to.equal(false);
+    expect(isDenseRectangularOps(out)).to.equal(true);
+    const rowsOp = out.find(o => o.op === 'rows');
+    expect(rowsOp && rowsOp.op === 'rows' && rowsOp.values).to.deep.equal([
+      [1, 2],
+      [3, undefined],
+    ]);
+  });
+
+  it('does not coalesce cells that carry styles', () => {
+    const ops: BuilderOp[] = [
+      {op: 'sheet', name: 'S'},
+      {op: 'cell', sheet: 'S', address: 'A1', value: 1, style: {font: {bold: true}}},
+      {op: 'cell', sheet: 'S', address: 'B1', value: 2},
+    ];
+    const out = optimizeOps(ops);
+    expect(out.some(o => o.op === 'cell')).to.equal(true);
+    expect(isDenseRectangularOps(out)).to.equal(false);
   });
 
   it('does not mutate original ops', () => {
@@ -93,15 +124,22 @@ describe('dense rectangular path', () => {
     expect(_isDenseMaterialize(b._ops)).to.equal(true);
   });
 
-  it('is not dense when styles/merges/cells present', () => {
+  it('is not dense when styles/merges/row+cell patches present', () => {
     const styled = workbook().sheet('S').rows([[1]]).style('A1', {font: {bold: true}});
     expect(_isDenseMaterialize(styled._ops)).to.equal(false);
 
     const merged = workbook().sheet('S').rows([[1, 2]]).merge('A1:B1');
     expect(_isDenseMaterialize(merged._ops)).to.equal(false);
 
+    // Existing rows + random cell stays on general path (no cell→rows coalesce).
     const patched = workbook().sheet('S').rows([[1]]).cell('A2', 9);
     expect(_isDenseMaterialize(patched._ops)).to.equal(false);
+  });
+
+  it('cell-by-cell builder becomes dense after optimize', () => {
+    let b = workbook().sheet('S');
+    b = b.cell('A1', 'a').cell('B1', 1).cell('A2', 'b').cell('B2', 2);
+    expect(_isDenseMaterialize(b._ops)).to.equal(true);
   });
 
   it('dense write → load matches general (cell-by-cell) path values', async () => {

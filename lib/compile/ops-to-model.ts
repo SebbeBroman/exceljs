@@ -228,11 +228,141 @@ function fuseMetaAndRows(ops: BuilderOp[]): {meta: WorkbookMeta; fused: BuilderO
 }
 
 /**
+ * Convert style-free random `cell` / `cells` ops on a sheet into a single bulk
+ * `rows` op when the sheet has no prior row/rows data ops. Enables the dense
+ * materialize path for cell-by-cell builders (common bench / fill patterns).
+ *
+ * Only runs when every cell is style-free and addresses are simple A1 (no sheet!).
+ */
+function coalesceStyleFreeCellsToRows(ops: BuilderOp[]): BuilderOp[] {
+  // sheet → list of cell placements (or null if sheet cannot coalesce)
+  type Placement = {row: number; col: number; value: CellValue};
+  const placements = new Map<string, Placement[] | null>();
+  const hasRowOps = new Set<string>();
+
+  for (const op of ops) {
+    if (op.op === 'row' || op.op === 'rows') {
+      hasRowOps.add(op.sheet);
+      placements.set(op.sheet, null);
+      continue;
+    }
+    if (op.op === 'cell') {
+      if (op.style || hasRowOps.has(op.sheet) || placements.get(op.sheet) === null) {
+        placements.set(op.sheet, null);
+        continue;
+      }
+      const decoded = colCache.decodeAddress(op.address);
+      if (!decoded?.row || !decoded?.col) {
+        placements.set(op.sheet, null);
+        continue;
+      }
+      let list = placements.get(op.sheet);
+      if (list === undefined) {
+        list = [];
+        placements.set(op.sheet, list);
+      }
+      if (list === null) continue;
+      list.push({row: decoded.row, col: decoded.col, value: op.value});
+      continue;
+    }
+    if (op.op === 'cells') {
+      if (hasRowOps.has(op.sheet) || placements.get(op.sheet) === null) {
+        placements.set(op.sheet, null);
+        continue;
+      }
+      let list = placements.get(op.sheet);
+      if (list === undefined) {
+        list = [];
+        placements.set(op.sheet, list);
+      }
+      if (list === null) continue;
+      for (const [address, value] of Object.entries(op.map)) {
+        const decoded = colCache.decodeAddress(address);
+        if (!decoded?.row || !decoded?.col) {
+          placements.set(op.sheet, null);
+          list = null;
+          break;
+        }
+        list.push({row: decoded.row, col: decoded.col, value});
+      }
+      continue;
+    }
+    // Structural / feature ops that block pure dense cell coalescing for that sheet
+    // when they appear alongside cells: merges, styles, notes, etc.
+    // sheet / columns / meta are fine — handled outside placements.
+    if (
+      op.op === 'style' ||
+      op.op === 'merge' ||
+      op.op === 'note' ||
+      op.op === 'dataValidation' ||
+      op.op === 'conditionalFormatting' ||
+      op.op === 'table' ||
+      op.op === 'sheetImage' ||
+      op.op === 'protect' ||
+      op.op === 'sheetProtection' ||
+      op.op === 'views' ||
+      op.op === 'pageSetup' ||
+      op.op === 'headerFooter'
+    ) {
+      placements.set(op.sheet, null);
+    }
+  }
+
+  const coalesceSheets = new Set<string>();
+  for (const [sheet, list] of placements) {
+    if (list && list.length > 0) coalesceSheets.add(sheet);
+  }
+  if (coalesceSheets.size === 0) return ops;
+
+  // Build dense row arrays per sheet (1-based → index 0).
+  const rowsBySheet = new Map<string, CellValue[][]>();
+  for (const sheet of coalesceSheets) {
+    const list = placements.get(sheet)!;
+    if (!list) continue;
+    let maxRow = 0;
+    let maxCol = 0;
+    for (let i = 0; i < list.length; i++) {
+      const p = list[i]!;
+      if (p.row > maxRow) maxRow = p.row;
+      if (p.col > maxCol) maxCol = p.col;
+    }
+    const grid: CellValue[][] = new Array(maxRow);
+    for (let r = 0; r < maxRow; r++) {
+      grid[r] = new Array(maxCol);
+    }
+    for (let i = 0; i < list.length; i++) {
+      const p = list[i]!;
+      grid[p.row - 1]![p.col - 1] = p.value;
+    }
+    rowsBySheet.set(sheet, grid);
+  }
+
+  const out: BuilderOp[] = [];
+  const emittedRows = new Set<string>();
+  for (const op of ops) {
+    if (op.op === 'cell' || op.op === 'cells') {
+      if (!coalesceSheets.has(op.sheet)) {
+        out.push(op);
+        continue;
+      }
+      if (!emittedRows.has(op.sheet)) {
+        out.push({op: 'rows', sheet: op.sheet, values: rowsBySheet.get(op.sheet)!});
+        emittedRows.add(op.sheet);
+      }
+      continue;
+    }
+    out.push(op);
+  }
+  return out;
+}
+
+/**
  * Op-log passes:
  * 1. Merge meta (last write wins per field)
  * 2. Drop empty ops (empty rows/cells)
  * 3. Fuse consecutive `row` / `rows` on the same sheet into one `rows`
  * 4. Last-write-wins for cell addresses (`cell` / `cells`) — skipped when none
+ * 5. Coalesce style-free cell/cells-only sheets into bulk `rows` (dense path)
  *
  * Never mutates the input op objects or their nested arrays/maps.
  */
@@ -290,6 +420,7 @@ export function optimizeOps(ops: BuilderOp[]): BuilderOp[] {
     }
 
     out = staged.filter((op): op is BuilderOp => op != null);
+    out = coalesceStyleFreeCellsToRows(out);
   }
 
   if (Object.keys(meta).length) {

@@ -32,7 +32,8 @@ workbook().sheet(…).row(…).cell(…)
 
 - **Op-log:** fluent builder records ops; does not mutate a cell graph while chaining.
 - **Materialize:** ops applied onto the legacy mutable `DocWorkbook` so the existing OOXML encoder can run. Dense rectangular op-logs use a bulk `addRows` path.
-- **Encode:** `writeBuffer` → XLSX writer → zip. Optional features (drawings, tables, comments, pivots) load via dynamic `import()` where possible.
+- **Encode:** `writeBuffer` → XLSX writer → zip (default deflate **level 1** for speed; override with `{ zip: { level: 6 } }` for smaller files). Optional features (drawings, tables, comments, pivots) load via dynamic `import()` where possible.
+- **Cell-by-cell ops:** style-free `.cell()` / `.cells()` logs coalesce into bulk `.rows()` during optimize so they hit the dense materialize path.
 
 Plain snapshots:
 

@@ -6,6 +6,9 @@ const CLOSE_ANGLE = '>';
 const OPEN_ANGLE_SLASH = '</';
 const CLOSE_SLASH_ANGLE = '/>';
 
+// Matches utils.xmlEncode special chars — used to skip encode on hot path
+const XML_SPECIAL = /[<>&'"\x7F\x00-\x08\x0B-\x0C\x0E-\x1F]/;
+
 type XmlAttributes = Record<string, unknown> | null | undefined;
 
 interface RollbackState {
@@ -18,16 +21,37 @@ interface RollbackState {
 function pushAttribute(xml: string[], name: string, value: unknown): void {
   xml.push(` ${name}="${utils.xmlEncode(String(value))}"`);
 }
-function pushAttributes(xml: string[], attributes: XmlAttributes): void {
-  if (attributes) {
-    const tmp: string[] = [];
-    for (const [name, value] of Object.entries(attributes)) {
-      if (value !== undefined) {
-        pushAttribute(tmp, name, value);
-      }
+
+/** Build attribute string in one allocation (no per-attr array). */
+function attributesToString(attributes: XmlAttributes): string {
+  if (!attributes) return '';
+  let out = '';
+  for (const name of Object.keys(attributes)) {
+    const value = attributes[name];
+    if (value !== undefined) {
+      out += ` ${name}="${utils.xmlEncode(String(value))}"`;
     }
-    xml.push(tmp.join(''));
   }
+  return out;
+}
+
+function pushAttributes(xml: string[], attributes: XmlAttributes): void {
+  const s = attributesToString(attributes);
+  if (s) xml.push(s);
+}
+
+/** Encode leaf text; numbers and simple strings skip the full xmlEncode path. */
+function encodeLeafText(text: unknown): string {
+  if (typeof text === 'number') {
+    // numbers never contain XML-special chars
+    return String(text);
+  }
+  const s = String(text);
+  // short plain strings (common for '0'/'1', shared-string ids) skip encode
+  if (s.length <= 32 && !XML_SPECIAL.test(s)) {
+    return s;
+  }
+  return utils.xmlEncode(s);
 }
 
 class XmlStream {
@@ -77,10 +101,13 @@ class XmlStream {
 
     this._stack.push(name);
 
-    // start streaming node
-    xml.push(OPEN_ANGLE);
-    xml.push(name);
-    pushAttributes(xml, attributes);
+    // start streaming node — single push for name (+ attrs when present)
+    const attrs = attributesToString(attributes);
+    if (attrs) {
+      xml.push(OPEN_ANGLE + name + attrs);
+    } else {
+      xml.push(OPEN_ANGLE + name);
+    }
     this.leaf = true;
     this.open = true;
   }
@@ -126,21 +153,38 @@ class XmlStream {
     if (this.leaf) {
       xml.push(CLOSE_SLASH_ANGLE);
     } else {
-      xml.push(OPEN_ANGLE_SLASH);
-      xml.push(node!);
-      xml.push(CLOSE_ANGLE);
+      // single chunk: </name>
+      xml.push(OPEN_ANGLE_SLASH + node! + CLOSE_ANGLE);
     }
     this.open = false;
     this.leaf = false;
   }
 
+  /**
+   * Emit a complete leaf element in as few chunks as possible.
+   * Hot path for sheet cells (`<v>…</v>`, self-closing tags, etc.).
+   * Does not touch the element stack (complete element written atomically).
+   * Rollback/commit semantics preserved via _xml length only.
+   */
   leafNode(name: string, attributes?: XmlAttributes, text?: unknown): void {
-    this.openNode(name, attributes);
-    if (text !== undefined) {
-      // zeros need to be written
-      this.writeText(text);
+    const xml = this._xml;
+    // Close any currently open start-tag before writing sibling content
+    if (this.open) {
+      xml.push(CLOSE_ANGLE);
+      this.open = false;
     }
-    this.closeNode();
+    this.leaf = false;
+
+    const attrs = attributesToString(attributes);
+    if (text === undefined) {
+      // zeros need to be written — but undefined means self-closing
+      xml.push(OPEN_ANGLE + name + attrs + CLOSE_SLASH_ANGLE);
+      return;
+    }
+
+    // Single chunk: <name attrs>text</name>
+    // numbers / short plain strings skip full xmlEncode
+    xml.push(OPEN_ANGLE + name + attrs + CLOSE_ANGLE + encodeLeafText(text) + OPEN_ANGLE_SLASH + name + CLOSE_ANGLE);
   }
 
   closeAll(): void {

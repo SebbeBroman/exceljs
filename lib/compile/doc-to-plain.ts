@@ -31,8 +31,6 @@ type AnyWs = any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyRow = any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyCell = any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyCol = any;
 
 function pickStyle(style: Record<string, unknown> | undefined | null): Style | undefined {
@@ -51,14 +49,13 @@ function styleHasContent(style: Style | undefined): boolean {
   return Boolean(style && Object.keys(style).length);
 }
 
-function cellValueFromDoc(cell: AnyCell): CellValue {
+function cellValueFromSlot(type: number, value: unknown): CellValue {
   // Merge slaves share the master; omit them from the sparse plain model.
-  if (cell.type === Enums.ValueType.Merge) {
+  if (type === Enums.ValueType.Merge) {
     return null;
   }
-  const v = cell.value as CellValue;
-  if (v === undefined) return null;
-  return v;
+  if (value === undefined) return null;
+  return value as CellValue;
 }
 
 function columnsFromSheet(ws: AnyWs): ColumnInput[] | undefined {
@@ -134,12 +131,12 @@ function dataValidationsFromSheet(ws: AnyWs): Record<string, DataValidation> | u
 function notesFromSheet(ws: AnyWs): Record<string, NoteValue> | undefined {
   const notes: Record<string, NoteValue> = {};
   (ws as AnyWs).eachRow({includeEmpty: false}, (row: AnyRow) => {
-    row.eachCell({includeEmpty: false}, (cell: AnyCell) => {
-      if (cell.note != null && cell.note !== '') {
+    // eachValue avoids CompactCell → Cell materialization on the load path
+    row.eachValue((info: {note?: unknown; address?: string; col: number}) => {
+      if (info.note != null && info.note !== '') {
         const address =
-          cell.address ||
-          `${colCache.n2l(cell.col as number)}${cell.row as number}`;
-        notes[address] = cell.note as NoteValue;
+          info.address || `${colCache.n2l(info.col)}${row.number as number}`;
+        notes[address] = info.note as NoteValue;
       }
     });
   });
@@ -211,20 +208,30 @@ export function docWorkbookToPlain(wb: InstanceType<typeof DocWorkbook>): Workbo
       const cells: Record<number, SheetCell> = {};
       let hasCell = false;
 
-      row.eachCell((cell: AnyCell, colNumber: number) => {
-        if (cell.type === Enums.ValueType.Merge) return;
-        if (cell.type === Enums.ValueType.Null) return;
+      // eachValue reads CompactCell slots without materializing full Cells
+      row.eachValue(
+        (
+          info: {
+            type: number;
+            value: unknown;
+            style?: Record<string, unknown>;
+          },
+          colNumber: number,
+        ) => {
+          if (info.type === Enums.ValueType.Merge) return;
+          if (info.type === Enums.ValueType.Null) return;
 
-        const value = cellValueFromDoc(cell);
-        // Skip pure nulls without style
-        const style = pickStyle(cell.style);
-        if ((value === null || value === undefined) && !styleHasContent(style)) return;
+          const value = cellValueFromSlot(info.type, info.value);
+          // Skip pure nulls without style
+          const style = pickStyle(info.style);
+          if ((value === null || value === undefined) && !styleHasContent(style)) return;
 
-        cells[colNumber] = styleHasContent(style)
-          ? {value: value ?? null, style}
-          : {value: value ?? null};
-        hasCell = true;
-      });
+          cells[colNumber] = styleHasContent(style)
+            ? {value: value ?? null, style}
+            : {value: value ?? null};
+          hasCell = true;
+        },
+      );
 
       if (!hasCell && !row.height && !row.hidden) return;
 

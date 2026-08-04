@@ -229,15 +229,31 @@ export function materializeDocWorkbook(ops: BuilderOp[]): InstanceType<typeof Do
           break;
         case 'cell': {
           const ws = ensureSheet(op.sheet);
-          const cell = ws.getCell(op.address);
-          cell.value = op.value;
-          if (op.style) applyStyleToRange(ws, op.address, op.style);
+          if (op.style) {
+            const cell = ws.getCell(op.address);
+            cell.value = op.value;
+            applyStyleToRange(ws, op.address, op.style);
+          } else {
+            // Compact path: avoid allocating full Cell for style-free values.
+            const decoded = colCache.decodeAddress(op.address);
+            if (decoded?.row && decoded?.col) {
+              const row = ws.getRow(decoded.row);
+              row._setCompact(decoded.col, op.value);
+            } else {
+              ws.getCell(op.address).value = op.value;
+            }
+          }
           break;
         }
         case 'cells': {
           const ws = ensureSheet(op.sheet);
           for (const [address, value] of Object.entries(op.map)) {
-            ws.getCell(address).value = value;
+            const decoded = colCache.decodeAddress(address);
+            if (decoded?.row && decoded?.col) {
+              ws.getRow(decoded.row)._setCompact(decoded.col, value);
+            } else {
+              ws.getCell(address).value = value;
+            }
           }
           break;
         }

@@ -30,10 +30,14 @@ interface ZipDestination {
 }
 
 function toUint8Array(data: unknown): Uint8Array {
+  // Already bytes — share the view (no re-copy / re-encode)
+  if (data instanceof Uint8Array) {
+    return data;
+  }
   if (typeof data === 'string') {
     return strToU8(data);
   }
-  if (isBytes(data) || data instanceof ArrayBuffer || ArrayBuffer.isView(data)) {
+  if (data instanceof ArrayBuffer || ArrayBuffer.isView(data)) {
     return asUint8Array(data);
   }
   return strToU8(String(data));
@@ -45,7 +49,8 @@ function resolveLevel(options: StreamZipWriterOptions = {}): number {
   // JSZip / archiver used compression: 'DEFLATE' | 'STORE'
   if (options.compression === 'STORE') return 0;
   if (options.store === true) return 0;
-  return 6;
+  // Default level 1: much faster than 6 with similar size order-of-magnitude
+  return 1;
 }
 
 function normalizeName(name: string | undefined): string | undefined {
@@ -255,6 +260,9 @@ class StreamZipWriter extends EventEmitter {
     let bytes: Uint8Array;
     if (options.base64) {
       bytes = typeof data === 'string' ? fromBase64(data) : toUint8Array(data);
+    } else if (data instanceof Uint8Array) {
+      // Zero-copy: already encoded bytes
+      bytes = data;
     } else {
       bytes = toUint8Array(data);
     }

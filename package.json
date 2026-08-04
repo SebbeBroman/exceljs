@@ -95,7 +95,7 @@
     "bench:roundtrip": "pnpm build && node --expose-gc scripts/bench/e2e.mjs --filter roundtrip",
     "bench:dense": "pnpm build && node --expose-gc scripts/bench-dense-write.mjs",
     "bench:browser": "pnpm build && node scripts/bench/browser.mjs",
-    "bench:read": "pnpm build && node --expose-gc scripts/bench/read.mjs",
+    "bench:view": "pnpm build && node --expose-gc scripts/bench/read.mjs",
     "prepare": "vp config",
     "prepublishOnly": "pnpm typecheck && pnpm build"
   },
