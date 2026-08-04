@@ -118,6 +118,15 @@ interface CellColumn {
   style: Partial<Style>;
 }
 
+export interface CellCreateOptions {
+  /** Initial cell value (avoids NullValue → typed value thrash). */
+  value?: unknown;
+  /** Skip address validation when the address is known-good (e.g. from colCache). */
+  validateAddress?: boolean;
+  /** Pre-merged style; when set, row/column style merge is skipped. */
+  style?: Partial<Style> & Record<string, unknown>;
+}
+
 class Cell {
   static Types = Enums.ValueType;
 
@@ -129,7 +138,12 @@ class Cell {
   _mergeCount: number;
   _comment?: NoteClass | undefined;
 
-  constructor(row: CellRow | Row, column: CellColumn | Column, address: string) {
+  constructor(
+    row: CellRow | Row,
+    column: CellColumn | Column,
+    address: string,
+    options?: CellCreateOptions,
+  ) {
     if (!row || !column) {
       throw new Error('A Cell needs a Row');
     }
@@ -137,15 +151,111 @@ class Cell {
     this._row = row as CellRow;
     this._column = column as CellColumn;
 
-    colCache.validateAddress(address);
+    if (options?.validateAddress !== false) {
+      colCache.validateAddress(address);
+    }
     this._address = address;
 
-    // TODO: lazy evaluation of this._value
-    this._value = Value.create(Cell.Types.Null, this);
+    if (options && Object.prototype.hasOwnProperty.call(options, 'value')) {
+      this._value = Value.create(Value.getType(options.value), this, options.value);
+    } else {
+      this._value = Value.create(Cell.Types.Null, this);
+    }
 
-    this.style = this._mergeStyle(row.style, column.style, {});
+    if (options?.style) {
+      this.style = options.style;
+    } else {
+      this.style = this._mergeStyle(row.style, column.style, {});
+    }
 
     this._mergeCount = 0;
+  }
+
+  /** Infer ValueType for a JS value (used by row compact storage). */
+  static getValueType(value: unknown): number {
+    return Value.getType(value);
+  }
+
+  /**
+   * Build the wire model for a cell value without allocating a Cell / Value strategy.
+   * Shape matches Value*.model used by Cell.model / xforms.
+   * @param knownType optional ValueType (or -1 for JSON) to skip re-inference
+   */
+  static valueToModel(address: string, value: unknown, knownType?: number): CellValueModel {
+    const type = knownType === undefined ? Value.getType(value) : knownType;
+    switch (type) {
+      case Cell.Types.Null:
+        return {address, type: Cell.Types.Null};
+      case Cell.Types.Number:
+      case Cell.Types.String:
+      case Cell.Types.Date:
+      case Cell.Types.Boolean:
+      case Cell.Types.SharedString:
+      case Cell.Types.Error:
+        return {address, type, value};
+      case Cell.Types.RichText:
+        // RichTextValue stores model.type as String (historical)
+        return {address, type: Cell.Types.String, value};
+      case Cell.Types.Hyperlink: {
+        const v = value as HyperlinkValueInput;
+        const model: CellValueModel = {
+          address,
+          type: Cell.Types.Hyperlink,
+          text: v.text,
+          hyperlink: v.hyperlink,
+        };
+        if (v.tooltip) model.tooltip = v.tooltip;
+        return model;
+      }
+      case Cell.Types.Formula: {
+        const v = value as FormulaValueInput;
+        return {
+          address,
+          type: Cell.Types.Formula,
+          shareType: v.shareType,
+          ref: v.ref,
+          formula: v.formula,
+          sharedFormula: v.sharedFormula,
+          result: v.result,
+        };
+      }
+      case -1:
+      default:
+        // plain objects → JSON string (JSONValue); knownType -1 skips re-detect
+        return {
+          address,
+          type: Cell.Types.String,
+          value: JSON.stringify(value),
+          rawValue: value,
+        };
+    }
+  }
+
+  /** Merge row/column styles into a plain object (shared with compact cell path). */
+  static mergeStyles(
+    rowStyle: Partial<Style> | undefined | null,
+    colStyle: Partial<Style> | undefined | null,
+    style: Partial<Style> & Record<string, unknown> = {},
+  ): Partial<Style> & Record<string, unknown> {
+    const numFmt = (rowStyle && rowStyle.numFmt) || (colStyle && colStyle.numFmt);
+    if (numFmt) style.numFmt = numFmt;
+
+    const font = (rowStyle && rowStyle.font) || (colStyle && colStyle.font);
+    if (font) style.font = font;
+
+    const alignment = (rowStyle && rowStyle.alignment) || (colStyle && colStyle.alignment);
+    if (alignment) style.alignment = alignment;
+
+    const border = (rowStyle && rowStyle.border) || (colStyle && colStyle.border);
+    if (border) style.border = border;
+
+    const fill = (rowStyle && rowStyle.fill) || (colStyle && colStyle.fill);
+    if (fill) style.fill = fill;
+
+    const protection = (rowStyle && rowStyle.protection) || (colStyle && colStyle.protection);
+    if (protection) style.protection = protection;
+
+    return style;
   }
 
   get worksheet(): CellWorksheet {
@@ -220,25 +330,7 @@ class Cell {
     colStyle: Partial<Style> | undefined | null,
     style: Partial<Style> & Record<string, unknown>,
   ): Partial<Style> & Record<string, unknown> {
-    const numFmt = (rowStyle && rowStyle.numFmt) || (colStyle && colStyle.numFmt);
-    if (numFmt) style.numFmt = numFmt;
-
-    const font = (rowStyle && rowStyle.font) || (colStyle && colStyle.font);
-    if (font) style.font = font;
-
-    const alignment = (rowStyle && rowStyle.alignment) || (colStyle && colStyle.alignment);
-    if (alignment) style.alignment = alignment;
-
-    const border = (rowStyle && rowStyle.border) || (colStyle && colStyle.border);
-    if (border) style.border = border;
-
-    const fill = (rowStyle && rowStyle.fill) || (colStyle && colStyle.fill);
-    if (fill) style.fill = fill;
-
-    const protection = (rowStyle && rowStyle.protection) || (colStyle && colStyle.protection);
-    if (protection) style.protection = protection;
-
-    return style;
+    return Cell.mergeStyles(rowStyle, colStyle, style);
   }
 
   // =========================================================================

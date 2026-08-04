@@ -14,6 +14,7 @@ import type {
 } from '../../index.js';
 import type Column from './column.js';
 import type {ValueTypeCode} from './enums.js';
+import type Note from './note.js';
 
 export interface RowDimensions {
   min: number;
@@ -55,10 +56,68 @@ export interface RowWorksheet {
   properties: {outlineLevelRow?: number};
 }
 
+/**
+ * Compact (flat) cell storage: no Cell / Value strategy objects.
+ * Materialized to Cell on getCell / findCell / eachCell.
+ * Write path (row.model) reads compact slots without hydrating.
+ */
+export interface CompactCell {
+  /** Brand: distinguishes from Cell without instanceof on hot paths. */
+  readonly _c: 1;
+  col: number;
+  address: string;
+  /** ValueType code; -1 for JSON-stringified plain objects. */
+  type: number;
+  value: unknown;
+  /** Prebuilt xform model (without style/comment); avoids rebuild on row.model. */
+  wm: RowModelCell;
+  style?: Partial<Style> & Record<string, unknown>;
+  comment?: Note;
+}
+
+export type CellSlot = Cell | CompactCell;
+
+function isCompact(entry: CellSlot | undefined | null): entry is CompactCell {
+  return entry != null && (entry as CompactCell)._c === 1;
+}
+
+function styleHasKeys(style: Partial<Style> & Record<string, unknown> | undefined): boolean {
+  if (!style) return false;
+  // faster than Object.keys alloc for the common empty-style case
+  for (const _k in style) return true;
+  return false;
+}
+
+/** Attach style/comment onto the prebuilt write model for xform. */
+function compactToModel(entry: CompactCell): RowModelCell {
+  const model = entry.wm;
+  if (entry.style) model.style = entry.style;
+  else delete model.style;
+  if (entry.comment) {
+    model.comment = (entry.comment as {model?: unknown}).model ?? entry.comment;
+  }
+  return model;
+}
+
+function buildWriteModel(address: string, type: number, value: unknown): RowModelCell {
+  switch (type) {
+    case Enums.ValueType.Null:
+      return {address, type};
+    case Enums.ValueType.Number:
+    case Enums.ValueType.String:
+    case Enums.ValueType.Date:
+    case Enums.ValueType.Boolean:
+      return {address, type, value};
+    default:
+      return Cell.valueToModel(address, value, type) as RowModelCell;
+  }
+}
+
 class Row {
   _worksheet!: RowWorksheet;
   _number: number;
-  _cells: Array<Cell | undefined>;
+  /** Sparse slots: CompactCell until API needs a full Cell. */
+  _cells: Array<CellSlot | undefined>;
   style: Partial<Style> & Record<string, unknown>;
   _outlineLevel?: number;
   _hidden?: boolean;
@@ -94,18 +153,74 @@ class Row {
     delete (this as Partial<Row>).style;
   }
 
+  /** Materialize a compact slot into a full Cell (in place). */
+  _materialize(col: number, compact: CompactCell): Cell {
+    const column = this._worksheet.getColumn(col);
+    const cell = new Cell(this, column, compact.address, {
+      validateAddress: false,
+      value: compact.value,
+      style: compact.style || Cell.mergeStyles(this.style, column.style, {}),
+    });
+    if (compact.comment) {
+      cell._comment = compact.comment as never;
+    }
+    this._cells[col - 1] = cell;
+    return cell;
+  }
+
+  /**
+   * Store a value as a compact slot (no Cell allocation).
+   * @param column optional pre-resolved column (avoids getColumn on key'd addRow)
+   */
+  _setCompact(col: number, value: unknown, column?: Column): void {
+    if (value === undefined) {
+      this._cells[col - 1] = undefined;
+      return;
+    }
+
+    const rawType = Cell.getValueType(value);
+    const type = rawType === undefined ? -1 : rawType;
+    const address = colCache.encodeAddress(this._number, col);
+    const colObj = column || this._worksheet.getColumn(col);
+    const compact: CompactCell = {
+      _c: 1,
+      col,
+      address,
+      type,
+      value: value as CellValue,
+      wm: buildWriteModel(address, type, value),
+    };
+    // Only allocate a style object when row or column actually carries styles
+    if (styleHasKeys(this.style) || styleHasKeys(colObj.style)) {
+      const style = Cell.mergeStyles(this.style, colObj.style, {});
+      if (styleHasKeys(style)) {
+        compact.style = style;
+      }
+    }
+    this._cells[col - 1] = compact;
+  }
+
   findCell(colNumber: number): Cell | undefined {
-    return this._cells[colNumber - 1];
+    const entry = this._cells[colNumber - 1];
+    if (!entry) return undefined;
+    if (isCompact(entry)) {
+      return this._materialize(colNumber, entry);
+    }
+    return entry;
   }
 
   // given {address, row, col}, find or create new cell
   getCellEx(address: RowCellAddress): Cell {
-    let cell = this._cells[address.col - 1];
-    if (!cell) {
-      const column = this._worksheet.getColumn(address.col);
-      cell = new Cell(this, column, address.address);
-      this._cells[address.col - 1] = cell;
+    const entry = this._cells[address.col - 1];
+    if (entry) {
+      if (isCompact(entry)) {
+        return this._materialize(address.col, entry);
+      }
+      return entry;
     }
+    const column = this._worksheet.getColumn(address.col);
+    const cell = new Cell(this, column, address.address, {validateAddress: false});
+    this._cells[address.col - 1] = cell;
     return cell;
   }
 
@@ -120,14 +235,18 @@ class Row {
         col = colCache.l2n(col);
       }
     }
-    return (
-      this._cells[col - 1] ||
-      this.getCellEx({
-        address: colCache.encodeAddress(this._number, col),
-        row: this._number,
-        col,
-      })
-    );
+    const entry = this._cells[col - 1];
+    if (entry) {
+      if (isCompact(entry)) {
+        return this._materialize(col, entry);
+      }
+      return entry;
+    }
+    return this.getCellEx({
+      address: colCache.encodeAddress(this._number, col),
+      row: this._number,
+      col,
+    });
   }
 
   // remove cell(s) and shift all higher cells down by count
@@ -142,8 +261,8 @@ class Row {
     if (nExpand < 0) {
       // remove cells
       for (i = start + inserts.length; i <= nEnd; i++) {
-        cDst = this._cells[i - 1];
-        cSrc = this._cells[i - nExpand - 1];
+        cDst = this.findCell(i);
+        cSrc = this.findCell(i - nExpand);
         if (cSrc) {
           cDst = this.getCell(i);
           cDst.value = cSrc.value;
@@ -160,7 +279,7 @@ class Row {
     } else if (nExpand > 0) {
       // insert new cells
       for (i = nEnd; i >= nKeep; i--) {
-        cSrc = this._cells[i - 1];
+        cSrc = this.findCell(i);
         if (cSrc) {
           cDst = this.getCell(i + nExpand);
           cDst.value = cSrc.value;
@@ -200,9 +319,16 @@ class Row {
         fn(this.getCell(i), i);
       }
     } else {
-      this._cells.forEach((cell, index) => {
-        if (cell && cell.type !== Enums.ValueType.Null) {
-          fn!(cell, index + 1);
+      this._cells.forEach((entry, index) => {
+        if (!entry) return;
+        if (isCompact(entry)) {
+          // type -1 = JSON object (has a value); Null is empty
+          if (entry.type === Enums.ValueType.Null) return;
+          fn!(this._materialize(index + 1, entry), index + 1);
+          return;
+        }
+        if (entry.type !== Enums.ValueType.Null) {
+          fn!(entry, index + 1);
         }
       });
     }
@@ -228,9 +354,16 @@ class Row {
   // return a sparse array of cell values
   get values(): CellValue[] {
     const values: CellValue[] = [];
-    this._cells.forEach(cell => {
-      if (cell && cell.type !== Enums.ValueType.Null) {
-        values[cell.col] = cell.value;
+    this._cells.forEach(entry => {
+      if (!entry) return;
+      if (isCompact(entry)) {
+        if (entry.type !== Enums.ValueType.Null) {
+          values[entry.col] = entry.value as CellValue;
+        }
+        return;
+      }
+      if (entry.type !== Enums.ValueType.Null) {
+        values[entry.col] = entry.value;
       }
     });
     return values;
@@ -250,11 +383,7 @@ class Row {
       }
       value.forEach((item, index) => {
         if (item !== undefined) {
-          this.getCellEx({
-            address: colCache.encodeAddress(this._number, index + offset),
-            row: this._number,
-            col: index + offset,
-          }).value = item;
+          this._setCompact(index + offset, item);
         }
       });
     } else {
@@ -262,11 +391,7 @@ class Row {
       const obj = value as Record<string, CellValue>;
       this._worksheet.eachColumnKey((column, key) => {
         if (obj[key] !== undefined) {
-          this.getCellEx({
-            address: colCache.encodeAddress(this._number, column.number),
-            row: this._number,
-            col: column.number,
-          }).value = obj[key];
+          this._setCompact(column.number, obj[key], column);
         }
       });
     }
@@ -274,7 +399,13 @@ class Row {
 
   // returns true if the row includes at least one cell with a value
   get hasValues(): boolean {
-    return _.some(this._cells, (cell: Cell | undefined) => cell && cell.type !== Enums.ValueType.Null);
+    return _.some(this._cells, (entry: CellSlot | undefined) => {
+      if (!entry) return false;
+      if (isCompact(entry)) {
+        return entry.type !== Enums.ValueType.Null;
+      }
+      return entry.type !== Enums.ValueType.Null;
+    });
   }
 
   get cellCount(): number {
@@ -293,13 +424,16 @@ class Row {
   get dimensions(): RowDimensions | null {
     let min = 0;
     let max = 0;
-    this._cells.forEach(cell => {
-      if (cell && cell.type !== Enums.ValueType.Null) {
-        if (!min || min > cell.col) {
-          min = cell.col;
+    this._cells.forEach(entry => {
+      if (!entry) return;
+      const type = isCompact(entry) ? entry.type : entry.type;
+      const col = isCompact(entry) ? entry.col : entry.col;
+      if (type !== Enums.ValueType.Null) {
+        if (!min || min > col) {
+          min = col;
         }
-        if (max < cell.col) {
-          max = cell.col;
+        if (max < col) {
+          max = col;
         }
       }
     });
@@ -315,9 +449,13 @@ class Row {
   // styles
   _applyStyle(name: string, value: unknown): unknown {
     this.style[name] = value;
-    this._cells.forEach(cell => {
-      if (cell) {
-        (cell as unknown as Record<string, unknown>)[name] = value;
+    this._cells.forEach(entry => {
+      if (!entry) return;
+      if (isCompact(entry)) {
+        if (!entry.style) entry.style = {};
+        (entry.style as Record<string, unknown>)[name] = value;
+      } else {
+        (entry as unknown as Record<string, unknown>)[name] = value;
       }
     });
     return value;
@@ -395,27 +533,34 @@ class Row {
 
   // =========================================================================
   get model(): RowModelData | null {
-    const cells: unknown[] = [];
+    const cells: RowModelCell[] = [];
     let min = 0;
     let max = 0;
-    this._cells.forEach(cell => {
-      if (cell) {
-        const cellModel = cell.model;
-        if (cellModel) {
-          if (!min || min > cell.col) {
-            min = cell.col;
-          }
-          if (max < cell.col) {
-            max = cell.col;
-          }
-          cells.push(cellModel);
-        }
+    const slots = this._cells;
+    const n = slots.length;
+
+    for (let i = 0; i < n; i++) {
+      const entry = slots[i];
+      if (!entry) continue;
+
+      if (isCompact(entry)) {
+        if (!min || min > entry.col) min = entry.col;
+        if (max < entry.col) max = entry.col;
+        cells.push(compactToModel(entry));
+        continue;
       }
-    });
+
+      const cellModel = entry.model;
+      if (cellModel) {
+        if (!min || min > entry.col) min = entry.col;
+        if (max < entry.col) max = entry.col;
+        cells.push(cellModel as RowModelCell);
+      }
+    }
 
     return this.height || cells.length
       ? {
-          cells: cells as RowModelCell[],
+          cells,
           number: this.number,
           min,
           max,
