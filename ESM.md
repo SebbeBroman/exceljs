@@ -3,6 +3,7 @@
 This fork converts the library to native **ES modules** aimed at modern bundlers (Vite, SvelteKit, Rollup, esbuild), with **strict TypeScript** sources under `lib/` and `excel.ts`.
 
 - Development / tests load TypeScript directly (Vitest + Vite)
+- Specs and ad-hoc scripts under `spec/` and `test/` are TypeScript
 - `pnpm build` emits JavaScript to `dist/` for Node consumers and publish
 - Public API types remain in hand-written `index.d.ts` (plus `pnpm typecheck` for the implementation)
 

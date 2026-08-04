@@ -1,0 +1,24 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "noEmit": true,
+    "allowJs": false,
+    "rootDir": ".",
+    "strict": true,
+    "noImplicitAny": false,
+    "noImplicitReturns": false,
+    "noImplicitOverride": false
+  },
+  "include": ["spec/**/*.ts", "spec/**/*.d.ts", "lib/**/*.ts", "excel.ts", "index.d.ts"],
+  "exclude": [
+    "node_modules",
+    "build",
+    "dist",
+    "spec/out",
+    "spec/manual",
+    "spec/browser",
+    "spec/dist",
+    "test"
+  ]
+}

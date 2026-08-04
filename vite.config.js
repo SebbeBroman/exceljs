@@ -15,7 +15,7 @@ const root = path.dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
   staged: {
     // Keep pre-commit scoped to maintained surface
-    '{lib,scripts}/**/*.{ts,js,mjs},excel.ts,vite.config.js,package.json,index.d.ts,benchmark.js':
+    '{lib,scripts,spec}/**/*.{ts,js,mjs},excel.ts,vite.config.js,package.json,index.d.ts,benchmark.js':
       'vp check --fix',
   },
 
@@ -138,11 +138,11 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    setupFiles: [path.join(root, 'spec/config/vitest.setup.js')],
+    setupFiles: [path.join(root, 'spec/config/vitest.setup.ts')],
     include: [
-      'spec/unit/**/*.spec.js',
-      'spec/integration/**/*.spec.js',
-      'spec/end-to-end/**/*.spec.js',
+      'spec/unit/**/*.spec.ts',
+      'spec/integration/**/*.spec.ts',
+      'spec/end-to-end/**/*.spec.ts',
     ],
     exclude: [
       'node_modules/**',
@@ -151,7 +151,7 @@ export default defineConfig({
       'spec/manual/**',
       'spec/typescript/**',
       // Optional network e2e deps (express/got) — skip unless installed
-      'spec/end-to-end/express.spec.js',
+      'spec/end-to-end/express.spec.ts',
     ],
     testTimeout: 30000,
     hookTimeout: 30000,

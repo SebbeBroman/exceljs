@@ -68,6 +68,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
+    "typecheck:spec": "tsc -p tsconfig.spec.json --noEmit",
+    "typecheck:test": "tsc -p tsconfig.test.json --noEmit",
     "test": "vp test run",
     "test:watch": "vp test",
     "test:unit": "vp test run spec/unit",
