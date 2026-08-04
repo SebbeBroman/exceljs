@@ -80,4 +80,54 @@ describe('viewWorkbook', () => {
     }
     expect(err?.message).to.match(/Unsupported format/);
   });
+
+  it('reads only the requested sheet in a multi-sheet workbook', async () => {
+    const buf = await writeBuffer(
+      workbook()
+        .sheet('A', s => s.rows([['only-a'], ['a2']]))
+        .sheet('B', s => s.rows([['only-b'], ['b2'], ['b3']])),
+    );
+    const view = await viewWorkbook(buf, {format: 'xlsx'});
+    expect(view.sheetNames).to.deep.equal(['A', 'B']);
+    // Only touch sheet B — lazy path must not require materializing A
+    const rows = view.sheet('B').rows();
+    expect(rows).to.deep.equal([['only-b'], ['b2'], ['b3']]);
+    expect(view.sheet(1).rows({start: 2, end: 2})).to.deep.equal([['b2']]);
+  });
+
+  it('end-limited slice returns the first N rows', async () => {
+    const data = Array.from({length: 50}, (_, i) => [`r${i + 1}`, i + 1]);
+    const buf = await writeBuffer(workbook().sheet('Big').rows(data));
+    const view = await viewWorkbook(buf, {format: 'xlsx'});
+    const rows = view.sheet(0).rows({start: 1, end: 5});
+    expect(rows).to.have.length(5);
+    expect(rows[0]).to.deep.equal(['r1', '1']);
+    expect(rows[4]).to.deep.equal(['r5', '5']);
+  });
+
+  it('xlsx records() and workbook(view) round-trip simple values', async () => {
+    const buf = await writeBuffer(
+      workbook()
+        .sheet('Roster')
+        .rows([
+          ['Name', 'Score'],
+          ['Ada', 98],
+          ['Bob', 70],
+        ]),
+    );
+    const view = await viewWorkbook(buf, {format: 'xlsx'});
+    const recs = view.sheet(0).records({header: true});
+    expect(recs).to.deep.equal([
+      {Name: 'Ada', Score: '98'},
+      {Name: 'Bob', Score: '70'},
+    ]);
+    const out = await workbook(view).writeBuffer();
+    const again = await viewWorkbook(out, {format: 'xlsx'});
+    expect(again.sheetNames).to.deep.equal(['Roster']);
+    expect(again.sheet(0).rows()).to.deep.equal([
+      ['Name', 'Score'],
+      ['Ada', '98'],
+      ['Bob', '70'],
+    ]);
+  });
 });

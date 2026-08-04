@@ -42,7 +42,9 @@ builder.build()  →  { meta, sheets }   (no I/O)
 writeBuffer(plain | builder)
 ```
 
-## Read path (buffer → plain)
+## Read path
+
+### Full fidelity (`load` / `readFile`)
 
 ```
 load(bytes) / readFile(path)
@@ -58,6 +60,26 @@ load(bytes) / readFile(path)
 ```
 
 Edit loop: `workbook(await load(buf)).sheet(…).cell(…).writeBuffer()`.
+
+### Values-only / lazy view (`viewWorkbook` / `readRows`)
+
+```
+viewWorkbook(bytes) / readRows(bytes)
+        │
+        ▼
+   openLightPackage            unzip + workbook.xml + SST only
+        │                      (no sheet XML yet)
+        ▼
+   parseLightSheet(sheet, { start, end, cols })
+        │                      saxen, early-exit when end is set
+        ▼
+   string[][] | CellValue[][]  (no DocWorkbook, styles, drawings)
+```
+
+- **Lazy per sheet:** only the requested sheet’s XML is parsed.
+- **Early exit:** `rows({ end: 100 })` stops SAX after that row (does not walk the rest of `sheetData`).
+- **Tradeoff:** values only — no styles, merges, or theme. Use `load()` for full-fidelity re-encode.
+- Engine: `lib/read/xlsx-light.ts`.
 
 ## CSV
 

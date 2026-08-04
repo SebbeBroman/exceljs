@@ -61,4 +61,24 @@ describe('readRows', () => {
     // dense rows 1,2,4 — blank row 3 skipped
     expect(rows.map(r => r[0])).to.deep.equal(['x', '42', 'y']);
   });
+
+  it('honours end slice on xlsx', async () => {
+    const data = Array.from({length: 30}, (_, i) => [`r${i + 1}`, String(i + 1)]);
+    const xlsx = await writeBuffer(workbook().sheet('T').rows(data));
+    const rows = await readRows(xlsx, {format: 'xlsx', end: 3});
+    expect(rows).to.deep.equal([
+      ['r1', '1'],
+      ['r2', '2'],
+      ['r3', '3'],
+    ]);
+  });
+
+  it('end-limited large sheet returns first N rows', async () => {
+    const data = Array.from({length: 200}, (_, i) => [i + 1, `v${i + 1}`]);
+    const xlsx = await writeBuffer(workbook().sheet('L').rows(data));
+    const rows = await readRows(xlsx, {format: 'xlsx', start: 1, end: 10});
+    expect(rows).to.have.length(10);
+    expect(rows[0]).to.deep.equal(['1', 'v1']);
+    expect(rows[9]).to.deep.equal(['10', 'v10']);
+  });
 });

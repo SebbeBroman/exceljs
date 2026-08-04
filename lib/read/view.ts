@@ -10,11 +10,19 @@
  */
 
 import fastCsv from 'fast-csv';
-import {load} from '../xlsx/load.js';
 import type {CellValue, SheetModel, Workbook, WorkbookMeta} from '../model/types.js';
+import colCache from '../utils/col-cache.js';
 import {cellToDisplayString} from './cells.js';
 import {decodeText, sniffFormat, toUint8Array, type ViewFormat} from './format.js';
-import {resolveSlice, sheetExtent, type ColSlice} from './slice.js';
+import {parseA1Range, resolveSlice, sheetExtent, type ColSlice} from './slice.js';
+import {
+  openLightPackage,
+  parseLightSheet,
+  type LightPackage,
+  type LightParseSheetOptions,
+  type LightSheetGrid,
+  type LightSheetInfo,
+} from './xlsx-light.js';
 
 /** Brand for `workbook(view)` / `isWorkbookView`. */
 export const WORKBOOK_VIEW = Symbol.for('@sebbebroman/excel-ts.WorkbookView');
@@ -132,6 +140,23 @@ function gridToSheetModel(grid: string[][], name: string, id: number): SheetMode
   return {id, name, rows};
 }
 
+/** Convert light cell grid (absolute row numbers via blankrows) into SheetModel. */
+function lightGridToSheetModel(grid: LightSheetGrid, startRow = 1): SheetModel {
+  const rows: SheetModel['rows'] = [];
+  for (let r = 0; r < grid.rows.length; r++) {
+    const line = grid.rows[r] as CellValue[];
+    const cells: Record<number, {value: CellValue}> = {};
+    for (let c = 0; c < line.length; c++) {
+      const v = line[c];
+      if (v != null && v !== '') {
+        cells[c + 1] = {value: v};
+      }
+    }
+    rows.push({number: startRow + r, cells});
+  }
+  return {id: grid.id, name: grid.name, rows};
+}
+
 function buildRowMatrix(
   sheet: SheetModel,
   options: RowsOptions,
@@ -186,6 +211,55 @@ function headerKeys(
   });
 }
 
+/** Map view RowsOptions → light parse options (including A1 range). */
+export function rowsOptionsToLight(options: RowsOptions): LightParseSheetOptions {
+  let start = options.start;
+  let end = options.end;
+  let cols: LightParseSheetOptions['cols'] | undefined;
+
+  if (options.range) {
+    const r = parseA1Range(options.range);
+    start = start ?? r.rowStart;
+    end = end ?? r.rowEnd;
+    if (options.cols == null) {
+      cols = {start: r.colStart, end: r.colEnd};
+    }
+  }
+
+  if (cols == null && options.cols != null) {
+    const raw = options.cols;
+    if (Array.isArray(raw)) {
+      if (raw.length === 0) {
+        cols = [];
+      } else if (typeof raw[0] === 'number') {
+        cols = raw as number[];
+      } else {
+        cols = (raw as string[]).map(letter => {
+          const s = letter.trim().toUpperCase();
+          if (/^\d+$/.test(s)) return Number(s);
+          return colCache.l2n(s);
+        });
+      }
+    } else {
+      cols = raw;
+    }
+  }
+
+  return {
+    start,
+    end,
+    cols,
+    values: options.values ?? 'string',
+    blankrows: options.blankrows,
+    trim: options.trim,
+    defval: options.defval,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// CSV sheet view (eager model)
+// ---------------------------------------------------------------------------
+
 class SheetViewImpl implements SheetView {
   constructor(
     private readonly model: SheetModel,
@@ -213,54 +287,38 @@ class SheetViewImpl implements SheetView {
   }
 
   records(options?: RecordsOptions): Record<string, string | CellValue>[] {
-    const opts = options ?? {};
-    const asString = opts.values !== 'cell';
-    const headerOpt = opts.header === undefined ? true : opts.header;
+    return recordsFromMatrix(this.model, options ?? {});
+  }
+}
 
-    if (headerOpt === false) {
-      const data = buildRowMatrix(this.model, opts);
-      return data.matrix.map(line => {
-        const rec: Record<string, string | CellValue> = {};
-        line.forEach((v, i) => {
-          rec[`col${i + 1}`] = v;
-        });
-        return rec;
-      });
-    }
+function recordsFromMatrix(
+  model: SheetModel,
+  opts: RecordsOptions,
+): Record<string, string | CellValue>[] {
+  const asString = opts.values !== 'cell';
+  const headerOpt = opts.header === undefined ? true : opts.header;
 
-    if (typeof headerOpt === 'number') {
-      const headerMatrix = buildRowMatrix(this.model, {
-        ...opts,
-        start: headerOpt,
-        end: headerOpt,
-        blankrows: true,
+  if (headerOpt === false) {
+    const data = buildRowMatrix(model, opts);
+    return data.matrix.map(line => {
+      const rec: Record<string, string | CellValue> = {};
+      line.forEach((v, i) => {
+        rec[`col${i + 1}`] = v;
       });
-      const keys = headerKeys(headerMatrix.matrix[0] ?? [], asString);
-      const bodyStart = Math.max(opts.start ?? 1, headerOpt + 1);
-      const body = buildRowMatrix(this.model, {...opts, start: bodyStart});
-      return body.matrix.map(line => {
-        const rec: Record<string, string | CellValue> = {};
-        keys.forEach((k, i) => {
-          rec[k] = line[i] ?? (asString ? '' : null);
-        });
-        return rec;
-      });
-    }
+      return rec;
+    });
+  }
 
-    // header: true — first row of slice
-    const sliceStart = opts.start ?? 1;
-    const headerMatrix = buildRowMatrix(this.model, {
+  if (typeof headerOpt === 'number') {
+    const headerMatrix = buildRowMatrix(model, {
       ...opts,
-      start: sliceStart,
-      end: sliceStart,
+      start: headerOpt,
+      end: headerOpt,
       blankrows: true,
     });
-    if (!headerMatrix.matrix.length) return [];
-    const keys = headerKeys(headerMatrix.matrix[0]!, asString);
-    const body = buildRowMatrix(this.model, {
-      ...opts,
-      start: sliceStart + 1,
-    });
+    const keys = headerKeys(headerMatrix.matrix[0] ?? [], asString);
+    const bodyStart = Math.max(opts.start ?? 1, headerOpt + 1);
+    const body = buildRowMatrix(model, {...opts, start: bodyStart});
     return body.matrix.map(line => {
       const rec: Record<string, string | CellValue> = {};
       keys.forEach((k, i) => {
@@ -269,6 +327,28 @@ class SheetViewImpl implements SheetView {
       return rec;
     });
   }
+
+  // header: true — first row of slice
+  const sliceStart = opts.start ?? 1;
+  const headerMatrix = buildRowMatrix(model, {
+    ...opts,
+    start: sliceStart,
+    end: sliceStart,
+    blankrows: true,
+  });
+  if (!headerMatrix.matrix.length) return [];
+  const keys = headerKeys(headerMatrix.matrix[0]!, asString);
+  const body = buildRowMatrix(model, {
+    ...opts,
+    start: sliceStart + 1,
+  });
+  return body.matrix.map(line => {
+    const rec: Record<string, string | CellValue> = {};
+    keys.forEach((k, i) => {
+      rec[k] = line[i] ?? (asString ? '' : null);
+    });
+    return rec;
+  });
 }
 
 class WorkbookViewImpl implements WorkbookView {
@@ -308,9 +388,119 @@ class WorkbookViewImpl implements WorkbookView {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Lazy xlsx view (per-sheet parse)
+// ---------------------------------------------------------------------------
+
+class LazyXlsxSheetView implements SheetView {
+  constructor(
+    private readonly pkg: LightPackage,
+    private readonly ref: LightSheetInfo,
+    private readonly cache: Map<number, SheetModel>,
+  ) {}
+
+  get name(): string {
+    return this.ref.name;
+  }
+
+  get id(): number {
+    return this.ref.id;
+  }
+
+  get index(): number {
+    return this.ref.index;
+  }
+
+  /** Light path does not parse sheetProtection. */
+  get protected(): boolean {
+    return false;
+  }
+
+  /** Full sheet → SheetModel, cached after first materialize. */
+  private materialize(): SheetModel {
+    let model = this.cache.get(this.ref.index);
+    if (!model) {
+      const grid = parseLightSheet(this.pkg, this.ref.index, {
+        values: 'cell',
+        blankrows: true,
+      });
+      model = lightGridToSheetModel(grid, 1);
+      this.cache.set(this.ref.index, model);
+    }
+    return model;
+  }
+
+  rows(options?: RowsOptions & {values?: 'string'}): string[][];
+  rows(options: RowsOptions & {values: 'cell'}): CellValue[][];
+  rows(options?: RowsOptions): string[][] | CellValue[][] {
+    const opts = options ?? {};
+    const cached = this.cache.get(this.ref.index);
+    if (cached) {
+      const {matrix, asString} = buildRowMatrix(cached, opts);
+      return (asString ? matrix : matrix) as string[][] | CellValue[][];
+    }
+
+    // Lazy: parse only this sheet's XML with slice options (supports end early-stop).
+    const lightOpts = rowsOptionsToLight(opts);
+    const grid = parseLightSheet(this.pkg, this.ref.index, lightOpts);
+    const asString = opts.values !== 'cell';
+    if (asString) return grid.rows as string[][];
+    return grid.rows as CellValue[][];
+  }
+
+  records(options?: RecordsOptions): Record<string, string | CellValue>[] {
+    // records() issues multiple slices (header + body) — materialize once.
+    return recordsFromMatrix(this.materialize(), options ?? {});
+  }
+}
+
+class LazyXlsxWorkbookView implements WorkbookView {
+  readonly [WORKBOOK_VIEW] = true as const;
+  readonly format = 'xlsx' as const;
+  readonly meta: WorkbookMeta = {};
+  /** Per-sheet SheetModel after first full materialize. */
+  private readonly sheetCache = new Map<number, SheetModel>();
+
+  constructor(private readonly pkg: LightPackage) {}
+
+  get sheetNames(): string[] {
+    return this.pkg.sheetNames;
+  }
+
+  sheet(nameOrIndex: string | number = 0): SheetView {
+    let ref: LightSheetInfo | undefined;
+    if (typeof nameOrIndex === 'number') {
+      ref = this.pkg.sheets[nameOrIndex];
+    } else {
+      ref = this.pkg.sheets.find(s => s.name === nameOrIndex);
+    }
+    if (!ref) {
+      throw new Error(`Sheet not found: ${String(nameOrIndex)}`);
+    }
+    return new LazyXlsxSheetView(this.pkg, ref, this.sheetCache);
+  }
+
+  toJSON(): Workbook {
+    const sheets: SheetModel[] = [];
+    for (const ref of this.pkg.sheets) {
+      let model = this.sheetCache.get(ref.index);
+      if (!model) {
+        const grid = parseLightSheet(this.pkg, ref.index, {
+          values: 'cell',
+          blankrows: true,
+        });
+        model = lightGridToSheetModel(grid, 1);
+        this.sheetCache.set(ref.index, model);
+      }
+      sheets.push(model);
+    }
+    return {meta: this.meta, sheets};
+  }
+}
+
 /**
  * Open CSV or OOXML bytes as a read-only {@link WorkbookView}.
- * Does not import the write/builder graph.
+ * Does not import the write/builder graph or DocWorkbook.
  */
 export async function viewWorkbook(
   data: ArrayBuffer | Uint8Array | ArrayBufferView | string,
@@ -340,6 +530,6 @@ export async function viewWorkbook(
 
   const bytes =
     typeof data === 'string' ? new TextEncoder().encode(data) : (binaryOrText as Uint8Array);
-  const plain = await load(bytes);
-  return new WorkbookViewImpl('xlsx', plain);
+  const pkg = await openLightPackage(bytes);
+  return new LazyXlsxWorkbookView(pkg);
 }

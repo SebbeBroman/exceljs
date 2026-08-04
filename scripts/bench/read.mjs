@@ -43,11 +43,20 @@ function makeGrid(nRows, nCols) {
 }
 
 const grid = makeGrid(ROWS, COLS);
+const gridSmall = makeGrid(Math.min(50, ROWS), COLS);
 
 const bufBuilder = await writeBuffer(workbook().sheet('data').rows(grid), {
   useSharedStrings: true,
   useStyles: false,
 });
+
+// Multi-sheet: large first sheet + tiny second (lazy path should only parse Small).
+const bufMulti = await writeBuffer(
+  workbook()
+    .sheet('Big', s => s.rows(grid))
+    .sheet('Small', s => s.rows(gridSmall)),
+  {useSharedStrings: true, useStyles: false},
+);
 
 const exceljsWb = new ExcelJS.Workbook();
 const ws = exceljsWb.addWorksheet('data');
@@ -67,6 +76,7 @@ console.log(
     cols: COLS,
     fixtureBytes: {
       excelTsXlsx: bufBuilder.byteLength,
+      excelTsMulti: bufMulti.byteLength,
       exceljsXlsx: bufExceljs.byteLength ?? bufExceljs.length,
       csv: csvBytes.byteLength,
     },
@@ -96,6 +106,17 @@ group(`xlsx ${ROWS}×${COLS}`, () => {
     bench('excel-ts readRows()', async () => {
       const rows = await readRows(bufBuilder, {format: 'xlsx'});
       if (rows.length < 100) throw new Error('empty');
+    }).gc('inner');
+
+    bench('excel-ts readRows({ end: 100 })', async () => {
+      const rows = await readRows(bufBuilder, {format: 'xlsx', end: 100});
+      if (rows.length !== 100) throw new Error(`expected 100 got ${rows.length}`);
+    }).gc('inner');
+
+    bench('excel-ts multi: only Small sheet', async () => {
+      const view = await viewWorkbook(bufMulti, {format: 'xlsx'});
+      const rows = view.sheet('Small').rows({values: 'string'});
+      if (rows.length < 1) throw new Error('empty');
     }).gc('inner');
 
     bench('exceljs@4 xlsx.load()', async () => {
