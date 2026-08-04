@@ -2,7 +2,6 @@
 import express from 'express';
 import got from 'got';
 import testutils from '../utils/index.js';
-import {PassThrough} from 'node:stream';
 
 const Excel = verquire('exceljs');
 
@@ -33,8 +32,7 @@ describe('Express', () => {
       decompress: false,
     });
     const wb2 = new Excel.Workbook();
-    // TODO: Remove passThrough with got 10+ (requires node v10+)
-    await wb2.xlsx.read(res.pipe(new PassThrough()));
+    await wb2.xlsx.read(res);
     testutils.checkTestBook(wb2, 'xlsx');
   });
 });
