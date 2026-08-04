@@ -14,7 +14,6 @@ const outDir = join(root, 'build', 'browser-smoke');
 mkdirSync(outDir, {recursive: true});
 
 const fsAlias = join(root, 'lib/shims/fs-browser.ts');
-const cryptoAlias = join(root, 'lib/shims/crypto-browser.ts');
 
 const sharedBuild = {
   bundle: true,
@@ -29,7 +28,6 @@ const sharedBuild = {
   },
   alias: {
     fs: fsAlias,
-    crypto: cryptoAlias,
     'node:module': join(root, 'lib/shims/node-module-browser.ts'),
     module: join(root, 'lib/shims/node-module-browser.ts'),
   },

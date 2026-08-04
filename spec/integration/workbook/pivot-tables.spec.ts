@@ -1,6 +1,6 @@
 // @vitest-migrated
 import fs from 'node:fs';
-import JSZip from 'jszip';
+import {unzipSync} from 'fflate';
 import {promisify} from 'node:util';
 
 // *Note*: `fs.promises` not supported before Node.js 11.14.0;
@@ -52,9 +52,9 @@ describe('Workbook', () => {
 
       return workbook.xlsx.writeFile(TEST_XLSX_FILEPATH).then(async () => {
         const buffer = await fsReadFileAsync(TEST_XLSX_FILEPATH);
-        const zip = await JSZip.loadAsync(buffer);
+        const files = unzipSync(new Uint8Array(buffer));
         for (const filepath of PIVOT_TABLE_FILEPATHS) {
-          expect(zip.files[filepath]).to.not.be.undefined();
+          expect(files[filepath]).to.not.be.undefined();
         }
       });
     });
@@ -69,9 +69,9 @@ describe('Workbook', () => {
 
       return workbook.xlsx.writeFile(TEST_XLSX_FILEPATH).then(async () => {
         const buffer = await fsReadFileAsync(TEST_XLSX_FILEPATH);
-        const zip = await JSZip.loadAsync(buffer);
+        const files = unzipSync(new Uint8Array(buffer));
         for (const filepath of PIVOT_TABLE_FILEPATHS) {
-          expect(zip.files[filepath]).to.be.undefined();
+          expect(files[filepath]).to.be.undefined();
         }
       });
     });

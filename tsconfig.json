@@ -24,8 +24,7 @@
     "allowJs": true,
     "checkJs": false,
     "types": ["node"],
-    "rootDir": ".",
-    "baseUrl": "."
+    "rootDir": "."
   },
   "include": ["lib/**/*", "excel.js", "excel.ts", "index.d.ts"],
   "exclude": ["node_modules", "build", "dist", "spec", "test", "scripts"]

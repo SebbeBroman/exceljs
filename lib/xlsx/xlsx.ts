@@ -340,7 +340,7 @@ class XLSX {
   }
 
   async read(stream: Readable | AsyncIterable<unknown>, options?: XlsxReadOptions): Promise<XlsxWorkbookHost> {
-    const chunks = [];
+    const chunks: unknown[] = [];
     for await (const chunk of fromReadable(stream)) {
       chunks.push(chunk);
     }

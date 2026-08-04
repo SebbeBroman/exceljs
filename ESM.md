@@ -2,6 +2,7 @@
 
 This fork converts the library to native **ES modules** aimed at modern bundlers (Vite, SvelteKit, Rollup, esbuild), with **strict TypeScript** sources under `lib/` and `excel.ts`.
 
+- **Node.js:** `>=22` (supported [LTS](https://nodejs.org/en/about/previous-releases) lines and newer; Node 20 and older are EOL)
 - Development / tests load TypeScript directly (Vitest + Vite)
 - Specs and ad-hoc scripts under `spec/` and `test/` are TypeScript
 - `pnpm build` emits JavaScript to `dist/` for Node consumers and publish
@@ -120,10 +121,12 @@ const wb2 = new Workbook();
 await wb2.xlsx.load(await file.arrayBuffer());
 ```
 
-**Do not use in the browser:** `readFile` / `writeFile`, `exceljs/stream/xlsx`, path-based CSV,
-`worksheet.protect()` (Node crypto).
+**Do not use in the browser:** `readFile` / `writeFile`, `exceljs/stream/xlsx`, path-based CSV
+(those need Node `fs` / streams). Worksheet password protection (`worksheet.protect()`) **is**
+supported in the browser: salt uses Web Crypto `getRandomValues`, and the Excel SHA-512 spin-hash
+uses [`@noble/hashes`](https://github.com/paulmillr/noble-hashes) (pure JS, no Node `crypto` shim).
 
-`package.json` `browser` maps `fs` / `crypto` to shims so Vite can resolve those imports without Node.
+`package.json` `browser` maps `fs` / `module` to shims so Vite can resolve those imports without Node.
 
 Optional Vite bits:
 

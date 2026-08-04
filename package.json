@@ -14,7 +14,7 @@
     "url": "https://github.com/exceljs/exceljs.git"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "devEngines": {
     "packageManager": {
@@ -28,7 +28,6 @@
   "types": "./index.d.ts",
   "browser": {
     "fs": "./dist/lib/shims/fs-browser.js",
-    "crypto": "./dist/lib/shims/crypto-browser.js",
     "node:module": "./dist/lib/shims/node-module-browser.js",
     "module": "./dist/lib/shims/node-module-browser.js"
   },
@@ -97,17 +96,16 @@
     "typescript"
   ],
   "dependencies": {
+    "@noble/hashes": "^2.2.0",
     "dayjs": "^1.8.34",
     "fast-csv": "^5.0.7",
     "fflate": "^0.8.2",
-    "saxen": "^11.1.1",
-    "uuid": "^14.0.1"
+    "saxen": "^11.1.1"
   },
   "devDependencies": {
-    "@types/node": "^20.11.0",
-    "esbuild": "^0.25.8",
-    "jszip": "^3.10.1",
-    "typescript": "~5.8.3",
+    "@types/node": "^22.20.1",
+    "esbuild": "^0.28.1",
+    "typescript": "~7.0.2",
     "vite": "catalog:",
     "vite-plus": "catalog:"
   }

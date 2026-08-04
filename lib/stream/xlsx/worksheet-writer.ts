@@ -603,7 +603,7 @@ class WorksheetWriter {
       }
       if (password) {
         this.sheetProtection.algorithmName = 'SHA-512';
-        this.sheetProtection.saltValue = Encryptor.randomBytes(16).toString('base64');
+        this.sheetProtection.saltValue = Encryptor.randomBytesBase64(16);
         this.sheetProtection.spinCount =
           options && 'spinCount' in options ? options.spinCount : 100000; // allow user specified spinCount
         this.sheetProtection.hashValue = Encryptor.convertPasswordToHash(

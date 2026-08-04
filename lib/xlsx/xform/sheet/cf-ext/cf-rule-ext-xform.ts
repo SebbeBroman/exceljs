@@ -1,9 +1,13 @@
-import {v4 as uuidv4} from 'uuid';
 import BaseXform from '../../base-xform.js';
 import CompositeXform from '../../composite-xform.js';
 import type {XmlStreamLike, XmlNode, XformOptions} from '../../base-xform.js';
 import DatabarExtXform from './databar-ext-xform.js';
 import IconSetExtXform from './icon-set-ext-xform.js';
+
+/** UUID v4 in braces, uppercase (Excel x14:cfRule id style). */
+function newX14Id(): string {
+  return `{${globalThis.crypto.randomUUID()}}`.toUpperCase();
+}
 
 const extIcons: Record<string, boolean> = {
   '3Triangles': true,
@@ -51,7 +55,7 @@ class CfRuleExtXform extends CompositeXform<CfRuleExtModel> {
 
   override prepare(model?: CfRuleExtModel | null, _options?: XformOptions): void {
     if (model && CfRuleExtXform.isExt(model)) {
-      model.x14Id = `{${uuidv4()}}`.toUpperCase();
+      model.x14Id = newX14Id();
     }
   }
 
@@ -85,7 +89,7 @@ class CfRuleExtXform extends CompositeXform<CfRuleExtModel> {
     xmlStream.openNode(this.tag, {
       type: 'iconSet',
       priority: model.priority,
-      id: model.x14Id || `{${uuidv4()}}`,
+      id: model.x14Id || newX14Id(),
     });
 
     this.iconSetXform.render(xmlStream, model as never);
