@@ -1,8 +1,10 @@
 # @sebbebroman/excel-ts
 
-Read, manipulate, and write Excel workbooks (`.xlsx`) and CSV files.
+Read, manipulate, and write Excel workbooks (`.xlsx`) with a **builder-first** ESM API.
 
-ESM + TypeScript fork of [ExcelJS](https://github.com/exceljs/exceljs), aimed at modern Node and bundlers (Vite, SvelteKit, Rollup, esbuild) with tree-shakeable entry points.
+Fork of [ExcelJS](https://github.com/exceljs/exceljs) aimed at modern Node and bundlers (Vite, SvelteKit, Rollup, esbuild).
+
+> **5.0.0-alpha.1** — builder-first public API only (`.` + `./node`). Write, load, CSV, advanced sheet features, Node streaming. See [MIGRATION-5.0.md](./MIGRATION-5.0.md) and [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ## Install
 
@@ -17,103 +19,273 @@ pnpm add @sebbebroman/excel-ts
 ## Quick start
 
 ```ts
-import { Workbook } from '@sebbebroman/excel-ts';
+import { workbook } from '@sebbebroman/excel-ts';
 
-const workbook = new Workbook();
-const sheet = workbook.addWorksheet('Data');
-sheet.addRow(['name', 'value']);
-sheet.addRow(['alpha', 1]);
-
-await workbook.xlsx.writeFile('out.xlsx');
-// or: const buffer = await workbook.xlsx.writeBuffer();
+const buffer = await workbook({ creator: 'Reports' })
+  .sheet('Data')
+  .row(['name', 'value'])
+  .row(['alpha', 1])
+  .style('A1:B1', { font: { bold: true } })
+  .writeBuffer();
 ```
 
-Namespace-style default (closest to classic ExcelJS):
+### Node file write
 
 ```ts
-import ExcelJS from '@sebbebroman/excel-ts';
+import { workbook, writeFile } from '@sebbebroman/excel-ts/node';
 
-const workbook = new ExcelJS.Workbook();
+await writeFile(
+  'out.xlsx',
+  workbook().sheet('Data').rows([
+    ['name', 'value'],
+    ['alpha', 1],
+  ]),
+);
+```
+
+### Nested sheets
+
+```ts
+const buffer = await workbook()
+  .sheet('A', s => s.row([1]).row([2]))
+  .sheet('B', s => s.cell('A1', 'hello'))
+  .writeBuffer();
+```
+
+### Plain snapshot (no I/O)
+
+```ts
+const data = workbook().sheet('S').rows([[1, 2]]).build();
+// { meta, sheets: [...] }
+```
+
+### Load + edit
+
+```ts
+import { workbook, load } from '@sebbebroman/excel-ts';
+
+const data = await load(buffer); // plain { meta, sheets }
+const out = await workbook(data)
+  .sheet('Sheet1')
+  .cell('A1', 'updated')
+  .writeBuffer();
+```
+
+### Import CSV / xlsx — view + rows (recommended)
+
+```ts
+import { viewWorkbook } from '@sebbebroman/excel-ts';
+// writes are a separate import so pure readers tree-shake better:
+import { workbook, writeBuffer } from '@sebbebroman/excel-ts';
+
+const data = reader.result as ArrayBuffer;
+const view = await viewWorkbook(data, {
+  format: 'auto',
+  filename: file.name, // optional sniff (.csv / .xlsx / .xlsm)
+});
+
+view.sheetNames; // ['Sheet1', ...]
+const sheet = view.sheet(0);
+
+// Dense string grid with optional row/col slice (1-based inclusive)
+const rows = sheet.rows({
+  start: 1,
+  end: 100,
+  cols: { start: 1, end: 4 }, // or cols: ['A', 'D']
+  // values: 'cell' for CellValue[][]
+});
+
+// Header → objects
+const records = sheet.records({ header: true });
+
+// Opt-in write from the same view
+const buf = await writeBuffer(workbook(view));
+```
+
+One-liner sugar (same as first sheet `.rows({ values: 'string' })`):
+
+```ts
+import { readRows } from '@sebbebroman/excel-ts';
+const rows = await readRows(data, { filename: file.name, start: 1, end: 50 });
+```
+
+Supports **CSV** and **OOXML** (`.xlsx` / `.xlsm` / …). Not `.xls` / `.xlsb`.
+
+### Node file read
+
+```ts
+import { readFile, writeFile, workbook } from '@sebbebroman/excel-ts/node';
+
+const data = await readFile('in.xlsx');
+await writeFile('out.xlsx', workbook(data).sheet('Sheet1').cell('A1', 'x'));
+```
+
+### Node streaming write (large row counts)
+
+Prefer `streamWrite` when rows are produced incrementally or the sheet is huge — rows are committed as they are written (bounded memory). Not available from the browser entry.
+
+```ts
+import { streamWrite, streamRead } from '@sebbebroman/excel-ts/node';
+
+// Declarative: async iterable / array / generator
+await streamWrite('big.xlsx', {
+  useSharedStrings: true,
+  sheets: [
+    {
+      name: 'Data',
+      columns: [
+        { header: 'Id', key: 'id', width: 10 },
+        { header: 'Name', key: 'name', width: 24 },
+      ],
+      rows: (async function* () {
+        for (let i = 1; i <= 100_000; i++) {
+          yield { id: i, name: `row-${i}` };
+        }
+      })(),
+    },
+  ],
+});
+
+// Callback: full control over multi-sheet flow
+await streamWrite('report.xlsx', async w => {
+  const sheet = w.sheet('Events', {
+    columns: [{ header: 'Ts' }, { header: 'Msg' }],
+  });
+  for await (const row of eventSource()) {
+    sheet.row(row);
+  }
+});
+
+// Optional: stream rows back without a full plain model
+for await (const { sheetName, rowNumber, values } of streamRead('big.xlsx')) {
+  // values[1] is column A (legacy sparse layout)
+  console.log(sheetName, rowNumber, values[1]);
+}
+```
+
+### CSV
+
+```ts
+import { workbook, csv } from '@sebbebroman/excel-ts';
+
+// Parse text → sheet → xlsx
+const init = await csv.parse('name,value\nalpha,1');
+const buffer = await workbook().sheet('Data', init).writeBuffer();
+
+// Stringify active sheet
+const text = await workbook()
+  .sheet('Data')
+  .rows([
+    ['name', 'value'],
+    ['alpha', 1],
+  ])
+  .csv();
+```
+
+Node:
+
+```ts
+import { readCsvFile, writeCsvFile } from '@sebbebroman/excel-ts/node';
+
+const data = await readCsvFile('in.csv'); // plain Workbook (one sheet)
+await writeCsvFile('out.csv', data);
 ```
 
 ## Entry points
 
 | Import | Purpose |
 |--------|---------|
-| `@sebbebroman/excel-ts` | Core workbook API (xlsx read/write) |
-| `@sebbebroman/excel-ts/csv` | Optional CSV (`workbook.csv`) |
-| `@sebbebroman/excel-ts/stream/xlsx` | Streaming reader/writer |
+| `@sebbebroman/excel-ts` | Builder, `writeBuffer`, `load`, `csv`, enums (browser-safe) |
+| `@sebbebroman/excel-ts/node` | + `writeFile` / `readFile` / `streamWrite` / `streamRead` / `readCsvFile` / `writeCsvFile` |
 
-### CSV (optional)
+There are **no** other package exports (no `./csv`, no `./stream/xlsx`, no default `ExcelJS` class). Types resolve to [`excel.d.ts`](./excel.d.ts). Internal Doc Workbook / legacy stream classes are not public.
 
-CSV is not loaded by default so apps that never need it can drop `fast-csv` from the dependency graph when tree-shaking allows.
-
-```ts
-import { Workbook } from '@sebbebroman/excel-ts';
-import '@sebbebroman/excel-ts/csv'; // enables workbook.csv
-
-const workbook = new Workbook();
-await workbook.csv.writeFile('out.csv');
-```
-
-### Streaming XLSX
-
-```ts
-import { WorkbookWriter, WorkbookReader } from '@sebbebroman/excel-ts/stream/xlsx';
-```
+Pipeline overview: [ARCHITECTURE.md](./ARCHITECTURE.md) (op-log → materialize → XLSX).
 
 ## Browser / bundlers
 
-The core `Workbook` + `xlsx.load` / `xlsx.writeBuffer` path does not need Node polyfills (`readable-stream`, `buffer`, bare `process`). Zip uses [fflate](https://github.com/101arrowz/fflate). Sheet password protection uses [`@noble/hashes`](https://github.com/paulmillr/noble-hashes) and Web Crypto for salt.
-
-**Browser-friendly:** `writeBuffer` / `load`, cell styles, protection, most xlsx features.
-
-**Node-only:** `readFile` / `writeFile`, `@sebbebroman/excel-ts/stream/xlsx`, path-based CSV.
+Core path uses [fflate](https://github.com/101arrowz/fflate) for zip. No `readable-stream` / npm `buffer` polyfills required for `writeBuffer`.
 
 ```ts
-import { Workbook } from '@sebbebroman/excel-ts';
+import { workbook } from '@sebbebroman/excel-ts';
 
-const workbook = new Workbook();
-workbook.addWorksheet('Sheet1').addRow(['a', 1]);
-const buffer = await workbook.xlsx.writeBuffer();
+const buffer = await workbook()
+  .sheet('Sheet1')
+  .row(['a', 1])
+  .writeBuffer();
 // download via Blob…
-```
-
-Optional Vite notes:
-
-```js
-// vite.config.js
-export default defineConfig({
-  define: { global: 'globalThis' }, // some deps check `global`
-  ssr: { noExternal: ['@sebbebroman/excel-ts'] },
-});
 ```
 
 ### Tree-shaking
 
-Heavy pieces (drawings, tables, comments, pivot, conditional formatting, SAX) are loaded via dynamic `import()` when used. With Rollup/Vite code-splitting, write-only plain-cell apps keep a smaller initial chunk.
+- Named exports only (`workbook`, `writeBuffer`, `load`, `csv`, …).
+- `"sideEffects": false`.
+- Import `@sebbebroman/excel-ts/node` only in Node code paths.
+- `writeBuffer` and `load` are separate modules (read does not pull write).
+- `csv` / builder `.csv()` load `fast-csv` only when used (`.csv()` uses a dynamic import).
 
-In the browser, tables / images / pivots need either:
+Heavy OOXML features still load with the current encoder bridge; later milestones split more of the encoder. Optional drawings/tables/comments/pivots already use dynamic `import()`.
 
-- `await ensureDocFeatures()` once after import, or
-- an async `xlsx.load` / `writeBuffer` path that ensures them automatically.
+### Dense export optimizations
+
+When the builder op-log is **rectangular only** (`.sheet` / `.columns` / `.row` / `.rows` — no random `.cell` patches, styles, or merges), materialize uses a bulk `addRows` path and keeps compact cell storage (no full Cell class graph per value). Consecutive `.row()` calls are fused into one `.rows` op; same-address `.cell` writes are last-write-wins. If the builder never applied styles, `writeBuffer` defaults `useStyles: false` (override with `{ useStyles: true }`).
+
+### Benchmarks (vs `exceljs@4`)
+
+`exceljs` is a **devDependency** for head-to-head e2e benches (write / read / round-trip) via [mitata](https://github.com/evanwashere/mitata):
+
+```bash
+pnpm bench                 # Node: full suite (default 5000×8)
+pnpm bench:write
+pnpm bench:read
+pnpm bench:roundtrip
+pnpm bench -- --rows 20000
+pnpm bench -- --filter write --rows 1000
+pnpm bench:dense           # internal dense-write microbench
+pnpm bench:browser         # Chrome headless: size + write/read vs exceljs browser build
+pnpm bench:browser -- --rows 1000 --runs 5
+```
+
+Contenders (Node): **excel-ts builder**, **exceljs@4** (npm), optionally **excel-ts legacy DocWorkbook**.
+
+Contenders (browser): **excel-ts** esbuild browser bundle vs **exceljs** official `dist/exceljs.min.js` (their browser field). Node often favors exceljs; browser compares the polyfill-heavy UMD build against the ESM/fflate path. Needs Chrome (`CHROME_PATH` override supported).
+
+## Status (5.0.0-alpha.1)
+
+| Phase / feature | Status |
+|-----------------|--------|
+| Phase 1–2: builder + `writeBuffer` / Node `writeFile` | ✅ |
+| Phase 3: dense write path / size-minded materialize | ✅ |
+| Phase 4: `load` / `readFile` + edit loop | ✅ |
+| Phase 5: views, pageSetup, headerFooter, validations, CF, notes, protect, tables, images, defined names | ✅ |
+| Phase 6: named `csv`, Node streamWrite / streamRead | ✅ |
+| Phase 7: public API cleanup (builder-only exports + docs) | ✅ |
+| Builder write (rows, cells, styles, merges, columns) | ✅ |
+| CSV (`csv.parse` / `.csv()` / Node file helpers) | ✅ |
+| Streaming (`streamWrite` / `streamRead` on `./node`) | ✅ |
+| Sheet protection | ✅ write; load re-encodes hash (password not recoverable) |
+| Tables / images / defined names | ✅ write; load best-effort |
+| Pivot builder API | later |
+| Drop internal DocWorkbook bridge | later (implementation detail today) |
+
+### Bundle size (indicative)
+
+Measured by `pnpm test:browser-bundle` (esbuild minify, write-only builder path, CSV omitted):
+
+| Build | Size |
+|-------|------|
+| Single-file minified | ~287 KB (gzip ~80 KB) |
+| Code-split entry | ~191 KB |
+
+Re-run after encoder changes. Details: [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ## API
 
-Public types live in [`index.d.ts`](./index.d.ts). The workbook/worksheet surface is largely compatible with ExcelJS.
-
-For the full historical API walkthrough (styles, tables, images, validations, streaming options, and so on), see the [upstream ExcelJS README](https://github.com/exceljs/exceljs#interface). Where this package differs:
-
-- ESM only (`"type": "module"`)
-- Named exports preferred for tree-shaking
-- CSV and streaming xlsx are separate entry points
-- Node `>= 22`; no legacy browserify / ES5 publish path
+Public types: [`excel.d.ts`](./excel.d.ts). Migration from 4.x: [MIGRATION-5.0.md](./MIGRATION-5.0.md). Architecture: [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ## Attribution
 
-This package is derived from **ExcelJS**, originally created by [Guyon Roche](https://github.com/guyonroche) and maintained by [exceljs/exceljs](https://github.com/exceljs/exceljs) contributors.
-
-Substantial changes in this fork include: native ESM packaging, strict TypeScript sources, optional CSV/stream entry points, fflate-based zip, pure-JS sheet protection, and tree-shake oriented lazy loading.
+Derived from **ExcelJS**, originally created by [Guyon Roche](https://github.com/guyonroche) and maintained by [exceljs/exceljs](https://github.com/exceljs/exceljs) contributors.
 
 ## License
 

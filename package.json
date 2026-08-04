@@ -1,7 +1,7 @@
 {
   "name": "@sebbebroman/excel-ts",
-  "version": "4.5.0",
-  "description": "Read and write Excel workbooks (xlsx/csv). ESM TypeScript fork of ExcelJS for modern bundlers.",
+  "version": "5.0.0-alpha.1",
+  "description": "Builder-first Excel (xlsx) for modern bundlers. ESM TypeScript fork of ExcelJS.",
   "private": false,
   "license": "MIT",
   "type": "module",
@@ -38,7 +38,7 @@
   },
   "main": "./dist/excel.js",
   "module": "./dist/excel.js",
-  "types": "./index.d.ts",
+  "types": "./excel.d.ts",
   "browser": {
     "fs": "./dist/lib/shims/fs-browser.js",
     "node:module": "./dist/lib/shims/node-module-browser.js",
@@ -46,35 +46,31 @@
   },
   "exports": {
     ".": {
-      "types": "./index.d.ts",
+      "types": "./excel.d.ts",
       "browser": "./dist/excel.js",
       "import": "./dist/excel.js",
       "default": "./dist/excel.js"
     },
-    "./csv": {
-      "types": "./index.d.ts",
-      "import": "./dist/lib/csv-entry.js",
-      "default": "./dist/lib/csv-entry.js"
-    },
-    "./stream/xlsx": {
-      "types": "./index.d.ts",
-      "import": "./dist/lib/stream-xlsx-entry.js",
-      "default": "./dist/lib/stream-xlsx-entry.js"
+    "./node": {
+      "types": "./excel.d.ts",
+      "import": "./dist/node.js",
+      "default": "./dist/node.js"
     },
     "./package.json": "./package.json"
   },
-  "sideEffects": [
-    "./dist/lib/csv-entry.js",
-    "./lib/csv-entry.ts"
-  ],
+  "sideEffects": false,
   "files": [
     "dist",
     "lib",
     "excel.ts",
+    "excel.d.ts",
+    "node.ts",
     "LICENSE",
     "README.md",
     "README_zh.md",
-    "index.d.ts"
+    "index.d.ts",
+    "MIGRATION-5.0.md",
+    "ARCHITECTURE.md"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
@@ -93,6 +89,13 @@
     "format": "vp fmt",
     "format:check": "vp fmt --check",
     "benchmark": "node --expose-gc benchmark.js",
+    "bench": "pnpm build && node --expose-gc scripts/bench/e2e.mjs",
+    "bench:write": "pnpm build && node --expose-gc scripts/bench/e2e.mjs --filter write",
+    "bench:read": "pnpm build && node --expose-gc scripts/bench/e2e.mjs --filter read",
+    "bench:roundtrip": "pnpm build && node --expose-gc scripts/bench/e2e.mjs --filter roundtrip",
+    "bench:dense": "pnpm build && node --expose-gc scripts/bench-dense-write.mjs",
+    "bench:browser": "pnpm build && node scripts/bench/browser.mjs",
+    "bench:read": "pnpm build && node --expose-gc scripts/bench/read.mjs",
     "prepare": "vp config",
     "prepublishOnly": "pnpm typecheck && pnpm build"
   },
@@ -117,6 +120,9 @@
   "devDependencies": {
     "@types/node": "^22.20.1",
     "esbuild": "^0.28.1",
+    "exceljs": "^4.4.0",
+    "mitata": "^1.0.34",
+    "puppeteer-core": "^25.4.0",
     "typescript": "~7.0.2",
     "vite": "catalog:",
     "vite-plus": "catalog:"

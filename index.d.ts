@@ -1,3 +1,17 @@
+/**
+ * LEGACY typings — internal / reference only.
+ *
+ * Supported public API types live in `excel.d.ts` (builder-first). This file
+ * still describes the ExcelJS-era class surface (Workbook, Worksheet, Style,
+ * Font, …) used by:
+ *   - internal Doc model shapes
+ *   - type imports from excel.d.ts (Style/Font/PageSetup aliases)
+ *   - historical tests via verquire
+ *
+ * Do not treat `index.d.ts` as the package contract. Package `"types"` points
+ * at `excel.d.ts`.
+ */
+
 /** Binary payload: Node Buffer or Uint8Array (browser). */
 export type ExcelJSBuffer = Uint8Array;
 
