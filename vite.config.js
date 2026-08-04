@@ -126,7 +126,6 @@ export default defineConfig({
       'README.md',
       'README_zh.md',
       'TODO.txt',
-      'ESM.md',
       'MODEL.md',
       'UPGRADE-4.0.md',
       // One-shot migration helpers

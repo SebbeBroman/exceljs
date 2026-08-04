@@ -7,7 +7,7 @@ import {fileURLToPath} from 'node:url';
 import {expect as viExpect, beforeAll, afterAll, beforeEach, afterEach} from 'vite-plus/test';
 import {createChaiExpect} from './chai-expect.ts';
 import verquire from '../utils/verquire.ts';
-// Enable optional CSV API on Workbook (exceljs/csv entry)
+// Enable optional CSV API on Workbook (@sebbebroman/excel-ts/csv entry)
 import '../../lib/csv-entry.ts';
 // Preload lazy doc features so sync APIs (addTable/addImage/…) work under Vitest.
 // createRequire cannot load .ts sources; dynamic import via Vite can.

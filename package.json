@@ -1,17 +1,30 @@
 {
-  "name": "exceljs",
-  "version": "4.5.0-esm.0",
-  "description": "Excel Workbook Manager - Read and Write xlsx and csv Files. (ESM / tree-shakeable fork)",
+  "name": "@sebbebroman/excel-ts",
+  "version": "4.5.0",
+  "description": "Read and write Excel workbooks (xlsx/csv). ESM TypeScript fork of ExcelJS for modern bundlers.",
   "private": false,
   "license": "MIT",
   "type": "module",
   "author": {
-    "name": "Guyon Roche",
-    "email": "guyon@live.com"
+    "name": "SebbeBroman",
+    "url": "https://github.com/SebbeBroman"
   },
+  "contributors": [
+    {
+      "name": "Guyon Roche",
+      "email": "guyon@live.com"
+    },
+    {
+      "name": "ExcelJS contributors"
+    }
+  ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/exceljs/exceljs.git"
+    "url": "git+https://github.com/SebbeBroman/excel-ts.git"
+  },
+  "homepage": "https://github.com/SebbeBroman/excel-ts#readme",
+  "bugs": {
+    "url": "https://github.com/SebbeBroman/excel-ts/issues"
   },
   "engines": {
     "node": ">=22"
@@ -61,8 +74,7 @@
     "LICENSE",
     "README.md",
     "README_zh.md",
-    "index.d.ts",
-    "ESM.md"
+    "index.d.ts"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
@@ -86,14 +98,14 @@
   },
   "keywords": [
     "xlsx",
-    "json",
-    "csv",
     "excel",
-    "esm",
-    "tree-shaking",
+    "csv",
     "spreadsheet",
     "workbook",
-    "typescript"
+    "typescript",
+    "esm",
+    "tree-shaking",
+    "exceljs"
   ],
   "dependencies": {
     "@noble/hashes": "^2.2.0",

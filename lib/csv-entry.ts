@@ -2,9 +2,9 @@
  * Optional CSV support entry.
  * Side-effect: enables workbook.csv on Workbook.
  *
- *   import 'exceljs/csv';
+ *   import '@sebbebroman/excel-ts/csv';
  *   // or
- *   import {enableCsv, CSV} from 'exceljs/csv';
+ *   import {enableCsv, CSV} from '@sebbebroman/excel-ts/csv';
  */
 import CSV from './csv/csv.js';
 import Workbook from './doc/workbook.js';

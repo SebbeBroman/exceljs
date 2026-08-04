@@ -1,7 +1,7 @@
 /**
  * Streaming XLSX API entry — import only when needed so the main package can tree-shake it.
  *
- *   import {WorkbookWriter, WorkbookReader} from 'exceljs/stream/xlsx';
+ *   import {WorkbookWriter, WorkbookReader} from '@sebbebroman/excel-ts/stream/xlsx';
  */
 export {default as WorkbookWriter} from './stream/xlsx/workbook-writer.js';
 export {default as WorkbookReader} from './stream/xlsx/workbook-reader.js';

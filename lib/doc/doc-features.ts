@@ -70,8 +70,8 @@ function syncLoadNode(): boolean {
 
 function notReady(name: string): Error {
   return new Error(
-    `ExcelJS: ${name} support is not loaded yet. ` +
-      `Await ensureDocFeatures() once after importing exceljs before using tables, images, or pivots ` +
+    `@sebbebroman/excel-ts: ${name} support is not loaded yet. ` +
+      `Await ensureDocFeatures() once after importing the package before using tables, images, or pivots ` +
       `(xlsx load/write will ensure this automatically when needed).`,
   );
 }

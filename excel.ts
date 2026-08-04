@@ -1,12 +1,12 @@
 /**
- * ExcelJS ESM entry (Vite / SvelteKit / modern bundlers).
+ * Package entry for @sebbebroman/excel-ts.
  *
  * Prefer named imports for tree-shaking:
- *   import { Workbook } from 'exceljs';
+ *   import { Workbook } from '@sebbebroman/excel-ts';
  *
  * Optional features:
- *   import 'exceljs/csv';
- *   import { WorkbookWriter } from 'exceljs/stream/xlsx';
+ *   import '@sebbebroman/excel-ts/csv';
+ *   import { WorkbookWriter } from '@sebbebroman/excel-ts/stream/xlsx';
  */
 
 import Workbook from './lib/doc/workbook.js';
@@ -16,7 +16,7 @@ import {ensureDocFeatures} from './lib/doc/doc-features.js';
 
 export {Workbook, ModelContainer, ensureDocFeatures};
 
-// Stream APIs live at 'exceljs/stream/xlsx' so the main entry stays lean.
+// Stream APIs live at '@sebbebroman/excel-ts/stream/xlsx' so the main entry stays lean.
 
 // Enum values as named exports (matches index.d.ts usage patterns)
 export const {ValueType, FormulaType, RelationshipType, DocumentType, ReadingOrder, ErrorValue} =
@@ -24,8 +24,8 @@ export const {ValueType, FormulaType, RelationshipType, DocumentType, ReadingOrd
 
 export {enums};
 
-// Namespace-style default for drop-in migration from `const ExcelJS = require('exceljs')`
-// Note: does not include stream.* (import from 'exceljs/stream/xlsx') or csv (import 'exceljs/csv')
+// Namespace-style default (ExcelJS-compatible shape)
+// Note: does not include stream.* or csv — use the dedicated entry points
 const ExcelJS = {
   Workbook,
   ModelContainer,

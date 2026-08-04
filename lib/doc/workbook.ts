@@ -20,19 +20,19 @@ import type {WorksheetModelData, WorksheetOptions} from './worksheet.js';
 //  Manage String table, Hyperlink table, etc.
 //  Manage scaffolding for contained objects to write to/read from
 //
-// Note (ESM fork): CSV is optional so unused apps can tree-shake it.
-// Enable with: import 'exceljs/csv'  or  import {enableCsv} from 'exceljs/csv'
+// Note: CSV is optional so unused apps can tree-shake it.
+// Enable with: import '@sebbebroman/excel-ts/csv'  or  import {enableCsv} from '@sebbebroman/excel-ts/csv'
 
 /**
  * Constructor type for optional CSV module.
- * Parameter/return typed loosely so `exceljs/csv` can assign without circular
+ * Parameter/return typed loosely so the csv entry can assign without circular
  * CsvWorkbook ↔ Workbook constraints.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type CsvConstructor = new (workbook: any) => any;
 
 class Workbook {
-  /** Optional CSV class; set via enableCsv / `import 'exceljs/csv'`. */
+  /** Optional CSV class; set via enableCsv / `import '@sebbebroman/excel-ts/csv'`. */
   static CSV: CsvConstructor | null = null;
 
   category: string;
@@ -88,7 +88,7 @@ class Workbook {
   get csv(): InstanceType<CsvConstructor> {
     if (!Workbook.CSV) {
       throw new Error(
-        'CSV support is not loaded. Add `import "exceljs/csv"` (or `import { enableCsv } from "exceljs/csv"`) before using workbook.csv',
+        'CSV support is not loaded. Add `import "@sebbebroman/excel-ts/csv"` (or `import { enableCsv } from "@sebbebroman/excel-ts/csv"`) before using workbook.csv',
       );
     }
     if (!this._csv) this._csv = new Workbook.CSV(this);
