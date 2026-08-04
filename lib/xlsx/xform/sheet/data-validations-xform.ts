@@ -1,4 +1,4 @@
-import _ from '../../../utils/under-dash.js';
+import {isEqual} from '../../../utils/object.js';
 import utils from '../../../utils/utils.js';
 import colCache from '../../../utils/col-cache.js';
 import BaseXform from '../base-xform.js';
@@ -54,12 +54,14 @@ function assignBool(
 function optimiseDataValidations(model: DataValidationsModel): DataValidationEntry[] {
   // Squeeze alike data validations together into rectangular ranges
   // to reduce file size and speed up Excel load time
-  const dvList = _.map(model, (dataValidation, address) => ({
-    address: address as string,
-    dataValidation: dataValidation as DataValidationEntry,
-    marked: false,
-  })).sort((a, b) => _.strcmp(a.address, b.address));
-  const dvMap = _.keyBy(dvList, 'address');
+  const dvList = Object.keys(model)
+    .map(address => ({
+      address,
+      dataValidation: model[address],
+      marked: false,
+    }))
+    .sort((a, b) => (a.address < b.address ? -1 : a.address > b.address ? 1 : 0));
+  const dvMap = Object.fromEntries(dvList.map(dv => [dv.address, dv]));
   const matchCol = (
     addr: {row: number; col: number; address: string},
     height: number,
@@ -67,7 +69,7 @@ function optimiseDataValidations(model: DataValidationsModel): DataValidationEnt
   ): boolean => {
     for (let i = 0; i < height; i++) {
       const otherAddress = colCache.encodeAddress(addr.row + i, col);
-      if (!model[otherAddress] || !_.isEqual(model[addr.address], model[otherAddress])) {
+      if (!model[otherAddress] || !isEqual(model[addr.address], model[otherAddress])) {
         return false;
       }
     }
@@ -93,7 +95,7 @@ function optimiseDataValidations(model: DataValidationsModel): DataValidationEnt
         // iterate downwards - finding matching cells
         let height = 1;
         let otherAddress = colCache.encodeAddress(addr.row + height, addr.col);
-        while (model[otherAddress] && _.isEqual(dv.dataValidation, model[otherAddress])) {
+        while (model[otherAddress] && isEqual(dv.dataValidation, model[otherAddress])) {
           height++;
           otherAddress = colCache.encodeAddress(addr.row + height, addr.col);
         }

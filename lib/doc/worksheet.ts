@@ -1,5 +1,4 @@
 import {copyStyle} from '../utils/copy-style.js';
-import _ from '../utils/under-dash.js';
 import colCache from '../utils/col-cache.js';
 import Range from './range.js';
 import Row from './row.js';
@@ -345,9 +344,9 @@ class Worksheet {
   }
 
   eachColumnKey(f: (column: Column, key: string) => void): void {
-    _.each(this._keys, (column: Column, key: string | number) => {
-      f(column, String(key));
-    });
+    for (const [key, column] of Object.entries(this._keys)) {
+      f(column, key);
+    }
   }
 
   // get a single column by col number. If it doesn't exist, create it and any gaps before it
@@ -751,11 +750,11 @@ class Worksheet {
 
   _mergeCellsInternal(dimensions: Range, ignoreStyle?: boolean): void {
     // check cells aren't already merged
-    _.each(this._merges, (merge: Range) => {
+    for (const merge of Object.values(this._merges)) {
       if (merge.intersects(dimensions)) {
         throw new Error('Cannot merge already merged cells');
       }
-    });
+    }
 
     // apply merge
     const master = this.getCell(dimensions.top, dimensions.left);
@@ -787,7 +786,7 @@ class Worksheet {
 
   get hasMerges(): boolean {
     // return true if this._merges has a merge object
-    return _.some(this._merges, Boolean);
+    return Object.values(this._merges).some(Boolean);
   }
 
   // scan the range defined by ['tl:br'], [tl,br] or [t,l,b,r] and if any cell is part of a merge,
@@ -1062,9 +1061,9 @@ Please leave feedback at https://github.com/exceljs/exceljs/discussions/2575`,
     // ==========================================================
     // Merges
     model.merges = [];
-    _.each(this._merges, (merge: Range) => {
+    for (const merge of Object.values(this._merges)) {
       model.merges!.push(merge.range);
-    });
+    }
 
     return model;
   }
@@ -1079,11 +1078,11 @@ Please leave feedback at https://github.com/exceljs/exceljs/discussions/2575`,
   }
 
   _parseMergeCells(model: WorksheetModelData): void {
-    _.each(model.mergeCells, (merge: string) => {
+    for (const merge of model.mergeCells || []) {
       // Do not merge styles when importing an Excel file
       // since each cell may have different styles intentionally.
       this.mergeCellsWithoutStyle(merge);
-    });
+    }
   }
 
   set model(value: WorksheetModelData) {

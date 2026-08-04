@@ -1,4 +1,4 @@
-import _ from '../utils/under-dash.js';
+import {deepMerge} from '../utils/object.js';
 import type {Comment, CommentEditAs, RichText} from '../../index.js';
 
 /** Note payload: plain string or full Comment-like object. */
@@ -67,7 +67,7 @@ class Note {
         break;
     }
     // Suitable for all cell comments
-    return _.deepMerge({}, Note.DEFAULT_CONFIGS, value) as unknown as NoteModel;
+    return deepMerge({}, Note.DEFAULT_CONFIGS, value) as unknown as NoteModel;
   }
 
   set model(value: {note: Comment & {texts?: RichText[]}}) {

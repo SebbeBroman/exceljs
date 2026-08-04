@@ -1,4 +1,3 @@
-import _ from '../../../utils/under-dash.js';
 import BaseXform from '../base-xform.js';
 import type {XmlStreamLike, XmlNode} from '../base-xform.js';
 
@@ -24,7 +23,7 @@ class PrintOptionsXform extends BaseXform<PrintOptionsModel> {
         horizontalCentered: booleanToXml(model.horizontalCentered),
         verticalCentered: booleanToXml(model.verticalCentered),
       };
-      if (_.some(attributes, (value: unknown) => value !== undefined)) {
+      if (Object.values(attributes).some(value => value !== undefined)) {
         xmlStream.leafNode(this.tag, attributes);
       }
     }

@@ -1,7 +1,6 @@
 // @vitest-migrated
 import testUtils from '../../utils/index.js';
 
-const _ = verquire('utils/under-dash');
 const Excel = verquire('exceljs');
 
 describe('Worksheet', () => {
@@ -581,11 +580,11 @@ describe('Worksheet', () => {
 
           values.forEach((rowValues, index) => {
             const row = ws.getRow(index + 1);
-            _.each(rowValues, (value, key) => {
+            for (const [key, value] of Object.entries(rowValues)) {
               if (key !== 'dob') {
                 expect(row.getCell(key).value).to.equal(value);
               }
-            });
+            }
           });
 
           expect(ws.getColumn(1).width).to.equal(10);

@@ -3,7 +3,6 @@ import BooleanXform from '../simple/boolean-xform.js';
 import IntegerXform from '../simple/integer-xform.js';
 import StringXform from '../simple/string-xform.js';
 import UnderlineXform from './underline-xform.js';
-import _ from '../../../utils/under-dash.js';
 import BaseXform from '../base-xform.js';
 import type {XmlStreamLike, XmlNode} from '../base-xform.js';
 
@@ -55,9 +54,9 @@ class FontXform extends BaseXform<Record<string, unknown>> {
     const {map} = this;
 
     xmlStream.openNode(this.options.tagName);
-    _.each(this.map, (defn: FontMapEntry, tag: string | number) => {
-      map[tag as string].xform.render(xmlStream, model![defn.prop]);
-    });
+    for (const [tag, defn] of Object.entries(this.map)) {
+      map[tag].xform.render(xmlStream, model![defn.prop]);
+    }
     xmlStream.closeNode();
   }
 

@@ -1,5 +1,3 @@
-import _ from '../lib/utils/under-dash.ts';
-
 const a = [];
 a[3] = 'three';
 // a[2] = 'two';
@@ -8,6 +6,6 @@ a[1] = 'one';
 a[5] = 'five';
 a[0] = 'zero';
 
-_.each(a, i => {
+a.forEach(i => {
   console.log(i);
 });

@@ -1,4 +1,4 @@
-import _ from '../utils/under-dash.js';
+import {isEqual} from '../utils/object.js';
 import Enums from './enums.js';
 import colCache from '../utils/col-cache.js';
 import type {
@@ -191,7 +191,7 @@ class Column {
       this.width === other.width &&
       this.hidden === other.hidden &&
       this.outlineLevel === other.outlineLevel &&
-      _.isEqual(this.style, other.style)
+      isEqual(this.style, other.style)
     );
   }
 

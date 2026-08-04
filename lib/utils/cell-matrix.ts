@@ -1,4 +1,3 @@
-import _ from './under-dash.js';
 import colCache from './col-cache.js';
 import type {CellAddress, DecodeExResult, RangeAddressEx} from './col-cache.js';
 
@@ -114,9 +113,9 @@ class CellMatrix {
   forEach(
     callback: (cell: MatrixCell, rowNumber: number, colNumber: number) => void,
   ): void {
-    _.each(this.sheets, (_sheet, sheetName) => {
-      this.forEachInSheet(sheetName as string, callback);
-    });
+    for (const sheetName of Object.keys(this.sheets)) {
+      this.forEachInSheet(sheetName, callback);
+    }
   }
 
   map<T>(callback: (cell: MatrixCell) => T): T[] {
@@ -188,11 +187,11 @@ class CellMatrix {
       for (let i = 0; i < numInsert; i++) {
         inserts.push(null);
       }
-      _.each(sheet, row => {
+      for (const row of sheet) {
         if (row) {
           row.splice(start, numDelete, ...inserts);
         }
-      });
+      }
     }
   }
 }

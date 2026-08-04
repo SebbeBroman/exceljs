@@ -1,4 +1,4 @@
-import _ from '../lib/utils/under-dash.ts';
+import {isEqual} from '../lib/utils/object.ts';
 import HrStopwatch from './utils/hr-stopwatch.ts';
 import Excel from '../excel.ts';
 
@@ -172,23 +172,23 @@ const assert = function(value, failMessage, passMessage) {
 const assertFont = function(value, expected, address) {
   // console.log('assertFont', address, JSON.stringify(value), JSON.stringify(expected));
   assert(value, `Expected to find font object at ${address}`);
-  _.each(expected, (item, name) => {
+  for (const name of Object.keys(expected)) {
     assert(
       value[name] === expected[name],
       `Expected ${address}.font[${name}] to be ${expected[name]}, but was ${value[name]}`
     );
-  });
-  _.each(value, (item, name) => {
+  }
+  for (const name of Object.keys(value)) {
     assert(
       expected[name],
       `Found unexpected ${address}.font[${name}] = ${value[name]}`
     );
-  });
+  }
 };
 
 const assertEqual = function(address, name, value, expected) {
   assert(
-    _.isEqual(value, expected),
+    isEqual(value, expected),
     `Expected Cell[${address}] ${name} to be ${JSON.stringify(
       expected
     )}, was ${JSON.stringify(value)}`
@@ -313,7 +313,7 @@ wb.xlsx.readFile(filename).then(() => {
     ws.getRow(11).height === 40,
     `Expected Row 11 to be height 40, was ${ws.getRow(11).height}`
   );
-  _.each(alignments, (alignment, index) => {
+  alignments.forEach((alignment, index) => {
     const rowNumber = 11;
     const colNumber = index + 1;
     const cell = ws.getCell(rowNumber, colNumber);
@@ -322,7 +322,7 @@ wb.xlsx.readFile(filename).then(() => {
       `Expected Cell[${rowNumber},${colNumber}] to be ${alignment.text}, was ${cell.value}`
     );
     assert(
-      _.isEqual(cell.alignment, alignment.alignment),
+      isEqual(cell.alignment, alignment.alignment),
       `Expected Cell[${rowNumber},${colNumber}] alignment to be ${JSON.stringify(
         alignment.alignment
       )}, was ${JSON.stringify(cell.alignment)}`
@@ -335,25 +335,25 @@ wb.xlsx.readFile(filename).then(() => {
     `Expected Row 12 to be height 40, was ${row12.height}`
   );
   assert(
-    _.isEqual(row12.getCell(1).fill, fills.blueWhiteHGrad),
+    isEqual(row12.getCell(1).fill, fills.blueWhiteHGrad),
     `Expected [12,1] fill to be ${JSON.stringify(
       fills.blueWhiteHGrad
     )}, was ${JSON.stringify(row12.getCell(1).fill)}`
   );
   assert(
-    _.isEqual(row12.getCell(2).fill, fills.redDarkVertical),
+    isEqual(row12.getCell(2).fill, fills.redDarkVertical),
     `Expected [12,2] fill to be ${JSON.stringify(
       fills.redDarkVertical
     )}, was ${JSON.stringify(row12.getCell(2).fill)}`
   );
   assert(
-    _.isEqual(row12.getCell(3).fill, fills.redGreenDarkTrellis),
+    isEqual(row12.getCell(3).fill, fills.redGreenDarkTrellis),
     `Expected [12,3] fill to be ${JSON.stringify(
       fills.redGreenDarkTrellis
     )}, was ${JSON.stringify(row12.getCell(3).fill)}`
   );
   assert(
-    _.isEqual(row12.getCell(4).fill, fills.rgbPathGrad),
+    isEqual(row12.getCell(4).fill, fills.rgbPathGrad),
     `Expected [12,4] fill to be ${JSON.stringify(
       fills.rgbPathGrad
     )}, was ${JSON.stringify(row12.getCell(4).fill)}`

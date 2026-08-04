@@ -1,4 +1,3 @@
-import _ from '../../../utils/under-dash.js';
 import defaultNumFormats from '../../defaultnumformats.js';
 import BaseXform from '../base-xform.js';
 import type {XmlStreamLike, XmlNode} from '../base-xform.js';
@@ -10,12 +9,12 @@ export interface NumFmtModel {
 
 function hashDefaultFormats(): Record<string, number> {
   const hash: Record<string, number> = {};
-  _.each(defaultNumFormats, (dnf: {f?: string}, id: string | number) => {
+  for (const [id, dnf] of Object.entries(defaultNumFormats as Record<string, {f?: string}>)) {
     if (dnf.f) {
-      hash[dnf.f] = parseInt(String(id), 10);
+      hash[dnf.f] = parseInt(id, 10);
     }
     // at some point, add the other cultures here...
-  });
+  }
   return hash;
 }
 const defaultFmtHash = hashDefaultFormats();

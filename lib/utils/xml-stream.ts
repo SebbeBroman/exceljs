@@ -1,4 +1,3 @@
-import _ from './under-dash.js';
 import utils from './utils.js';
 
 // constants
@@ -22,11 +21,11 @@ function pushAttribute(xml: string[], name: string, value: unknown): void {
 function pushAttributes(xml: string[], attributes: XmlAttributes): void {
   if (attributes) {
     const tmp: string[] = [];
-    _.each(attributes as Record<string, unknown>, (value, name) => {
+    for (const [name, value] of Object.entries(attributes)) {
       if (value !== undefined) {
-        pushAttribute(tmp, name as string, value);
+        pushAttribute(tmp, name, value);
       }
-    });
+    }
     xml.push(tmp.join(''));
   }
 }

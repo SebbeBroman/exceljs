@@ -1,4 +1,3 @@
-import _ from '../utils/under-dash.js';
 import Enums from './enums.js';
 import colCache from '../utils/col-cache.js';
 import Cell from './cell.js';
@@ -399,7 +398,7 @@ class Row {
 
   // returns true if the row includes at least one cell with a value
   get hasValues(): boolean {
-    return _.some(this._cells, (entry: CellSlot | undefined) => {
+    return this._cells.some((entry: CellSlot | undefined) => {
       if (!entry) return false;
       if (isCompact(entry)) {
         return entry.type !== Enums.ValueType.Null;

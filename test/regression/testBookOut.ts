@@ -1,4 +1,3 @@
-import _ from '../../lib/utils/under-dash.ts';
 import ExcelJS from '../../lib/exceljs.nodejs.ts';
 import HrStopwatch from './utils/hr-stopwatch.ts';
 
@@ -248,7 +247,7 @@ ws.getCell('C10').value = '<a>';
 ws.getCell('D10').value = '><';
 
 ws.getRow(11).height = 40;
-_.each(alignments, (alignment, index) => {
+alignments.forEach((alignment, index) => {
   const rowNumber = 11;
   const colNumber = index + 1;
   const cell = ws.getCell(rowNumber, colNumber);

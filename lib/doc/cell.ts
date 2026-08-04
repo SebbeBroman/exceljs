@@ -1,6 +1,6 @@
 import {slideFormula} from '../utils/shared-formula.js';
 import colCache from '../utils/col-cache.js';
-import _ from '../utils/under-dash.js';
+import {escapeHtml} from '../utils/escape-html.js';
 import Enums from './enums.js';
 import Note from './note.js';
 import type {
@@ -449,7 +449,7 @@ class Cell {
   }
 
   get html(): string {
-    return _.escapeHtml(this.text);
+    return escapeHtml(this.text);
   }
 
   toString(): string {

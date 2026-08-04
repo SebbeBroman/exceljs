@@ -1,9 +1,9 @@
 // @vitest-migrated
 import util from 'node:util';
 
-const _ = verquire('utils/under-dash');
+const {isEqual} = verquire('utils/object');
 
-describe('under-dash', () => {
+describe('object helpers', () => {
   describe('isEqual', () => {
     const values = [
       0,
@@ -45,7 +45,7 @@ describe('under-dash', () => {
           const assertion = `${showVal(a)} ${i === j ? '==' : '!='} ${showVal(
             b
           )}`;
-          expect(_.isEqual(a, b)).to.equal(i === j, `expected ${assertion}`);
+          expect(isEqual(a, b)).to.equal(i === j, `expected ${assertion}`);
         }
       }
     });
@@ -59,7 +59,7 @@ describe('under-dash', () => {
           const assertion = `${showVal(a)} ${i === j ? '==' : '!='} ${showVal(
             b
           )}`;
-          expect(_.isEqual(a, b)).to.equal(i === j, `expected ${assertion}`);
+          expect(isEqual(a, b)).to.equal(i === j, `expected ${assertion}`);
         }
       }
     });
@@ -73,7 +73,7 @@ describe('under-dash', () => {
           const assertion = `${showVal(a)} ${i === j ? '==' : '!='} ${showVal(
             b
           )}`;
-          expect(_.isEqual(a, b)).to.equal(i === j, `expected ${assertion}`);
+          expect(isEqual(a, b)).to.equal(i === j, `expected ${assertion}`);
         }
       }
     });

@@ -1,4 +1,3 @@
-import _ from '../utils/under-dash.js';
 import colCache from '../utils/col-cache.js';
 import CellMatrix from '../utils/cell-matrix.js';
 import Range from './range.js';
@@ -79,17 +78,17 @@ class DefinedNames {
   }
 
   removeAllNames(location: DefinedNameLocation | DecodeExResult): void {
-    _.each(this.matrixMap, (matrix: CellMatrix) => {
+    for (const matrix of Object.values(this.matrixMap)) {
       matrix.removeCellEx(location as CellAddress);
-    });
+    }
   }
 
   forEach(callback: (name: string, cell: DefinedNameCell) => void): void {
-    _.each(this.matrixMap, (matrix: CellMatrix, name: string | number) => {
+    for (const [name, matrix] of Object.entries(this.matrixMap)) {
       matrix.forEach((cell: DefinedNameCell) => {
-        callback(String(name), cell);
+        callback(name, cell);
       });
-    });
+    }
   }
 
   // get all the names of a cell
@@ -98,11 +97,9 @@ class DefinedNames {
   }
 
   getNamesEx(address: DefinedNameLocation | DecodeExResult): string[] {
-    return _.map(
-      this.matrixMap,
-      (matrix: CellMatrix, name: string | number) =>
-        matrix.findCellEx(address as DecodeExResult) && String(name),
-    ).filter(Boolean) as string[];
+    return Object.entries(this.matrixMap)
+      .map(([name, matrix]) => matrix.findCellEx(address as DecodeExResult) && name)
+      .filter(Boolean) as string[];
   }
 
   _explore(matrix: CellMatrix, cell: DefinedNameCell): Range {
@@ -186,25 +183,24 @@ class DefinedNames {
   }
 
   spliceRows(sheetName: string, start: number, numDelete: number, numInsert: number): void {
-    _.each(this.matrixMap, (matrix: CellMatrix) => {
+    for (const matrix of Object.values(this.matrixMap)) {
       matrix.spliceRows(sheetName, start, numDelete, numInsert);
       this.normaliseMatrix(matrix, sheetName);
-    });
+    }
   }
 
   spliceColumns(sheetName: string, start: number, numDelete: number, numInsert: number): void {
-    _.each(this.matrixMap, (matrix: CellMatrix) => {
+    for (const matrix of Object.values(this.matrixMap)) {
       matrix.spliceColumns(sheetName, start, numDelete, numInsert);
       this.normaliseMatrix(matrix, sheetName);
-    });
+    }
   }
 
   get model(): DefinedNamesModel {
     // To get names per cell - just iterate over all names finding cells if they exist
-    return _.map(
-      this.matrixMap,
-      (matrix: CellMatrix, name: string | number) => this.getRanges(String(name), matrix),
-    ).filter((definedName: DefinedNameRanges) => definedName.ranges.length) as DefinedNamesModel;
+    return Object.entries(this.matrixMap)
+      .map(([name, matrix]) => this.getRanges(name, matrix))
+      .filter((definedName: DefinedNameRanges) => definedName.ranges.length) as DefinedNamesModel;
   }
 
   set model(value: DefinedNamesModel) {

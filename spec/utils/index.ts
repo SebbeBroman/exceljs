@@ -3,7 +3,6 @@ import __req_0 from './test-data-validation-sheet.js';
 import __req_1 from './test-conditional-formatting-sheet.js';
 import __req_2 from './test-values-sheet.js';
 import __req_3 from './test-spliced-sheet.js';
-import _ from './under-dash.js';
 import tools from './tools.js';
 import testWorkbookReader from './test-workbook-reader.js';
 import __json_0 from './data/views.json';
@@ -23,6 +22,17 @@ const testSheets = {
   values: __req_2,
   splice: __req_3,
 };
+
+/** Resolve a dotted path on an object (e.g. `splice.rows.removeOnly`). */
+function getPath(obj, path) {
+  const parts = typeof path === 'string' ? path.split('.') : path;
+  let cur = obj;
+  for (const part of parts) {
+    if (cur == null) return undefined;
+    cur = cur[part];
+  }
+  return cur;
+}
 
 function getOptions(docType, options) {
   let result;
@@ -100,7 +110,9 @@ function createSheetMock() {
       delete this._keys[key];
     },
     eachColumnKey(f) {
-      _.each(this._keys, f);
+      for (const [key, value] of Object.entries(this._keys)) {
+        f(value, key);
+      }
     },
     eachRow(opt, f) {
       if (!f) {
@@ -144,7 +156,7 @@ const testUtils = {
     ];
 
     sheets.forEach(sheet => {
-      const testSheet = _.get(testSheets, sheet);
+      const testSheet = getPath(testSheets, sheet);
       testSheet.addSheet(workbook, options);
     });
 
@@ -172,7 +184,7 @@ const testUtils = {
     }
 
     sheets.forEach(sheet => {
-      const testSheet = _.get(testSheets, sheet);
+      const testSheet = getPath(testSheets, sheet);
       testSheet.checkSheet(workbook, options);
     });
   },

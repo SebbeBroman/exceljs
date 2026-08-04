@@ -1,7 +1,7 @@
 // @vitest-migrated
 import CompyXform from './compy-xform.js';
 import {PassThrough} from 'node:stream';
-import {cloneDeep, each} from '../../../utils/under-dash.js';
+import {cloneDeep} from '../../../utils/clone-deep.js';
 
 const parseSax = verquire('utils/parse-sax');
 const XmlStream = verquire('utils/xml-stream');
@@ -198,10 +198,10 @@ const its = {
 };
 
 function testXform(expectations) {
-  each(expectations, expectation => {
+  expectations.forEach(expectation => {
     const tests = getExpectation(expectation, 'tests');
     describe(expectation.title, () => {
-      each(tests, test => {
+      tests.forEach(test => {
         its[test](expectation);
       });
     });

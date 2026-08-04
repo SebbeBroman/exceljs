@@ -1,6 +1,5 @@
 import {EventEmitter} from '../../utils/event-emitter.js';
 import parseSax from '../../utils/parse-sax.js';
-import _ from '../../utils/under-dash.js';
 import utils from '../../utils/utils.js';
 import colCache from '../../utils/col-cache.js';
 import Dimensions from '../../doc/range.js';
@@ -131,8 +130,9 @@ class WorksheetReader extends EventEmitter {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   eachColumnKey(f: (value: any, key: string) => void): void {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    _.each(this._keys, f as any);
+    for (const [key, value] of Object.entries(this._keys)) {
+      f(value, key);
+    }
   }
 
   async read(): Promise<void> {

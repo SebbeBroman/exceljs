@@ -1,4 +1,3 @@
-import _ from '../../../utils/under-dash.js';
 import colCache from '../../../utils/col-cache.js';
 import XmlStream from '../../../utils/xml-stream.js';
 import RelType from '../../rel-type.js';
@@ -510,9 +509,11 @@ class WorkSheetXform extends BaseXform<WorksheetXformModel> {
     }
 
     if (node.name === 'worksheet') {
-      _.each(this.map, (xform: BaseXform | EmptyConditionalFormattingsXform | EmptyExtLstXform) => {
+      for (const xform of Object.values(this.map) as Array<
+        BaseXform | EmptyConditionalFormattingsXform | EmptyExtLstXform
+      >) {
         xform.reset();
-      });
+      }
       return true;
     }
 

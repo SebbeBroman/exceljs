@@ -1,4 +1,3 @@
-import _ from '../../../utils/under-dash.js';
 import BaseXform from '../base-xform.js';
 import type {XmlStreamLike, XmlNode} from '../base-xform.js';
 
@@ -30,7 +29,7 @@ class SheetFormatPropertiesXform extends BaseXform<SheetFormatPropertiesModel> {
         attributes.customHeight = '1';
       }
 
-      if (_.some(attributes, (value: unknown) => value !== undefined)) {
+      if (Object.values(attributes).some(value => value !== undefined)) {
         xmlStream.leafNode('sheetFormatPr', attributes);
       }
     }

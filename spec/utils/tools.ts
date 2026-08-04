@@ -1,5 +1,4 @@
 // @vitest-migrated
-import _ from './under-dash.js';
 
 const tools = {
   dtMatcher: /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[.]\d{3}Z$/,
@@ -15,11 +14,19 @@ const tools = {
     } else {
       return o;
     }
-    _.each(o, (value, name) => {
-      if (value !== undefined) {
-        clone[name] = fix(value);
+    if (Array.isArray(o)) {
+      o.forEach((value, name) => {
+        if (value !== undefined) {
+          clone[name] = fix(value);
+        }
+      });
+    } else {
+      for (const [name, value] of Object.entries(o)) {
+        if (value !== undefined) {
+          clone[name] = fix(value);
+        }
       }
-    });
+    }
     return clone;
   },
 

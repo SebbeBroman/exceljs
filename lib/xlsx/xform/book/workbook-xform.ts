@@ -1,4 +1,3 @@
-import _ from '../../../utils/under-dash.js';
 import colCache from '../../../utils/col-cache.js';
 import XmlStream from '../../../utils/xml-stream.js';
 import BaseXform from '../base-xform.js';
@@ -213,11 +212,11 @@ class WorkbookXform extends BaseXform<WorkbookModel> {
 
     // reconcile print areas
     const definedNames: unknown[] = [];
-    _.each(m.definedNames as {name: string; localSheetId: number; ranges: string[]}[] | undefined, (definedName: {
-      name: string;
-      localSheetId: number;
-      ranges: string[];
-    }) => {
+    const definedNameList =
+      (m.definedNames as
+        | {name: string; localSheetId: number; ranges: string[]}[]
+        | undefined) || [];
+    for (const definedName of definedNameList) {
       if (definedName.name === '_xlnm.Print_Area') {
         worksheet = worksheets[definedName.localSheetId];
         if (worksheet) {
@@ -266,7 +265,7 @@ class WorkbookXform extends BaseXform<WorkbookModel> {
       } else {
         definedNames.push(definedName);
       }
-    });
+    }
     m.definedNames = definedNames;
 
     // used by sheets to build their image models

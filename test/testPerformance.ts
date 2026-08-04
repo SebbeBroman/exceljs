@@ -1,5 +1,4 @@
 import fs from 'node:fs';
-import _ from '../lib/utils/under-dash.ts';
 import HrStopwatch from './utils/hr-stopwatch.ts';
 import Excel from '../lib/exceljs.nodejs.ts';
 
@@ -178,13 +177,13 @@ function runTests(options) {
 
 let mainPromise = Promise.resolve();
 // var mainPromise = execute(125, 'stream', 'plain', 'own');
-_.each(counts, count => {
+for (const count of counts) {
   mainPromise = mainPromise.then(() => {
     resultSheet.addRow().getCell('count').value = count;
   });
-  _.each(workbooks, workbook => {
-    _.each(styles, style => {
-      _.each(strings, str => {
+  for (const workbook of workbooks) {
+    for (const style of styles) {
+      for (const str of strings) {
         mainPromise = mainPromise.then(
           runTests({
             count,
@@ -193,13 +192,13 @@ _.each(counts, count => {
             str,
           })
         );
-      });
-    });
-  });
+      }
+    }
+  }
   mainPromise = mainPromise.then(() => {
     resultSheet.lastRow.commit();
   });
-});
+}
 
 mainPromise = mainPromise
   .then(() => resultBook.commit())

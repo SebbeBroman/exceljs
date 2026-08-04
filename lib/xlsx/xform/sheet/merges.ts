@@ -1,4 +1,3 @@
-import _ from '../../../utils/under-dash.js';
 import Range from '../../../doc/range.js';
 import colCache from '../../../utils/col-cache.js';
 import Enums from '../../../doc/enums.js';
@@ -39,12 +38,12 @@ class Merges {
   }
 
   get mergeCells(): string[] {
-    return _.map(this.merges, (merge: Range) => merge.range);
+    return Object.values(this.merges).map((merge: Range) => merge.range);
   }
 
   reconcile(mergeCells: string[], rows: MergeRowLike[]): void {
     // reconcile merge list with merge cells
-    _.each(mergeCells, (merge: string) => {
+    for (const merge of mergeCells) {
       const dimensions = colCache.decode(merge) as {
         top: number;
         left: number;
@@ -68,7 +67,7 @@ class Merges {
           }
         }
       }
-    });
+    }
   }
 
   getMasterAddress(address: string): string | undefined {

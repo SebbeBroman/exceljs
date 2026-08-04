@@ -1,4 +1,3 @@
-import _ from '../../utils/under-dash.js';
 import RelType from '../../xlsx/rel-type.js';
 import colCache from '../../utils/col-cache.js';
 import Encryptor from '../../utils/encryptor.js';
@@ -397,8 +396,9 @@ class WorksheetWriter {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   eachColumnKey(f: (value: any, key: string) => void): void {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    _.each(this._keys, f as any);
+    for (const [key, value] of Object.entries(this._keys)) {
+      f(value, key);
+    }
   }
 
   // get a single column by col number. If it doesn't exist, it and any gaps before it

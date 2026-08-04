@@ -1,19 +1,17 @@
-import _ from '../../lib/utils/under-dash.ts';
-
 function ColumnSum(columns) {
   this.columns = columns;
   this.sums = [];
   this.count = 0;
-  _.each(this.columns, column => {
+  for (const column of this.columns) {
     this.sums[column] = 0;
-  });
+  }
 }
 
 ColumnSum.prototype = {
   add(row) {
-    _.each(this.columns, column => {
+    for (const column of this.columns) {
       this.sums[column] += row.getCell(column).value;
-    });
+    }
     this.count++;
   },
 

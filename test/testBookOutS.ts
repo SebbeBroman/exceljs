@@ -1,4 +1,3 @@
-import _ from '../lib/utils/under-dash.ts';
 import Excel from '../lib/exceljs.nodejs.ts';
 
 // const { Workbook } = Excel;
@@ -256,7 +255,7 @@ ws.getCell('D10').value = '><';
 ws.getRow(10).commit();
 
 ws.getRow(11).height = 40;
-_.each(alignments, (alignment, index) => {
+alignments.forEach((alignment, index) => {
   const rowNumber = 11;
   const colNumber = index + 1;
   const cell = ws.getCell(rowNumber, colNumber);

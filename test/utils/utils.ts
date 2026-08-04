@@ -1,5 +1,4 @@
 import fs from 'node:fs';
-import _ from '../../lib/utils/under-dash.ts';
 
 const main = {
   cleanDir(path) {
@@ -38,9 +37,9 @@ const main = {
         deferred.reject(err);
       } else {
         const promises = [];
-        _.each(files, file => {
+        for (const file of files) {
           promises.push(remove(`${path}/${file}`));
-        });
+        }
 
         Promise.all(promises)
           .then(() => {
