@@ -52,7 +52,7 @@
       "default": "./dist/excel.js"
     },
     "./node": {
-      "types": "./excel.d.ts",
+      "types": "./node.d.ts",
       "import": "./dist/node.js",
       "default": "./dist/node.js"
     },
@@ -65,6 +65,7 @@
     "excel.ts",
     "excel.d.ts",
     "node.ts",
+    "node.d.ts",
     "LICENSE",
     "README.md",
     "README_zh.md",
@@ -111,11 +112,11 @@
     "exceljs"
   ],
   "dependencies": {
-    "@noble/hashes": "^2.2.0",
-    "dayjs": "^1.8.34",
-    "fast-csv": "^5.0.7",
-    "fflate": "^0.8.2",
-    "saxen": "^11.1.1"
+    "@noble/hashes": "2.2.0",
+    "dayjs": "1.11.21",
+    "fast-csv": "5.0.7",
+    "fflate": "0.8.3",
+    "saxen": "11.1.1"
   },
   "devDependencies": {
     "@types/node": "^22.20.1",
@@ -124,7 +125,7 @@
     "mitata": "^1.0.34",
     "puppeteer-core": "^25.4.0",
     "typescript": "~7.0.2",
-    "vite": "catalog:",
-    "vite-plus": "catalog:"
+    "vite": "npm:@voidzero-dev/vite-plus-core@0.2.7",
+    "vite-plus": "0.2.7"
   }
 }

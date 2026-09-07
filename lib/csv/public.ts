@@ -18,7 +18,14 @@ import type {WorkbookBuilder} from '../builder/workbook-builder.js';
 // dayjs default export is callable + has .extend; typings vary by version
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const dayjsFn = dayjs as any;
-const dayjsExt = dayjsFn.extend(customParseFormat).extend(utc);
+// Lazily extend once on first use (keeps module import side-effect free so
+// `sideEffects: false` tree-shaking stays correct for shared-dayjs consumers).
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let dayjsExt: any | null = null;
+function ext(): any {
+  if (!dayjsExt) dayjsExt = dayjsFn.extend(customParseFormat).extend(utc);
+  return dayjsExt;
+}
 
 const DEFAULT_DATE_FORMATS = [
   'YYYY-MM-DD[T]HH:mm:ssZ',
@@ -80,7 +87,7 @@ function defaultParseMap(dateFormats: string[]) {
       if (matchingDate) {
         return matchingDate;
       }
-      const dayjsObj = dayjsExt(datum, currentDateFormat, true);
+      const dayjsObj = ext()(datum, currentDateFormat, true);
       if (dayjsObj.isValid()) {
         return dayjsObj;
       }
@@ -110,9 +117,9 @@ function defaultStringifyMap(options: CsvStringifyOptions) {
       }
       if (value instanceof Date) {
         if (dateFormat) {
-          return dateUTC ? dayjsExt.utc(value).format(dateFormat) : dayjsExt(value).format(dateFormat);
+          return dateUTC ? ext().utc(value).format(dateFormat) : ext()(value).format(dateFormat);
         }
-        return dateUTC ? dayjsExt.utc(value).format() : dayjsExt(value).format();
+        return dateUTC ? ext().utc(value).format() : ext()(value).format();
       }
       if (v.error) {
         return v.error;

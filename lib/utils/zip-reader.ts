@@ -35,7 +35,15 @@ function getInflateRawSync(): InflateRawSync | null {
 /**
  * Parse a classic ZIP (stored / deflate) with Node's native inflate.
  * Throws on ZIP64 / unsupported methods so callers can fall back to fflate.
+ *
+ * Security policy: CRC32 is not re-verified on the native path (matches
+ * fflate `unzipSync` behavior for corrupt-entry tolerance); callers should
+ * treat a successful parse as structurally valid, not integrity-proof.
+ * Decompression-bomb guard: total uncompressed output is capped at
+ * MAX_TOTAL_UNCOMPRESSED (512 MiB) and entry count at MAX_ENTRIES.
  */
+const MAX_TOTAL_UNCOMPRESSED = 512 * 1024 * 1024;
+const MAX_ENTRIES = 10_000;
 function unzipNative(data: Uint8Array): Record<string, Uint8Array> {
   const inflate = getInflateRawSync();
   if (!inflate) {
@@ -56,12 +64,16 @@ function unzipNative(data: Uint8Array): Record<string, Uint8Array> {
 
   const totalEntries = view.getUint16(eocd + 10, true);
   let cdOffset = view.getUint32(eocd + 16, true);
+  if (totalEntries > MAX_ENTRIES) {
+    throw new Error(`ZIP entry count ${totalEntries} exceeds limit ${MAX_ENTRIES}`);
+  }
   // ZIP64: offsets of 0xffffffff need the ZIP64 EOCD locator — let fflate handle those.
   if (cdOffset === 0xffffffff || totalEntries === 0xffff) {
     throw new Error('ZIP64 not handled by native path');
   }
 
   const files: Record<string, Uint8Array> = Object.create(null);
+  let totalUncompressed = 0;
   // File names in OOXML are ASCII/UTF-8; decode once per entry.
   const nameDecoder = typeof TextDecoder !== 'undefined' ? new TextDecoder('utf-8') : null;
 
@@ -103,8 +115,16 @@ function unzipNative(data: Uint8Array): Record<string, Uint8Array> {
 
     if (method === 0) {
       // Stored — copy so callers cannot mutate the source archive buffer.
+      totalUncompressed += compSize;
+      if (totalUncompressed > MAX_TOTAL_UNCOMPRESSED) {
+        throw new Error('ZIP uncompressed size exceeds 512 MiB limit');
+      }
       files[name] = comp.slice();
     } else if (method === 8) {
+      totalUncompressed += uncompSize || compSize * 4;
+      if (totalUncompressed > MAX_TOTAL_UNCOMPRESSED) {
+        throw new Error('ZIP uncompressed size exceeds 512 MiB limit');
+      }
       const out = inflate(comp, uncompSize > 0 ? {maxOutputLength: uncompSize} : undefined);
       // Node returns Buffer (Uint8Array subclass); keep as-is (no extra copy).
       files[name] = out instanceof Uint8Array ? out : new Uint8Array(out as ArrayBuffer);
