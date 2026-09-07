@@ -170,18 +170,6 @@ function valueFromCellModel(cellModel: RowModelCell): unknown {
   }
 }
 
-/** Shallow write-model copy without style/comment (attached later by compactToModel). */
-function writeModelFromCellModel(address: string, cellModel: RowModelCell): RowModelCell {
-  const wm: RowModelCell = {address, type: cellModel.type as number};
-  for (const key in cellModel) {
-    if (key === 'style' || key === 'comment' || key === 'address') continue;
-    const v = cellModel[key];
-    if (v !== undefined) wm[key] = v;
-  }
-  wm.address = address;
-  return wm;
-}
-
 /** Types safe to keep as CompactCell on load (no Cell / Value strategy). */
 function isCompactLoadType(type: number): boolean {
   switch (type) {
@@ -291,6 +279,12 @@ class Row {
   /**
    * Store a post-reconcile xform cell model as a CompactCell (load path).
    * Falls back to full Cell for types that cannot be represented compactly.
+   *
+   * The reconciled model is reused in place as the write model (`wm`): it is
+   * garbage after hydration, so instead of copying every key into a fresh
+   * object (one alloc + N copies per cell), style/comment are extracted and
+   * undefined-valued leftovers dropped — exactly what the old copy produced,
+   * since it skipped `style`/`comment`/`address` and any `undefined` value.
    */
   _setCompactFromModel(col: number, address: string, cellModel: RowModelCell): void {
     const type = cellModel.type as number;
@@ -304,24 +298,36 @@ class Row {
       return;
     }
 
+    const value = valueFromCellModel(cellModel);
+    const style = cellModel.style as Partial<Style> & Record<string, unknown>;
+    const comment = cellModel.comment as {type?: string} | undefined;
+    delete cellModel.style;
+    delete cellModel.comment;
+    // writeModelFromCellModel skipped undefined values — drop them so the
+    // reused object has exactly the same shape (e.g. reconciled `styleId`,
+    // hyperlink juggling leaves `styleId`/`result`/`value` undefined).
+    for (const key in cellModel) {
+      if (cellModel[key] === undefined) delete cellModel[key];
+    }
+    cellModel.address = address;
+
     const compact: CompactCell = {
       _c: 1,
       col,
       address,
       type,
-      value: valueFromCellModel(cellModel) as CellValue,
-      wm: writeModelFromCellModel(address, cellModel),
+      value: value as CellValue,
+      wm: cellModel,
     };
 
-    if (cellModel.style) {
-      compact.style = cellModel.style as Partial<Style> & Record<string, unknown>;
+    if (style) {
+      compact.style = style;
     }
 
-    if (cellModel.comment) {
-      const c = cellModel.comment as {type?: string};
-      if (c.type === 'note') {
+    if (comment) {
+      if (comment.type === 'note') {
         compact.comment = Note.fromModel(
-          cellModel.comment as Parameters<typeof Note.fromModel>[0],
+          comment as Parameters<typeof Note.fromModel>[0],
         );
       }
     }

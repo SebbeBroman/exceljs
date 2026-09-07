@@ -61,6 +61,23 @@ load(bytes) / readFile(path)
 
 Edit loop: `workbook(await load(buf)).sheet(…).cell(…).writeBuffer()`.
 
+Full-fidelity `load` runs in two phases: package parts first (workbook,
+SST, styles, rels, …), then sheets — each sheet flows parse → reconcile-ready
+without waiting on other sheets. Sheets eligible for the fused fast path
+(`lib/xlsx/xform/sheet/fast-sheet-data.ts`) parse + reconcile `sheetData`
+in one saxen pass (style/date/shared-string/formula/hyperlink/comment
+resolution inline, per-sheet style caches); sheet head/tail still parses
+with WorksheetXform and hydrate reuses reconciled models in place
+(`Row._setCompactFromModel`, no per-cell copy). Anything the fused parser
+does not implement (run fonts, phonetics, extensions, `ignoreNodes`, …)
+falls back to the classic path — correctness first. Disable for diagnostics
+via `setFastSheetDataEnabled(false)` (test-only hook).
+
+`writeBuffer` collects fully-materialized parts and runs one synchronous
+`zipSync` (`lib/utils/buffer-zip.ts`) instead of the streaming ZipWriter's
+event-loop hops (same parts, same level). Streaming `write()`/`writeFile`
+keep the streaming writer.
+
 ### Values-only / lazy view (`viewWorkbook` / `readRows`)
 
 ```
