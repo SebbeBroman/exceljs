@@ -26,6 +26,7 @@ export interface LightSheetInfo {
 export type LightSheetRef = LightSheetInfo;
 
 export interface LightPackage {
+  /** Worksheet names only — chartsheets have no grid and are skipped. */
   sheetNames: string[];
   sheets: LightSheetInfo[];
   /** Shared string table; index → plain string (rich text flattened) */
@@ -102,6 +103,43 @@ function resolveWorksheetPath(target: string): string | null {
   return `xl/${t}`;
 }
 
+/** Scan for `<tag ...>` open tags, respecting quoted `>` inside attribute values. */
+function scanTagAttrs(xml: string, tag: string): string[] {
+  const out: string[] = [];
+  const lower = xml.toLowerCase();
+  const needle = `<${tag.toLowerCase()}`;
+  let pos = 0;
+  while (true) {
+    const start = lower.indexOf(needle, pos);
+    if (start === -1) break;
+    // Avoid `</tag`, `<tagData` etc: next char must terminate the tag name.
+    const after = xml[start + tag.length + 1] ?? '';
+    if (after === '/' || /[A-Za-z0-9_:.\-]/.test(after)) {
+      pos = start + needle.length;
+      continue;
+    }
+    // Walk to the unquoted `>`.
+    let i = start + needle.length;
+    let quote: string | null = null;
+    let end = -1;
+    for (; i < xml.length; i++) {
+      const ch = xml[i]!;
+      if (quote) {
+        if (ch === quote) quote = null;
+      } else if (ch === '"' || ch === "'") {
+        quote = ch;
+      } else if (ch === '>') {
+        end = i;
+        break;
+      }
+    }
+    if (end === -1) break;
+    out.push(xml.slice(start + needle.length, end));
+    pos = end + 1;
+  }
+  return out;
+}
+
 function parseWorkbookSheets(xml: string): Array<{
   name: string;
   id: number;
@@ -109,11 +147,8 @@ function parseWorkbookSheets(xml: string): Array<{
   state?: string;
 }> {
   const out: Array<{name: string; id: number; rId: string; state?: string}> = [];
-  // Allow `/` inside attribute values; stop only at tag terminator.
-  const re = /<sheet\b([^>]*?)\/?\s*>/gi;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(xml))) {
-    const attrs = m[1]!;
+  // Quote-aware scan: sheet names may legally contain `>` which breaks `[^>]*`.
+  for (const attrs of scanTagAttrs(xml, 'sheet')) {
     const nameRaw = attrOf(attrs, 'name');
     const rId = attrOf(attrs, 'r:id') ?? attrOf(attrs, 'id');
     if (!nameRaw || !rId) continue;
@@ -132,11 +167,7 @@ function parseWorkbookSheets(xml: string): Array<{
 
 function parseWorkbookRels(xml: string): Map<string, string> {
   const map = new Map<string, string>();
-  // Type URLs contain `/` — capture until `>` only.
-  const re = /<Relationship\b([^>]*?)\/?\s*>/gi;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(xml))) {
-    const attrs = m[1]!;
+  for (const attrs of scanTagAttrs(xml, 'Relationship')) {
     const id = attrOf(attrs, 'Id');
     const target = attrOf(attrs, 'Target');
     if (id && target) map.set(id, target);

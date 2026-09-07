@@ -403,7 +403,9 @@ class XLSX {
 
     // Parse independent package parts in parallel. Shared strings / styles are only
     // needed at reconcile time (after every sheet XML has been parsed), so sheet
-    // parse can race with them. Media index assignment is a sync critical section.
+    // parse can race with them. Keyed assignments (comments/tables/drawings) and
+    // the media index+push critical section in _processMediaEntry are sync after
+    // their last await, hence atomic; media order is normalized after Promise.all.
     const partTasks: Promise<void>[] = [];
 
     for (const rawName of Object.keys(zipFiles)) {
@@ -529,6 +531,22 @@ class XLSX {
     }
 
     await Promise.all(partTasks);
+
+    // Media entries complete in nondeterministic order under Promise.all, but
+    // each `_processMediaEntry` assigns index+push atomically so index and array
+    // stay consistent. Re-sort by filename here for deterministic output bytes:
+    // drawings resolve via mediaIndex (by name), so reordering + rebuilding the
+    // index before reconcile() is safe.
+    if (model.media.length > 1) {
+      model.media.sort((a: XlsxModel, b: XlsxModel) =>
+        `${a.name}.${a.extension}`.localeCompare(`${b.name}.${b.extension}`),
+      );
+      model.mediaIndex = {};
+      model.media.forEach((medium: XlsxModel, i: number) => {
+        model.mediaIndex[`${medium.name}.${medium.extension}`] = i;
+        model.mediaIndex[medium.name] = i;
+      });
+    }
 
     await this.reconcile(model, options);
 

@@ -39,11 +39,69 @@ function getInflateRawSync(): InflateRawSync | null {
  * Security policy: CRC32 is not re-verified on the native path (matches
  * fflate `unzipSync` behavior for corrupt-entry tolerance); callers should
  * treat a successful parse as structurally valid, not integrity-proof.
- * Decompression-bomb guard: total uncompressed output is capped at
+ * Decompression-bomb guard: total *actual* uncompressed output is capped at
  * MAX_TOTAL_UNCOMPRESSED (512 MiB) and entry count at MAX_ENTRIES.
+ * Header `uncompSize` is never trusted: inflate is bounded by the remaining
+ * budget and the real output length is accounted afterwards.
  */
-const MAX_TOTAL_UNCOMPRESSED = 512 * 1024 * 1024;
-const MAX_ENTRIES = 10_000;
+export const ZIP_LIMITS = {
+  maxEntries: 10_000,
+  maxTotalUncompressed: 512 * 1024 * 1024,
+} as const;
+const MAX_TOTAL_UNCOMPRESSED = ZIP_LIMITS.maxTotalUncompressed;
+const MAX_ENTRIES = ZIP_LIMITS.maxEntries;
+
+/** Marker for decompression-guard rejections — must never fall through to fflate. */
+export const ZIP_LIMIT_EXCEEDED = 'ZIP_LIMIT_EXCEEDED';
+
+function zipLimitError(message: string): Error {
+  const err = new Error(message);
+  (err as {code?: string}).code = ZIP_LIMIT_EXCEEDED;
+  return err;
+}
+
+export function isZipLimitError(err: unknown): boolean {
+  return (
+    err instanceof Error &&
+    ((err as {code?: string}).code === ZIP_LIMIT_EXCEEDED ||
+      /exceeds limit/i.test(err.message))
+  );
+}
+
+/** Cheap EOCD entry-count pre-check so the fflate path can fail fast without inflating. */
+function zipEntryCountHint(data: Uint8Array): number | null {
+  try {
+    if (data.length < 22) return null;
+    const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+    let eocd = data.length - 22;
+    const minEocd = Math.max(0, data.length - 22 - 0xffff);
+    while (eocd >= minEocd) {
+      if (view.getUint32(eocd, true) === 0x06054b50) break;
+      eocd--;
+    }
+    if (eocd < minEocd) return null;
+    const totalEntries = view.getUint16(eocd + 10, true);
+    if (totalEntries === 0xffff) return null; // ZIP64 — unknown here
+    return totalEntries;
+  } catch {
+    return null;
+  }
+}
+
+/** Enforce entry-count + total-size caps on an already-inflated file map (fflate path). */
+function enforceUnzipLimits(files: Record<string, Uint8Array>): void {
+  const names = Object.keys(files);
+  if (names.length > MAX_ENTRIES) {
+    throw zipLimitError(`ZIP entry count ${names.length} exceeds limit ${MAX_ENTRIES}`);
+  }
+  let total = 0;
+  for (const name of names) {
+    total += files[name]!.byteLength;
+    if (total > MAX_TOTAL_UNCOMPRESSED) {
+      throw zipLimitError('ZIP uncompressed size exceeds 512 MiB limit');
+    }
+  }
+}
 function unzipNative(data: Uint8Array): Record<string, Uint8Array> {
   const inflate = getInflateRawSync();
   if (!inflate) {
@@ -65,7 +123,7 @@ function unzipNative(data: Uint8Array): Record<string, Uint8Array> {
   const totalEntries = view.getUint16(eocd + 10, true);
   let cdOffset = view.getUint32(eocd + 16, true);
   if (totalEntries > MAX_ENTRIES) {
-    throw new Error(`ZIP entry count ${totalEntries} exceeds limit ${MAX_ENTRIES}`);
+    throw zipLimitError(`ZIP entry count ${totalEntries} exceeds limit ${MAX_ENTRIES}`);
   }
   // ZIP64: offsets of 0xffffffff need the ZIP64 EOCD locator — let fflate handle those.
   if (cdOffset === 0xffffffff || totalEntries === 0xffff) {
@@ -115,19 +173,39 @@ function unzipNative(data: Uint8Array): Record<string, Uint8Array> {
 
     if (method === 0) {
       // Stored — copy so callers cannot mutate the source archive buffer.
-      totalUncompressed += compSize;
-      if (totalUncompressed > MAX_TOTAL_UNCOMPRESSED) {
-        throw new Error('ZIP uncompressed size exceeds 512 MiB limit');
+      // Account actual bytes, not header claims.
+      if (totalUncompressed + compSize > MAX_TOTAL_UNCOMPRESSED) {
+        throw zipLimitError('ZIP uncompressed size exceeds 512 MiB limit');
       }
+      totalUncompressed += compSize;
       files[name] = comp.slice();
     } else if (method === 8) {
-      totalUncompressed += uncompSize || compSize * 4;
-      if (totalUncompressed > MAX_TOTAL_UNCOMPRESSED) {
-        throw new Error('ZIP uncompressed size exceeds 512 MiB limit');
+      // Never trust the header size: bound inflate by the remaining budget and
+      // account the real output length afterwards (catches lying headers).
+      const remaining = MAX_TOTAL_UNCOMPRESSED - totalUncompressed;
+      if (remaining <= 0) {
+        throw zipLimitError('ZIP uncompressed size exceeds 512 MiB limit');
       }
-      const out = inflate(comp, uncompSize > 0 ? {maxOutputLength: uncompSize} : undefined);
+      let out: Uint8Array;
+      try {
+        out = inflate(comp, {maxOutputLength: remaining});
+      } catch (err) {
+        if (isZipLimitError(err)) throw err;
+        // Node throws when output exceeds maxOutputLength — normalize to a
+        // guard error so callers never fall through to the uncapped path.
+        const msg = err instanceof Error ? err.message : String(err);
+        if (/maxOutputLength|too large|output length|ERR_BUFFER/i.test(msg)) {
+          throw zipLimitError('ZIP uncompressed size exceeds 512 MiB limit');
+        }
+        throw err;
+      }
+      const bytes = out instanceof Uint8Array ? out : new Uint8Array(out as ArrayBuffer);
+      totalUncompressed += bytes.byteLength;
+      if (totalUncompressed > MAX_TOTAL_UNCOMPRESSED) {
+        throw zipLimitError('ZIP uncompressed size exceeds 512 MiB limit');
+      }
       // Node returns Buffer (Uint8Array subclass); keep as-is (no extra copy).
-      files[name] = out instanceof Uint8Array ? out : new Uint8Array(out as ArrayBuffer);
+      files[name] = bytes;
     } else {
       throw new Error(`unsupported ZIP method ${method} for ${name}`);
     }
@@ -152,11 +230,22 @@ export function unzipToFiles(
     if (getInflateRawSync()) {
       try {
         return Promise.resolve(unzipNative(u8));
-      } catch {
+      } catch (err) {
+        // Guard rejections must propagate — falling through to uncapped fflate
+        // would defeat the bomb protection.
+        if (isZipLimitError(err)) throw err;
         // ZIP64 / exotic — fall through to fflate
       }
     }
-    return Promise.resolve(unzipSync(u8) as Record<string, Uint8Array>);
+    // fflate path (browser + ZIP64 fallback): fail fast on entry count, then
+    // enforce total-size caps on the inflated output before returning it.
+    const hint = zipEntryCountHint(u8);
+    if (hint != null && hint > MAX_ENTRIES) {
+      throw zipLimitError(`ZIP entry count ${hint} exceeds limit ${MAX_ENTRIES}`);
+    }
+    const files = unzipSync(u8) as Record<string, Uint8Array>;
+    enforceUnzipLimits(files);
+    return Promise.resolve(files);
   } catch (err) {
     return Promise.reject(err);
   }

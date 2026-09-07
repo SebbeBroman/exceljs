@@ -359,6 +359,13 @@ export function stringifyCsv(
 export function workbook(
   init?: WorkbookInit | Workbook | WorkbookView,
 ): WorkbookBuilder;
+/**
+ * Re-open a plain snapshot or view for editing. WARNING: `WorkbookView`
+ * (`viewWorkbook`/`readRows`) is values-only (no styles, merges, formulas,
+ * hyperlinks, images; dates arrive numeric) — `workbook(view)` re-encodes
+ * from values, so never use it for fidelity round-trips. Use `load()` when
+ * formatting must survive.
+ */
 export function isWorkbookBuilder(value: unknown): value is WorkbookBuilder;
 export function writeBuffer(
   input: Workbook | WorkbookBuilder,
