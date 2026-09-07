@@ -89,15 +89,32 @@ function appendRowsDense(ws: AnyWs, values: readonly RowInput[]): void {
   }
 }
 
+/** Header text for a column def (first line only when header is an array). */
+function columnHeaderText(c: ColumnInput): string | undefined {
+  if (c.header == null) return undefined;
+  return Array.isArray(c.header) ? c.header[0] : c.header;
+}
+
+/**
+ * Apply keys/widths/styles without writing headers via Column.header (which
+ * overwrites row 1). Append a header row when any column has a non-empty header,
+ * matching plain-model compile semantics so title-then-columns keeps the title.
+ */
 function applyColumns(ws: AnyWs, columns: ColumnInput[]): void {
+  const headers = columns.map(columnHeaderText);
   ws.columns = columns.map(c => ({
-    header: c.header,
     key: c.key,
     width: c.width,
     hidden: c.hidden,
     style: c.style,
     outlineLevel: c.outlineLevel,
   }));
+  if (headers.some(h => h != null && h !== '')) {
+    setRowValues(
+      ws,
+      headers.map(h => h ?? null),
+    );
+  }
 }
 
 function applyMeta(wb: InstanceType<typeof DocWorkbook>, m: BuilderOp & {op: 'meta'}): void {

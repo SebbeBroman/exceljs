@@ -25,7 +25,7 @@ import type {
   Style as FullStyle,
   TableProperties,
   WorkbookProperties,
-  WorkbookView,
+  WorkbookView as LegacyWorkbookView,
   WorksheetProtection,
   WorksheetView,
 } from './index.js';
@@ -69,10 +69,14 @@ export interface WorkbookMeta {
   revision?: Date | string | number;
   contentStatus?: string;
   properties?: Partial<WorkbookProperties>;
-  views?: WorkbookView[];
+  views?: LegacyWorkbookView[];
 }
 
 export interface ColumnInput {
+  /**
+   * Header label. Only the first line is used when `header` is an array
+   * (multi-row headers are not supported — extra lines are dropped).
+   */
   header?: string | string[];
   key?: string;
   width?: number;
@@ -82,6 +86,14 @@ export interface ColumnInput {
 }
 
 export type RowInput = ReadonlyArray<CellValue> | Record<string, CellValue>;
+
+export type SheetTitleInput = string | {
+  text: string;
+  /** Applied to `merge` when given, otherwise to the title cell. */
+  style?: Style;
+  /** Valid A1 range (e.g. `'A1:B1'`). Invalid ranges throw at build time. */
+  merge?: string;
+};
 
 export interface SheetCell {
   value: CellValue;
@@ -241,6 +253,7 @@ export interface ReadRowsOptions extends ViewWorkbookOptions, RowsOptions {
 }
 
 export interface SheetInit {
+  title?: SheetTitleInput;
   columns?: ColumnInput[];
   rows?: RowInput[];
   merges?: string[];
@@ -277,6 +290,7 @@ export interface CsvStringifyOptions {
 }
 
 export interface SheetBuilder {
+  title(title: SheetTitleInput): SheetBuilder;
   row(values: RowInput): SheetBuilder;
   rows(values: RowInput[]): SheetBuilder;
   cell(address: string, value: CellValue, style?: Style): SheetBuilder;
@@ -298,6 +312,8 @@ export interface SheetBuilder {
 
 export interface WorkbookBuilder {
   sheet(name: string, init?: SheetInit | ((s: SheetBuilder) => void)): WorkbookBuilder;
+  /** Emit a title row on the active sheet (call `.sheet(name)` first). */
+  title(title: SheetTitleInput): WorkbookBuilder;
   row(values: RowInput): WorkbookBuilder;
   rows(values: RowInput[]): WorkbookBuilder;
   cell(address: string, value: CellValue, style?: Style): WorkbookBuilder;
@@ -317,6 +333,8 @@ export interface WorkbookBuilder {
   table(table: TableProperties): WorkbookBuilder;
   /** Register workbook media; returns image id. */
   image(def: MediaImage): number;
+  /** Alias for `image(def)` — clearer name for the register step. */
+  addImage(def: MediaImage): number;
   /** Place a registered image on the active sheet. */
   image(imageId: number, range: SheetImageRange): WorkbookBuilder;
   definedName(name: string, refersTo: string): WorkbookBuilder;
@@ -376,7 +394,7 @@ export const ReadingOrder: typeof import('./index.js').ReadingOrder;
 export const ErrorValue: typeof import('./index.js').ErrorValue;
 export const enums: unknown;
 
-/** Node entry (`@sebbebroman/excel-ts/node`) also exports: */
+/** Node entry (`@sebbebroman/excel-ts/node`) also exports (Node-only — do not import from browser bundles): */
 export function writeFile(
   path: string,
   input: Workbook | WorkbookBuilder,

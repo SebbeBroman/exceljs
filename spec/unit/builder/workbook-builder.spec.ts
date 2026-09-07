@@ -1,5 +1,5 @@
 import {describe, it, expect} from 'vitest';
-import {workbook} from '../../../excel.ts';
+import {workbook, load} from '../../../excel.ts';
 import {writeBuffer} from '../../../lib/xlsx/write-buffer.ts';
 import {compileToPlainWorkbook} from '../../../lib/compile/ops-to-model.ts';
 import {unzipSync, strFromU8} from 'fflate';
@@ -99,5 +99,130 @@ describe('workbook builder', () => {
 
     expect(plain.sheets[0]!.rows[0]!.cells[1]!.value).to.equal('Name');
     expect(plain.sheets[0]!.rows[1]!.cells[1]!.value).to.equal('Ada');
+  });
+
+  it('title row before columns-with-headers is kept in build and writeBuffer', async () => {
+    const b = workbook()
+      .sheet('Report')
+      .row(['Report'])
+      .columns([
+        {header: 'A', key: 'a'},
+        {header: 'B', key: 'b'},
+      ])
+      .row(['1', '2']);
+
+    const plain = b.build();
+    expect(plain.sheets[0]!.rows).to.have.length(3);
+    expect(plain.sheets[0]!.rows[0]!.cells[1]!.value).to.equal('Report');
+    expect(plain.sheets[0]!.rows[1]!.cells[1]!.value).to.equal('A');
+    expect(plain.sheets[0]!.rows[1]!.cells[2]!.value).to.equal('B');
+    expect(plain.sheets[0]!.rows[2]!.cells[1]!.value).to.equal('1');
+
+    const roundtrip = await load(await b.writeBuffer());
+    const sheet = roundtrip.sheets[0]!;
+    const byRow = (n: number) => sheet.rows.find(r => r.number === n)!;
+    expect(byRow(1).cells[1]!.value).to.equal('Report');
+    expect(byRow(2).cells[1]!.value).to.equal('A');
+    expect(byRow(2).cells[2]!.value).to.equal('B');
+    expect(byRow(3).cells[1]!.value).to.equal('1');
+  });
+
+  it('columns-first still places headers on row 1', () => {
+    const plain = workbook()
+      .sheet('S')
+      .columns([{header: 'A'}, {header: 'B'}])
+      .row(['1', '2'])
+      .build();
+
+    expect(plain.sheets[0]!.rows[0]!.cells[1]!.value).to.equal('A');
+    expect(plain.sheets[0]!.rows[1]!.cells[1]!.value).to.equal('1');
+  });
+
+  it('SheetInit.title emits title before columns and rows', () => {
+    const plain = workbook()
+      .sheet('Report', {
+        title: {
+          text: 'Q1 Revenue',
+          style: {font: {bold: true, size: 16}},
+          merge: 'A1:B1',
+        },
+        columns: [
+          {header: 'Product', key: 'p', width: 20},
+          {header: 'Revenue', key: 'r', width: 12},
+        ],
+        rows: [{p: 'Widgets', r: 12000}],
+      })
+      .build();
+
+    const sheet = plain.sheets[0]!;
+    expect(sheet.rows[0]!.cells[1]!.value).to.equal('Q1 Revenue');
+    expect(sheet.rows[1]!.cells[1]!.value).to.equal('Product');
+    expect(sheet.rows[2]!.cells[1]!.value).to.equal('Widgets');
+    expect(sheet.merges).to.deep.equal(['A1:B1']);
+  });
+
+  it('fluent .title() works before columns', () => {
+    const plain = workbook()
+      .sheet('S')
+      .title('Hello')
+      .columns([{header: 'A'}])
+      .row(['1'])
+      .build();
+
+    expect(plain.sheets[0]!.rows[0]!.cells[1]!.value).to.equal('Hello');
+    expect(plain.sheets[0]!.rows[1]!.cells[1]!.value).to.equal('A');
+    expect(plain.sheets[0]!.rows[2]!.cells[1]!.value).to.equal('1');
+  });
+
+  it('all-empty headers suppress the header row', () => {
+    const plain = workbook()
+      .sheet('S')
+      .columns([{header: ''}, {}])
+      .row(['1', '2'])
+      .build();
+
+    expect(plain.sheets[0]!.rows).to.have.length(1);
+    expect(plain.sheets[0]!.rows[0]!.cells[1]!.value).to.equal('1');
+  });
+
+  it('styled title applies style to the merge range', () => {
+    const plain = workbook()
+      .sheet('S')
+      .title({text: 'T', style: {font: {bold: true}}, merge: 'A1:B1'})
+      .build();
+
+    expect(plain.sheets[0]!.merges).to.deep.equal(['A1:B1']);
+    const row1 = plain.sheets[0]!.rows[0]!;
+    expect(row1.cells[1]!.style?.font).toMatchObject({bold: true});
+    expect(row1.cells[2]!.style?.font).toMatchObject({bold: true});
+  });
+
+  it('keyed rows resolve after title + columns', () => {
+    const plain = workbook()
+      .sheet('S', {
+        title: 'T',
+        columns: [
+          {header: 'A', key: 'a'},
+          {header: 'B', key: 'b'},
+        ],
+        rows: [{a: '1', b: '2'}],
+      })
+      .build();
+
+    expect(plain.sheets[0]!.rows[2]!.cells[1]!.value).to.equal('1');
+    expect(plain.sheets[0]!.rows[2]!.cells[2]!.value).to.equal('2');
+  });
+
+  it('rejects invalid title merge ranges', () => {
+    expect(() => workbook().sheet('S').title({text: 'T', merge: 'not-a-range'})).to.throw(
+      /Invalid title merge range/,
+    );
+  });
+
+  it('sparse far cells do not OOM the coalesce path', () => {
+    const plain = workbook().sheet('S').cell('A1', 'hi').cell('Z1000000', 'far').build();
+    const rows = plain.sheets[0]!.rows;
+    expect(rows.find(r => r.number === 1)!.cells[1]!.value).to.equal('hi');
+    expect(rows.find(r => r.number === 1000000)!.cells[26]!.value).to.equal('far');
   });
 });

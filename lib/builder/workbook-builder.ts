@@ -11,6 +11,7 @@ import type {
   RowInput,
   SheetImageRange,
   SheetInit,
+  SheetTitleInput,
   Style,
   TableProperties,
   Workbook,
@@ -19,6 +20,7 @@ import type {
   WriteOptions,
 } from '../model/types.js';
 import {type BuilderOp, emptyUsedFlags, noteFormulaValue, type UsedFlags} from './ops.js';
+import colCache from '../utils/col-cache.js';
 import {compileToPlainWorkbook} from '../compile/ops-to-model.js';
 import {writeBuffer as encodeWriteBuffer} from '../xlsx/write-buffer.js';
 import type {CsvStringifyOptions} from '../csv/public.js';
@@ -35,7 +37,31 @@ function isWorkbookViewLike(value: unknown): value is {toJSON(): Workbook} {
   );
 }
 
+function normalizeTitle(title: SheetTitleInput): {text: string; style?: Style; merge?: string} {
+  if (typeof title === 'string') return {text: title};
+  return title;
+}
+
+function assertValidMerge(range: string): void {
+  // Throws on non-A1 ranges so title({merge}) fails fast instead of
+  // emitting a corrupt mergeCells entry at encode time.
+  try {
+    const decoded = colCache.decode(range) as {
+      top?: number;
+      left?: number;
+      row?: number;
+      col?: number;
+    };
+    const isRange = decoded.top != null && decoded.left != null;
+    const isCell = decoded.row != null && decoded.col != null;
+    if (!isRange && !isCell) throw new Error('not A1');
+  } catch {
+    throw new Error(`Invalid title merge range: ${range}`);
+  }
+}
+
 export interface SheetBuilder {
+  title(title: SheetTitleInput): SheetBuilder;
   row(values: RowInput): SheetBuilder;
   rows(values: RowInput[]): SheetBuilder;
   cell(address: string, value: CellValue, style?: Style): SheetBuilder;
@@ -58,6 +84,12 @@ export interface SheetBuilder {
 
 export interface WorkbookBuilder {
   sheet(name: string, init?: SheetInit | ((s: SheetBuilder) => void)): WorkbookBuilder;
+  /**
+   * Emit a title row on the active sheet (requires `.sheet(name)` first).
+   * Prefer `SheetBuilder.title()` or `SheetInit.title` when working with
+   * multiple sheets to avoid cursor mistakes.
+   */
+  title(title: SheetTitleInput): WorkbookBuilder;
   row(values: RowInput): WorkbookBuilder;
   rows(values: RowInput[]): WorkbookBuilder;
   cell(address: string, value: CellValue, style?: Style): WorkbookBuilder;
@@ -83,6 +115,8 @@ export interface WorkbookBuilder {
   image(def: MediaImage): number;
   /** Place a previously registered image on the active sheet. */
   image(imageId: number, range: SheetImageRange): WorkbookBuilder;
+  /** Alias for `image(def)` — clearer name for the register step. */
+  addImage(def: MediaImage): number;
   /** Workbook-level defined name (`refersTo` e.g. `Sheet1!$A$1:$B$2`). */
   definedName(name: string, refersTo: string): WorkbookBuilder;
 
@@ -106,6 +140,11 @@ class SheetBuilderImpl implements SheetBuilder {
     private readonly wb: WorkbookBuilderImpl,
     private readonly name: string,
   ) {}
+
+  title(title: SheetTitleInput): SheetBuilder {
+    this.wb.applyTitle(this.name, title);
+    return this;
+  }
 
   row(values: RowInput): SheetBuilder {
     this.wb._push({op: 'row', sheet: this.name, values});
@@ -302,10 +341,27 @@ class WorkbookBuilderImpl implements WorkbookBuilder {
   private requireCursor(): string {
     if (!this._cursor) {
       throw new Error(
-        'No active sheet. Call .sheet(name) before row/cell/style/merge/columns operations.',
+        'No active sheet. Call .sheet(name) before title/row/cell/style/merge/columns operations.',
       );
     }
     return this._cursor;
+  }
+
+  /** @internal Emit title row (+ optional merge/style) on a named sheet.
+   * Style applies to the merge range when given, otherwise to A1 (the title cell).
+   */
+  applyTitle(sheet: string, title: SheetTitleInput): void {
+    const {text, style, merge} = normalizeTitle(title);
+    if (merge !== undefined) assertValidMerge(merge);
+    this._ops.push({op: 'row', sheet, values: [text]});
+    if (merge) {
+      this._used.merges = true;
+      this._ops.push({op: 'merge', sheet, range: merge});
+    }
+    if (style) {
+      this._used.styles = true;
+      this._ops.push({op: 'style', sheet, range: merge ?? 'A1', style});
+    }
   }
 
   sheet(name: string, init?: SheetInit | ((s: SheetBuilder) => void)): WorkbookBuilder {
@@ -315,6 +371,7 @@ class WorkbookBuilderImpl implements WorkbookBuilder {
     if (typeof init === 'function') {
       init(new SheetBuilderImpl(this, name));
     } else if (init) {
+      if (init.title != null) this.applyTitle(name, init.title);
       if (init.columns?.length) this.columns(init.columns);
       if (init.rows?.length) this.rows(init.rows);
       if (init.merges?.length) {
@@ -324,6 +381,11 @@ class WorkbookBuilderImpl implements WorkbookBuilder {
       if (init.pageSetup) this.pageSetup(init.pageSetup);
       if (init.headerFooter) this.headerFooter(init.headerFooter);
     }
+    return this;
+  }
+
+  title(title: SheetTitleInput): WorkbookBuilder {
+    this.applyTitle(this.requireCursor(), title);
     return this;
   }
 
@@ -438,6 +500,10 @@ class WorkbookBuilderImpl implements WorkbookBuilder {
     this._used.images = true;
     this._ops.push({op: 'media', id, image: defOrId});
     return id;
+  }
+
+  addImage(def: MediaImage): number {
+    return this.image(def);
   }
 
   definedName(name: string, refersTo: string): WorkbookBuilder {

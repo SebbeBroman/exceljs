@@ -71,6 +71,11 @@ export interface WorkbookMeta {
 }
 
 export interface ColumnInput {
+  /**
+   * Header label. Only the first line is used when `header` is an array
+   * (multi-row headers are not supported — extra lines are dropped
+   * consistently across build/writeBuffer/stream paths).
+   */
   header?: string | string[];
   key?: string;
   width?: number;
@@ -81,6 +86,12 @@ export interface ColumnInput {
 
 /** Array of cell values, or a keyed object when columns define keys. */
 export type RowInput = ReadonlyArray<CellValue> | Record<string, CellValue>;
+
+/** Title row above a table: plain text, or text with optional style/merge.
+ * `style` applies to the `merge` range when given, otherwise to the title
+ * cell (A1 of the emitted row). `merge` must be a valid A1 range.
+ */
+export type SheetTitleInput = string | {text: string; style?: Style; merge?: string};
 
 export interface SheetCell {
   value: CellValue;
@@ -209,6 +220,8 @@ export interface LoadOptions {
 }
 
 export interface SheetInit {
+  /** Optional title row emitted before columns/rows. */
+  title?: SheetTitleInput;
   columns?: ColumnInput[];
   rows?: RowInput[];
   merges?: string[];

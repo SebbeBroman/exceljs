@@ -66,6 +66,7 @@ export type {
   ProtectConfig,
   DefinedNameEntry,
   WorksheetViewInput,
+  SheetTitleInput,
 } from './lib/model/types.js';
 
 // Enums still useful for formula / value discrimination when reading later

@@ -119,10 +119,29 @@ async function consumeRows(ws: AnyWs, rows: AsyncIterable<RowInput> | Iterable<R
   }
 }
 
+/** Apply keys/widths without Column.header overwrite; append header row if needed. */
+function applyColumns(ws: AnyWs, columns: ColumnInput[]): void {
+  const headers = columns.map(c => {
+    if (c.header == null) return undefined;
+    return Array.isArray(c.header) ? c.header[0] : c.header;
+  });
+  ws.columns = columns.map(c => ({
+    key: c.key,
+    width: c.width,
+    hidden: c.hidden,
+    style: c.style,
+    outlineLevel: c.outlineLevel,
+  }));
+  if (headers.some(h => h != null && h !== '')) {
+    const row = ws.addRow(headers.map(h => h ?? null));
+    row.commit();
+  }
+}
+
 function applySheetOptions(ws: AnyWs, options?: StreamSheetOptions): void {
   if (!options) return;
   if (options.columns) {
-    ws.columns = options.columns;
+    applyColumns(ws, options.columns);
   }
   // state / views / pageSetup / headerFooter / autoFilter / properties
   // are passed into addWorksheet where supported; columns applied after.
@@ -150,7 +169,7 @@ class StreamSheetHandleImpl implements StreamSheetHandle {
   constructor(private readonly ws: AnyWs) {}
 
   columns(cols: ColumnInput[]): StreamSheetHandle {
-    this.ws.columns = cols;
+    applyColumns(this.ws, cols);
     return this;
   }
 
