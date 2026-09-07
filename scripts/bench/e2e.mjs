@@ -63,6 +63,14 @@ function bufLen(buf) {
 }
 
 // Prebuild golden buffers (not timed) so read benches don't include write cost.
+// NOTE: contenders use different zip levels (excel-ts default level 1 vs
+// exceljs default ~6), so output byte sizes differ — read benches parse each
+// contender's OWN bytes. Compare within-contender, not as a pure parser race.
+import {execSync} from 'node:child_process';
+let commit = 'unknown';
+try {
+  commit = execSync('git rev-parse --short HEAD', {cwd: root}).toString().trim();
+} catch {}
 console.log(
   JSON.stringify({
     suite: 'e2e excel-ts vs exceljs',
@@ -72,6 +80,8 @@ console.log(
     styles: INCLUDE_STYLES,
     exceljs: '4.x (devDependency)',
     filter: FILTER,
+    commit,
+    zip: 'excel-ts level 1 default; exceljs default',
   }),
 );
 

@@ -78,8 +78,9 @@ viewWorkbook(bytes) / readRows(bytes)
 
 - **Lazy per sheet:** only the requested sheet’s XML is parsed.
 - **Early exit:** `rows({ end: 100 })` stops SAX after that row (does not walk the rest of `sheetData`).
-- **Tradeoff:** values only — no styles, merges, or theme. Use `load()` for full-fidelity re-encode.
+- **Tradeoff:** values only — no styles, merges, formulas, hyperlinks, or theme, and dates arrive numeric. Use `load()` for full-fidelity re-encode. Never round-trip `workbook(view)` expecting fidelity.
 - Engine: `lib/read/xlsx-light.ts`.
+- **Zip limits:** `lib/utils/zip-reader.ts` caps entries (10k) and total uncompressed output (512 MiB); CRC is not re-verified (parse success ≠ integrity proof).
 
 ## CSV
 

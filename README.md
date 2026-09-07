@@ -52,6 +52,32 @@ const buffer = await workbook()
   .writeBuffer();
 ```
 
+### Title row + table
+
+`.columns([{ header }])` appends a header row after any rows already written, so a title-then-table chain is safe. Prefer `SheetInit.title` (or fluent `.title()`) for the common case:
+
+```ts
+const buffer = await workbook().sheet('Report', {
+  title: {
+    text: 'Q1 Revenue',
+    style: { font: { bold: true, size: 16 } },
+    merge: 'A1:B1',
+  },
+  columns: [
+    { header: 'Product', key: 'p', width: 20 },
+    { header: 'Revenue', key: 'r', width: 12 },
+  ],
+  rows: [
+    { p: 'Widgets', r: 12000 },
+    { p: 'Gadgets', r: 8000 },
+  ],
+}).writeBuffer();
+
+// Equivalent fluent form:
+// workbook().sheet('Report').title({ text: 'Q1 Revenue', merge: 'A1:B1' })
+//   .columns([...]).rows([...])
+```
+
 ### Plain snapshot (no I/O)
 
 ```ts
@@ -110,6 +136,12 @@ const rows = await readRows(data, { filename: file.name, start: 1, end: 50 });
 ```
 
 Supports **CSV** and **OOXML** (`.xlsx` / `.xlsm` / …). Not `.xls` / `.xlsb`.
+
+> **Read path choice:** `load()` / `readFile()` parse full fidelity (values,
+> styles, merges, tables, …) for re-encode. `viewWorkbook()` / `readRows()`
+> are **values-only** (no styles, merges, formulas, hyperlinks, dates stay
+> numeric) and must not be used for round-trip writes expecting fidelity —
+> `workbook(view).writeBuffer()` keeps values only.
 
 ### Node file read
 
@@ -219,7 +251,7 @@ const buffer = await workbook()
 ### Tree-shaking
 
 - Named exports only (`workbook`, `writeBuffer`, `load`, `csv`, …).
-- `"sideEffects": false`.
+- `"sideEffects": false` (CSV `dayjs` plugins extend lazily on first use, so shared-`dayjs` consumers are unaffected).
 - Import `@sebbebroman/excel-ts/node` only in Node code paths.
 - `writeBuffer` and `load` are separate modules (read does not pull write).
 - `csv` / builder `.csv()` load `fast-csv` only when used (`.csv()` uses a dynamic import).
@@ -265,17 +297,23 @@ Contenders (browser): **excel-ts** esbuild browser bundle vs **exceljs** officia
 | Streaming (`streamWrite` / `streamRead` on `./node`) | ✅ |
 | Sheet protection | ✅ write; load re-encodes hash (password not recoverable) |
 | Tables / images / defined names | ✅ write; load best-effort |
-| Pivot builder API | later |
+| Pivot builder API | later (no `.pivot()` yet — read/write of pivot tables is best-effort via load) |
 | Drop internal DocWorkbook bridge | later (implementation detail today) |
 
-### Bundle size (indicative)
+> **Column headers:** `ColumnInput.header` as an array uses only the first
+> line — multi-row headers are not supported and extra lines are dropped
+> consistently across `build()` / `writeBuffer()` / `streamWrite()`.
 
-Measured by `pnpm test:browser-bundle` (esbuild minify, write-only builder path, CSV omitted):
+### Bundle size (indicative — write-only fixture)
+
+Measured by `pnpm test:browser-bundle` (esbuild minify, write-only builder path, CSV omitted, 2-cell fixture):
 
 | Build | Size |
 |-------|------|
 | Single-file minified | ~287 KB (gzip ~80 KB) |
-| Code-split entry | ~191 KB |
+| Code-split entry | ~191 KB (excludes async chunks needed at runtime; total ~551 KB) |
+
+Not representative of `load`/styles/tables/comments/CSV builds. Quote with fixture + flags + commit hash.
 
 Re-run after encoder changes. Details: [ARCHITECTURE.md](./ARCHITECTURE.md).
 
