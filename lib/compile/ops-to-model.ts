@@ -315,6 +315,11 @@ function coalesceStyleFreeCellsToRows(ops: BuilderOp[]): BuilderOp[] {
   if (coalesceSheets.size === 0) return ops;
 
   // Build dense row arrays per sheet (1-based → index 0).
+  // Guard: a single far cell (e.g. Z1000000) would otherwise allocate a
+  // maxRow×maxCol grid and OOM. Skip coalescing for sparse/huge extents and
+  // keep the original cell ops (correct, just not dense).
+  const MAX_COALESCE_CELLS = 250_000;
+  const MAX_COALESCE_ROWS = 50_000;
   const rowsBySheet = new Map<string, CellValue[][]>();
   for (const sheet of coalesceSheets) {
     const list = placements.get(sheet)!;
@@ -325,6 +330,10 @@ function coalesceStyleFreeCellsToRows(ops: BuilderOp[]): BuilderOp[] {
       const p = list[i]!;
       if (p.row > maxRow) maxRow = p.row;
       if (p.col > maxCol) maxCol = p.col;
+    }
+    if (maxRow > MAX_COALESCE_ROWS || maxRow * maxCol > MAX_COALESCE_CELLS) {
+      coalesceSheets.delete(sheet);
+      continue;
     }
     const grid: CellValue[][] = new Array(maxRow);
     for (let r = 0; r < maxRow; r++) {
