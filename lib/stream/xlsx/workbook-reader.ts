@@ -3,7 +3,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import {Readable} from 'node:stream';
-import parseSax from '../../utils/parse-sax.js';
+import {eachSaxChunk} from '../../utils/parse-sax.js';
 import streamZipEntries from '../../utils/stream-zip-reader.js';
 import StyleManager from '../../xlsx/xform/style/styles-xform.js';
 import WorkbookXform from '../../xlsx/xform/book/workbook-xform.js';
@@ -21,8 +21,6 @@ export interface WorkbookStreamReaderOptions {
 
 export type WorkbookReaderInput = string | Readable | AsyncIterable<unknown> | NodeJS.ReadableStream;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type SaxNode = any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FontState = Record<string, any> | null;
 
@@ -229,98 +227,106 @@ class WorkbookReader extends EventEmitter {
     let richText: any[] = [];
     let index = 0;
     let font: FontState = null;
-    for await (const events of parseSax(entry)) {
-      for (const {eventType, value} of events) {
-        if (eventType === 'opentag') {
-          const node = value as SaxNode;
-          switch (node.name) {
-            case 'b':
-              font = font || {};
-              font.bold = true;
-              break;
-            case 'charset':
-              font = font || {};
-              font.charset = parseInt(node.attributes.charset, 10);
-              break;
-            case 'color':
-              font = font || {};
-              font.color = {};
-              if (node.attributes.rgb) {
-                font.color.argb = node.attributes.argb;
-              }
-              if (node.attributes.val) {
-                font.color.argb = node.attributes.val;
-              }
-              if (node.attributes.theme) {
-                font.color.theme = node.attributes.theme;
-              }
-              break;
-            case 'family':
-              font = font || {};
-              font.family = parseInt(node.attributes.val, 10);
-              break;
-            case 'i':
-              font = font || {};
-              font.italic = true;
-              break;
-            case 'outline':
-              font = font || {};
-              font.outline = true;
-              break;
-            case 'rFont':
-              font = font || {};
-              font.name = node.value;
-              break;
-            case 'si':
-              font = null;
-              richText = [];
-              text = null;
-              break;
-            case 'sz':
-              font = font || {};
-              font.size = parseInt(node.attributes.val, 10);
-              break;
-            case 'strike':
-              break;
-            case 't':
-              text = null;
-              break;
-            case 'u':
-              font = font || {};
-              font.underline = true;
-              break;
-            case 'vertAlign':
-              font = font || {};
-              font.vertAlign = node.attributes.val;
-              break;
-          }
-        } else if (eventType === 'text') {
-          text = text ? text + value : (value as string);
-        } else if (eventType === 'closetag') {
-          const node = value as SaxNode;
-          switch (node.name) {
-            case 'r':
-              richText.push({
-                font,
-                text,
-              });
-
-              font = null;
-              text = null;
-              break;
-            case 'si':
-              if (this.options.sharedStrings === 'cache') {
-                this.sharedStrings!.push(richText.length ? {richText} : text);
-              } else if (this.options.sharedStrings === 'emit') {
-                yield {index: index++, text: richText.length ? {richText} : text};
-              }
-
-              richText = [];
-              font = null;
-              text = null;
-              break;
-          }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const emitted: any[] = [];
+    for await (const _chunk of eachSaxChunk(entry, {
+      onOpen: (name, attr) => {
+        switch (name) {
+          case 'b':
+            font = font || {};
+            font.bold = true;
+            break;
+          case 'charset':
+            font = font || {};
+            font.charset = parseInt(attr('charset') || '', 10);
+            break;
+          case 'color':
+            font = font || {};
+            font.color = {};
+            if (attr('rgb')) {
+              font.color.argb = attr('argb');
+            }
+            if (attr('val')) {
+              font.color.argb = attr('val');
+            }
+            if (attr('theme')) {
+              font.color.theme = attr('theme');
+            }
+            break;
+          case 'family':
+            font = font || {};
+            font.family = parseInt(attr('val') || '', 10);
+            break;
+          case 'i':
+            font = font || {};
+            font.italic = true;
+            break;
+          case 'outline':
+            font = font || {};
+            font.outline = true;
+            break;
+          case 'rFont':
+            font = font || {};
+            font.name = undefined;
+            break;
+          case 'si':
+            font = null;
+            richText = [];
+            text = null;
+            break;
+          case 'sz':
+            font = font || {};
+            font.size = parseInt(attr('val') || '', 10);
+            break;
+          case 'strike':
+            break;
+          case 't':
+            text = null;
+            break;
+          case 'u':
+            font = font || {};
+            font.underline = true;
+            break;
+          case 'vertAlign':
+            font = font || {};
+            font.vertAlign = attr('val');
+            break;
+          default:
+            break;
         }
+      },
+      onText: value => {
+        text = text ? text + value : value;
+      },
+      onClose: name => {
+        switch (name) {
+          case 'r':
+            richText.push({
+              font,
+              text,
+            });
+
+            font = null;
+            text = null;
+            break;
+          case 'si':
+            if (this.options.sharedStrings === 'cache') {
+              this.sharedStrings!.push(richText.length ? {richText} : text);
+            } else if (this.options.sharedStrings === 'emit') {
+              emitted.push({index: index++, text: richText.length ? {richText} : text});
+            }
+
+            richText = [];
+            font = null;
+            text = null;
+            break;
+          default:
+            break;
+        }
+      },
+    })) {
+      while (emitted.length) {
+        yield emitted.shift();
       }
     }
   }

@@ -8,21 +8,36 @@ export type SaxEvent =
   | {eventType: 'text'; value: string}
   | {eventType: 'closetag'; value: {name: string}};
 
-/**
- * Stream XML into exceljs-shaped SAX events.
- * Normalized shape (matches former saxes adapter):
- *   {eventType: 'opentag', value: {name, attributes}}
- *   {eventType: 'text', value: string}
- *   {eventType: 'closetag', value: {name}}
- */
-export default async function* parseSax(
-  iterable: unknown,
-): AsyncGenerator<SaxEvent[], void, unknown> {
-  // Accept async iterables, arrays, strings, or legacy Node streams — no PassThrough.
-  const source = fromReadable(iterable);
+/** Look up one attribute. The function is reused across tags; do not store it. */
+export type SaxAttributeGetter = (name: string) => string | undefined;
+
+export interface SaxWalkHandlers {
+  /**
+   * `attr` and `materialize` are reused across tags. Read them before returning.
+   * `materialize` copies every attribute into a fresh object (xform path).
+   * `attr` decodes a single value and skips saxen's attribute parse until called.
+   */
+  onOpen(
+    name: string,
+    attr: SaxAttributeGetter,
+    materialize: () => Record<string, string>,
+  ): void;
+  onText(value: string): void;
+  onClose(name: string): void;
+}
+
+function decoded(value: string, decodeEntities: (text: string) => string): string {
+  return value.indexOf('&') === -1 ? value : decodeEntities(value);
+}
+
+interface SaxSession {
+  parser: Parser;
+  error: () => Error | undefined;
+}
+
+function openSax(handlers: SaxWalkHandlers): SaxSession {
   const parser = new Parser();
   let error: Error | undefined;
-  let events: SaxEvent[] = [];
 
   // saxen reports some well-formedness issues (e.g. text outside root) as
   // recoverable `warn`s; exceljs treats them as hard errors like saxes did.
@@ -34,35 +49,108 @@ export default async function* parseSax(
   parser.on('error', fail);
   parser.on('warn', fail);
 
-  parser.on('openTag', (name, getAttrs, decodeEntities) => {
-    const raw = getAttrs();
-    const attributes = Object.create(null) as Record<string, string>;
-    for (const key in raw) {
-      // saxen does not auto-decode entities; saxes did.
-      attributes[key] = decodeEntities(raw[key]);
+  let raw: Record<string, string> | null = null;
+  let decodeEntities: (text: string) => string = text => text;
+  let getAttrs: () => Record<string, string> | false = () => ({});
+
+  const loadRaw = (): Record<string, string> => {
+    if (raw === null) {
+      const got = getAttrs();
+      raw = got && typeof got === 'object' ? got : {};
     }
-    events.push({eventType: 'opentag', value: {name, attributes}});
-  });
+    return raw;
+  };
+  const attr: SaxAttributeGetter = name => {
+    const value = loadRaw()[name];
+    if (value == null) return undefined;
+    return decoded(value, decodeEntities);
+  };
+  const materialize = (): Record<string, string> => {
+    const sourceAttrs = loadRaw();
+    const attributes = Object.create(null) as Record<string, string>;
+    for (const key in sourceAttrs) {
+      attributes[key] = decoded(sourceAttrs[key]!, decodeEntities);
+    }
+    return attributes;
+  };
 
-  parser.on('text', (value, decodeEntities) => {
-    events.push({eventType: 'text', value: decodeEntities(value)});
+  parser.on('openTag', (name, nextGetAttrs, nextDecode) => {
+    raw = null;
+    getAttrs = nextGetAttrs;
+    decodeEntities = nextDecode;
+    handlers.onOpen(name, attr, materialize);
   });
-
+  parser.on('text', (value, nextDecode) => {
+    handlers.onText(decoded(value, nextDecode));
+  });
   parser.on('closeTag', name => {
-    events.push({eventType: 'closetag', value: {name}});
+    handlers.onClose(name);
+  });
+
+  return {parser, error: () => error};
+}
+
+function finishSax(session: SaxSession): void {
+  const endError = session.parser.end();
+  const error = session.error();
+  if (error) throw error;
+  if (endError) {
+    throw endError instanceof Error ? endError : new Error(String(endError));
+  }
+}
+
+/**
+ * Drive saxen from callbacks, yielding once per input chunk so the caller can
+ * release rows before the next chunk is parsed. No per-tag event objects.
+ */
+export async function* eachSaxChunk(
+  iterable: unknown,
+  handlers: SaxWalkHandlers,
+): AsyncGenerator<void, void, unknown> {
+  const source = fromReadable(iterable);
+  const session = openSax(handlers);
+  for await (const chunk of source) {
+    session.parser.write(bufferToString(chunk));
+    const error = session.error();
+    if (error) throw error;
+    yield;
+  }
+  finishSax(session);
+  yield;
+}
+
+/**
+ * Stream XML into exceljs-shaped SAX events.
+ * Xforms retain attribute objects, so each open tag gets its own copy.
+ */
+export default async function* parseSax(
+  iterable: unknown,
+): AsyncGenerator<SaxEvent[], void, unknown> {
+  const source = fromReadable(iterable);
+  const events: SaxEvent[] = [];
+  const session = openSax({
+    onOpen(name, _attr, materialize) {
+      events.push({eventType: 'opentag', value: {name, attributes: materialize()}});
+    },
+    onText(value) {
+      events.push({eventType: 'text', value});
+    },
+    onClose(name) {
+      events.push({eventType: 'closetag', value: {name}});
+    },
   });
 
   for await (const chunk of source) {
-    parser.write(bufferToString(chunk));
-    // saxen callbacks are synchronous during write, so all events for this
-    // chunk are already in `events` before we reach here.
+    session.parser.write(bufferToString(chunk));
+    const error = session.error();
     if (error) throw error;
-    yield events;
-    events = [];
+    if (events.length === 0) continue;
+    const batch = events.slice();
+    events.length = 0;
+    yield batch;
   }
 
-  parser.end();
-  if (error) throw error;
+  finishSax(session);
   if (events.length) {
     yield events;
   }
