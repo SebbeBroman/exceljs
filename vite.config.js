@@ -40,14 +40,18 @@ export default defineConfig({
       'spec/browser/**',
       'spec/dist/**',
       'spec/typescript/**',
-      'scripts/cjs-to-esm.mjs',
-      'scripts/migrate-specs-to-vitest.mjs',
-      // Legacy ad-hoc scripts (many still CJS)
-      'test/**',
     ],
     rules: {
       // Spreadsheet fixtures use holey arrays intentionally
       'no-sparse-arrays': 'off',
+      // Hot read/write paths pre-allocate fixed-length buffers with
+      // `new Array(n)` then fill by index — deliberately not `Array.from`,
+      // which would allocate an extra array per row.
+      'unicorn/no-new-array': 'off',
+      // XML_SPECIAL must match C0 control chars to skip encoding them.
+      'no-control-regex': 'off',
+      // Closures capture `this` via a local alias (once-listeners, zip sinks).
+      'typescript/no-this-alias': 'off',
       'no-console': ['error', {allow: ['warn', 'error']}],
       'prefer-const': 'warn',
       'no-var': 'error',
@@ -66,9 +70,12 @@ export default defineConfig({
     },
     overrides: [
       {
-        files: ['spec/**/*.{js,mjs,cjs}'],
+        files: ['spec/**/*.{ts,js,mjs,cjs}'],
         rules: {
           'no-console': 'off',
+          // Chai-style property assertions (`expect(x).to.be.ok`) read as
+          // unused expressions to the linter but are valid assertions.
+          'no-unused-expressions': 'off',
         },
         globals: {
           verquire: 'readonly',
@@ -85,6 +92,8 @@ export default defineConfig({
         rules: {
           'no-console': 'off',
           'no-unused-vars': 'off',
+          // Bench harness builds fixed-size row buffers up front.
+          'unicorn/no-new-array': 'off',
         },
       },
     ],
@@ -115,7 +124,6 @@ export default defineConfig({
       'out/**',
       'coverage/**',
       'spec/**',
-      'test/**',
       'spec/out/**',
       'spec/manual/public/**',
       '.github/**',
@@ -128,9 +136,6 @@ export default defineConfig({
       'TODO.txt',
       'MODEL.md',
       'UPGRADE-4.0.md',
-      // One-shot migration helpers
-      'scripts/cjs-to-esm.mjs',
-      'scripts/migrate-specs-to-vitest.mjs',
     ],
   },
 

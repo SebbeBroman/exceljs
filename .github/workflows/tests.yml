@@ -87,6 +87,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm add -D typescript
-      - run: pnpm exec tsc --strict --noEmit index.d.ts
+      # --ignoreConfig: TS7 errors (TS5112) when files are passed on the
+      # command line while a tsconfig.json is present in the repo root.
+      # Skipping the config also skips its `types`, so name node explicitly.
+      - run: pnpm exec tsc --strict --noEmit --ignoreConfig --types node index.d.ts
         env:
           CI: true
