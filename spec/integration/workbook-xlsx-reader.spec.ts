@@ -226,6 +226,40 @@ describe('WorkbookReader', () => {
         expect(cell.hyperlink).to.equal('mailto:someone@example.com');
       });
     });
+
+    // The compact load path rebuilds hyperlink cells from text/hyperlink only,
+    // which used to drop the formula. This guards the rebuild.
+    describe('with a hyperlinked formula round-tripped through write', () => {
+      let roundTripped;
+      beforeAll(async () => {
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.read(
+          fs.createReadStream('./spec/integration/data/formulas.xlsx')
+        );
+        const buffer = await workbook.xlsx.writeBuffer();
+        const reread = new ExcelJS.Workbook();
+        await reread.xlsx.load(buffer);
+        roundTripped = reread.getWorksheet().getCell('A1');
+      });
+
+      it('should still be a hyperlink cell', () => {
+        expect(roundTripped.type).to.equal(ExcelJS.ValueType.Hyperlink);
+      });
+
+      it('should keep the link target', () => {
+        expect(roundTripped.hyperlink).to.equal('mailto:someone@example.com');
+      });
+
+      it('should keep the evaluated text', () => {
+        expect(roundTripped.value.text).to.equal('someone@example.com');
+      });
+
+      it('should keep the formula source', () => {
+        expect(roundTripped.model.formula).to.equal(
+          '_xlfn.CONCAT("someone","@example.com")'
+        );
+      });
+    });
   });
 
   describe('with a spreadsheet that contains a shared string with an escaped underscore', () => {

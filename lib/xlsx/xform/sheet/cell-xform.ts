@@ -321,28 +321,34 @@ class CellXform extends BaseXform<CellXformModel> {
         xmlStream.leafNode('v', undefined, utils.dateToExcel(model.value as Date, model.date1904));
         break;
 
-      case Enums.ValueType.Hyperlink:
-        if (model.ssId !== undefined) {
+      case Enums.ValueType.Hyperlink: {
+        // CT_Cell orders children f, v, is — <f> must precede <v> or readers
+        // (including our own) mis-parse the cell, and the t attribute belongs on
+        // <c> itself, so both are set before the first leafNode.
+        //
+        // A formula-backed hyperlink must use t="str" with the literal text,
+        // never t="s": a shared-string cell carrying <f> reads back as a plain
+        // Formula cell and loses the hyperlink.
+        const hasFormula = model.formula !== undefined;
+        if (hasFormula) {
+          xmlStream.addAttribute('t', 'str');
+          const fAttrs: Record<string, unknown> = {};
+          if (model.shareType === 'shared' && model.si !== undefined) {
+            fAttrs.t = 'shared';
+            fAttrs.si = model.si;
+            if (model.ref !== undefined) fAttrs.ref = model.ref;
+          }
+          xmlStream.leafNode('f', hasFormula ? fAttrs : undefined, model.formula);
+          xmlStream.leafNode('v', undefined, model.text);
+        } else if (model.ssId !== undefined) {
           xmlStream.addAttribute('t', 's');
           xmlStream.leafNode('v', undefined, model.ssId);
         } else {
           xmlStream.addAttribute('t', 'str');
           xmlStream.leafNode('v', undefined, model.text);
         }
-        // Formula-backed hyperlink: emit <f> so the formula survives a
-        // read -> write round-trip (mirrors the Formula render branch).
-        if (model.formula !== undefined) {
-          const fAttrs: Record<string, unknown> = {};
-          if (model.shareType === 'shared' && model.si !== undefined) {
-            fAttrs.t = 'shared';
-            fAttrs.si = model.si;
-            if (model.ref !== undefined) fAttrs.ref = model.ref;
-            xmlStream.leafNode('f', fAttrs, model.formula);
-          } else {
-            xmlStream.leafNode('f', undefined, model.formula);
-          }
-        }
         break;
+      }
 
       case Enums.ValueType.Formula:
         this.renderFormula(xmlStream, model);
