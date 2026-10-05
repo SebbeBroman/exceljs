@@ -316,8 +316,7 @@ class Worksheet {
   set columns(value: ColumnDefn[]) {
     // calculate max header row count
     this._headerRowCount = value.reduce((pv, cv) => {
-      const headerCount =
-        (cv.header && 1) || (cv.headers && cv.headers.length) || 0;
+      const headerCount = (cv.header && 1) || (cv.headers && cv.headers.length) || 0;
       return Math.max(pv, headerCount as number);
     }, 0);
 
@@ -513,7 +512,10 @@ class Worksheet {
     return rows;
   }
 
-  addRow(value: CellValue[] | Record<string, CellValue> | null | undefined, style: StyleOption = 'n'): Row {
+  addRow(
+    value: CellValue[] | Record<string, CellValue> | null | undefined,
+    style: StyleOption = 'n',
+  ): Row {
     const rowNo = this._nextRow;
     const row = this.getRow(rowNo);
     row.values = value;
@@ -817,11 +819,7 @@ class Worksheet {
   fillFormula(
     range: string,
     formula: string,
-    results?:
-      | ((row: number, col: number) => unknown)
-      | unknown[]
-      | unknown[][]
-      | null,
+    results?: ((row: number, col: number) => unknown) | unknown[] | unknown[][] | null,
     shareType: string = 'shared',
   ): void {
     // Define formula for top-left cell and share to rest
@@ -906,7 +904,10 @@ class Worksheet {
 
   // =========================================================================
   // Worksheet Protection
-  protect(password?: string, options?: Partial<WorksheetProtection> & {spinCount?: number}): Promise<void> {
+  protect(
+    password?: string,
+    options?: Partial<WorksheetProtection> & {spinCount?: number},
+  ): Promise<void> {
     // TODO: make this function truly async
     // perhaps marshal to worker thread or something
     return new Promise(resolve => {

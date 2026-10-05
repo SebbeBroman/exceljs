@@ -130,9 +130,9 @@ class TableXform extends BaseXform<TableModel> {
     // fetch the dfxs from styles
     model!.columns!.forEach(column => {
       if (column.dxfId !== undefined) {
-        column.style = (options as {styles: {getDxfStyle(id: string | number): unknown}}).styles.getDxfStyle(
-          column.dxfId,
-        );
+        column.style = (
+          options as {styles: {getDxfStyle(id: string | number): unknown}}
+        ).styles.getDxfStyle(column.dxfId);
       }
     });
   }

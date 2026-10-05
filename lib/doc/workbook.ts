@@ -14,14 +14,9 @@ import type {
 import type {PivotTable} from './pivot-table.js';
 import type {WorksheetModelData, WorksheetOptions} from './worksheet.js';
 
-// Workbook requirements
-//  Load and Save from file and stream
-//  Access/Add/Delete individual worksheets
-//  Manage String table, Hyperlink table, etc.
-//  Manage scaffolding for contained objects to write to/read from
-//
-// Note: CSV is optional so unused apps can tree-shake it.
-// Enable with: import '@sebbebroman/excel-ts/csv'  or  import {enableCsv} from '@sebbebroman/excel-ts/csv'
+// INTERNAL Doc Workbook (mutable class model). Used by the materialize/load
+// bridge and historical tests — not part of the public package API.
+// Public CSV: named `csv` from `@sebbebroman/exceljs`. Tests enable class CSV via lib/csv-entry.ts.
 
 /**
  * Constructor type for optional CSV module.
@@ -32,7 +27,7 @@ import type {WorksheetModelData, WorksheetOptions} from './worksheet.js';
 export type CsvConstructor = new (workbook: any) => any;
 
 class Workbook {
-  /** Optional CSV class; set via enableCsv / `import '@sebbebroman/excel-ts/csv'`. */
+  /** Optional CSV class; set via enableCsv from lib/csv-entry.ts (tests/bridge only). */
   static CSV: CsvConstructor | null = null;
 
   category: string;
@@ -88,7 +83,7 @@ class Workbook {
   get csv(): InstanceType<CsvConstructor> {
     if (!Workbook.CSV) {
       throw new Error(
-        'CSV support is not loaded. Add `import "@sebbebroman/excel-ts/csv"` (or `import { enableCsv } from "@sebbebroman/excel-ts/csv"`) before using workbook.csv',
+        'CSV support is not loaded on Doc Workbook. For the public API use `csv` from @sebbebroman/exceljs. For tests, import lib/csv-entry (enableCsv).',
       );
     }
     if (!this._csv) this._csv = new Workbook.CSV(this);
@@ -193,7 +188,7 @@ class Workbook {
     // return a clone of _worksheets
     return this._worksheets
       .slice(1)
-      .sort((a, b) => (a!.orderNo - b!.orderNo))
+      .sort((a, b) => a!.orderNo - b!.orderNo)
       .filter(Boolean) as Worksheet[];
   }
 
@@ -223,13 +218,22 @@ class Workbook {
     return this.media[id];
   }
 
-  get model(): WorkbookModel & {
+  get model(): ReturnType<Workbook['getXlsxModel']> {
+    const model = this.getXlsxModel();
+    // Keep the legacy snapshot's two independent worksheet model arrays.
+    model.sheets = this.worksheets.map(ws => ws.model).filter(Boolean) as never;
+    return model;
+  }
+
+  /** @internal Write once per sheet; XLSX consumes worksheets, not a second cell graph. */
+  getXlsxModel(): WorkbookModel & {
     worksheets: WorksheetModelData[];
     sheets: WorksheetModelData[];
     pivotTables: PivotTable[];
     calcProperties: CalculationProperties | Record<string, unknown>;
     themes?: unknown;
   } {
+    const worksheets = this.worksheets.map(worksheet => worksheet.model);
     return {
       creator: this.creator || 'Unknown',
       lastModifiedBy: this.lastModifiedBy || 'Unknown',
@@ -237,8 +241,8 @@ class Workbook {
       created: this.created,
       modified: this.modified,
       properties: this.properties as WorkbookProperties,
-      worksheets: this.worksheets.map(worksheet => worksheet.model) as never,
-      sheets: this.worksheets.map(ws => ws.model).filter(Boolean) as never,
+      worksheets: worksheets as never,
+      sheets: worksheets.filter(Boolean) as never,
       definedNames: this._definedNames.model,
       views: this.views,
       company: this.company,
@@ -288,8 +292,7 @@ class Workbook {
     this._worksheets = [];
     value.worksheets.forEach(worksheetModel => {
       const {id, name, state} = worksheetModel;
-      const orderNo =
-        value.sheets && value.sheets.findIndex(ws => ws.id === id);
+      const orderNo = value.sheets && value.sheets.findIndex(ws => ws.id === id);
       const worksheet = new Worksheet({
         id,
         name,

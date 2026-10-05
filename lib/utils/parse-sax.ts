@@ -17,11 +17,7 @@ export interface SaxWalkHandlers {
    * `materialize` copies every attribute into a fresh object (xform path).
    * `attr` decodes a single value and skips saxen's attribute parse until called.
    */
-  onOpen(
-    name: string,
-    attr: SaxAttributeGetter,
-    materialize: () => Record<string, string>,
-  ): void;
+  onOpen(name: string, attr: SaxAttributeGetter, materialize: () => Record<string, string>): void;
   onText(value: string): void;
   onClose(name: string): void;
 }

@@ -1,4 +1,6 @@
 import fs from 'fs';
+import {xmlDecode} from './xml-decode.js';
+export {xmlDecode} from './xml-decode.js';
 
 // useful stuff
 // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
@@ -124,24 +126,7 @@ const utils = {
     if (lastIndex !== i) return result + text.substring(lastIndex, i);
     return result;
   },
-  xmlDecode(text: string): string {
-    return text.replace(/&([a-z]*);/g, c => {
-      switch (c) {
-        case '&lt;':
-          return '<';
-        case '&gt;':
-          return '>';
-        case '&amp;':
-          return '&';
-        case '&apos;':
-          return "'";
-        case '&quot;':
-          return '"';
-        default:
-          return c;
-      }
-    });
-  },
+  xmlDecode,
   validInt(value: unknown): number {
     const i = parseInt(String(value), 10);
     return !Number.isNaN(i) ? i : 0;
@@ -183,7 +168,8 @@ const utils = {
   },
 
   *range(start: number, stop: number, step = 1): Generator<number, void, unknown> {
-    const compareOrder = step > 0 ? (a: number, b: number) => a < b : (a: number, b: number) => a > b;
+    const compareOrder =
+      step > 0 ? (a: number, b: number) => a < b : (a: number, b: number) => a > b;
     for (let value = start; compareOrder(value, stop); value += step) {
       yield value;
     }
@@ -225,7 +211,6 @@ export const excelToDate = utils.excelToDate;
 export const parsePath = utils.parsePath;
 export const getRelsPath = utils.getRelsPath;
 export const xmlEncode = utils.xmlEncode;
-export const xmlDecode = utils.xmlDecode;
 export const validInt = utils.validInt;
 export const isDateFmt = utils.isDateFmt;
 export const toIsoDateString = utils.toIsoDateString;

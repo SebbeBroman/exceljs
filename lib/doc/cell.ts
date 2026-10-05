@@ -75,6 +75,11 @@ interface HyperlinkValueInput {
   text?: string;
   hyperlink?: string;
   tooltip?: string;
+  /** Formula source, when the hyperlink cell was produced from a formula. */
+  formula?: string;
+  sharedFormula?: string;
+  shareType?: string;
+  ref?: string;
 }
 
 /** Worksheet surface needed via cell.row */
@@ -88,12 +93,7 @@ interface CellWorksheet {
   workbook: {
     definedNames: {
       getNamesEx(address: {sheetName: string; address: string; row: number; col: number}): string[];
-      removeAllNames(address: {
-        sheetName: string;
-        address: string;
-        row: number;
-        col: number;
-      }): void;
+      removeAllNames(address: {sheetName: string; address: string; row: number; col: number}): void;
       addEx(
         address: {sheetName: string; address: string; row: number; col: number},
         name: string,
@@ -205,6 +205,11 @@ class Cell {
           hyperlink: v.hyperlink,
         };
         if (v.tooltip) model.tooltip = v.tooltip;
+        // Keep formula fields so a formula-backed hyperlink writes back intact.
+        if (v.formula) model.formula = v.formula;
+        if (v.sharedFormula) model.sharedFormula = v.sharedFormula;
+        if (v.shareType) model.shareType = v.shareType;
+        if (v.ref) model.ref = v.ref;
         return model;
       }
       case Cell.Types.Formula: {
@@ -817,6 +822,20 @@ class HyperlinkValue implements CellValueStrategy {
     if (value && value.tooltip) {
       this.model.tooltip = value.tooltip;
     }
+    if (value && value.formula) {
+      // Formula-backed hyperlink (xform reconcile moves result -> text and
+      // leaves `formula` in place). Retained so cell.model.formula round-trips.
+      this.model.formula = value.formula;
+    }
+    if (value && value.sharedFormula) {
+      this.model.sharedFormula = value.sharedFormula;
+    }
+    if (value && value.shareType) {
+      this.model.shareType = value.shareType;
+    }
+    if (value && value.ref) {
+      this.model.ref = value.ref;
+    }
   }
 
   get value(): CellHyperlinkValue {
@@ -838,6 +857,11 @@ class HyperlinkValue implements CellValueStrategy {
     if (value.tooltip) {
       this.model.tooltip = value.tooltip;
     }
+    // Carry formula fields so reassigning text/hyperlink does not drop them.
+    if (value.formula) this.model.formula = value.formula;
+    if (value.sharedFormula) this.model.sharedFormula = value.sharedFormula;
+    if (value.shareType) this.model.shareType = value.shareType;
+    if (value.ref) this.model.ref = value.ref;
   }
 
   get text(): string | undefined {
@@ -1089,8 +1113,7 @@ class FormulaValue implements CellValueStrategy {
       const {worksheet} = this.cell;
       const master = worksheet.findCell(this.model.sharedFormula as string);
       this._translatedFormula =
-        master &&
-        slideFormula(master.formula ?? '', master.address, this.model.address);
+        master && slideFormula(master.formula ?? '', master.address, this.model.address);
     }
     return this._translatedFormula;
   }

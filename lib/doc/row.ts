@@ -1,6 +1,7 @@
 import Enums from './enums.js';
 import colCache from '../utils/col-cache.js';
 import Cell from './cell.js';
+import Note from './note.js';
 import type {
   Alignment,
   Borders,
@@ -13,7 +14,6 @@ import type {
 } from '../../index.js';
 import type Column from './column.js';
 import type {ValueTypeCode} from './enums.js';
-import type Note from './note.js';
 
 export interface RowDimensions {
   min: number;
@@ -74,13 +74,24 @@ export interface CompactCell {
   comment?: Note;
 }
 
+/** Non-materializing cell slot view for plain projection / notes. */
+export interface CellValueInfo {
+  col: number;
+  address: string;
+  type: number;
+  value: unknown;
+  style?: Partial<Style> & Record<string, unknown>;
+  /** Public note payload (string or Comment), if any. */
+  note?: unknown;
+}
+
 export type CellSlot = Cell | CompactCell;
 
 function isCompact(entry: CellSlot | undefined | null): entry is CompactCell {
   return entry != null && (entry as CompactCell)._c === 1;
 }
 
-function styleHasKeys(style: Partial<Style> & Record<string, unknown> | undefined): boolean {
+function styleHasKeys(style: (Partial<Style> & Record<string, unknown>) | undefined): boolean {
   if (!style) return false;
   // faster than Object.keys alloc for the common empty-style case
   for (const _k in style) return true;
@@ -109,6 +120,87 @@ function buildWriteModel(address: string, type: number, value: unknown): RowMode
       return {address, type, value};
     default:
       return Cell.valueToModel(address, value, type) as RowModelCell;
+  }
+}
+
+/**
+ * Reconstruct the public CellValue from a post-reconcile xform cell model.
+ * Used for CompactCell.value so materialize / eachValue work without a Cell.
+ */
+function valueFromCellModel(cellModel: RowModelCell): unknown {
+  const type = cellModel.type as number;
+  switch (type) {
+    case Enums.ValueType.Null:
+      return null;
+    case Enums.ValueType.Number:
+    case Enums.ValueType.String:
+    case Enums.ValueType.Date:
+    case Enums.ValueType.Boolean:
+    case Enums.ValueType.Error:
+    case Enums.ValueType.SharedString:
+    case Enums.ValueType.RichText:
+      // JSONValue models carry rawValue (rare on load path)
+      if (cellModel.rawValue !== undefined) return cellModel.rawValue;
+      return cellModel.value;
+    case Enums.ValueType.Hyperlink: {
+      const v: {
+        text?: unknown;
+        hyperlink?: unknown;
+        tooltip?: unknown;
+        formula?: unknown;
+        sharedFormula?: unknown;
+        shareType?: unknown;
+        ref?: unknown;
+      } = {
+        text: cellModel.text,
+        hyperlink: cellModel.hyperlink,
+      };
+      if (cellModel.tooltip != null) v.tooltip = cellModel.tooltip;
+      // A formula cell reconciled to a hyperlink keeps its `formula` (the
+      // reconcile moves result -> text). Carry the formula fields through so
+      // `cell.model.formula` survives, matching the direct-model load path.
+      if (cellModel.formula != null) v.formula = cellModel.formula;
+      if (cellModel.sharedFormula != null) v.sharedFormula = cellModel.sharedFormula;
+      if (cellModel.shareType != null) v.shareType = cellModel.shareType;
+      if (cellModel.ref != null) v.ref = cellModel.ref;
+      return v;
+    }
+    case Enums.ValueType.Formula: {
+      const v: {
+        formula?: unknown;
+        sharedFormula?: unknown;
+        shareType?: unknown;
+        ref?: unknown;
+        result?: unknown;
+      } = {};
+      if (cellModel.formula != null) v.formula = cellModel.formula;
+      if (cellModel.sharedFormula != null) v.sharedFormula = cellModel.sharedFormula;
+      if (cellModel.shareType != null) v.shareType = cellModel.shareType;
+      if (cellModel.ref != null) v.ref = cellModel.ref;
+      if (cellModel.result !== undefined) v.result = cellModel.result;
+      return v;
+    }
+    default:
+      return cellModel.value;
+  }
+}
+
+/** Types safe to keep as CompactCell on load (no Cell / Value strategy). */
+function isCompactLoadType(type: number): boolean {
+  switch (type) {
+    case Enums.ValueType.Null:
+    case Enums.ValueType.Number:
+    case Enums.ValueType.String:
+    case Enums.ValueType.Date:
+    case Enums.ValueType.Boolean:
+    case Enums.ValueType.Hyperlink:
+    case Enums.ValueType.Formula:
+    case Enums.ValueType.SharedString:
+    case Enums.ValueType.RichText:
+    case Enums.ValueType.Error:
+      return true;
+    default:
+      return false;
   }
 }
 
@@ -196,6 +288,63 @@ class Row {
         compact.style = style;
       }
     }
+    this._cells[col - 1] = compact;
+  }
+
+  /**
+   * Store a post-reconcile xform cell model as a CompactCell (load path).
+   * Falls back to full Cell for types that cannot be represented compactly.
+   *
+   * The reconciled model is reused in place as the write model (`wm`): it is
+   * garbage after hydration, so instead of copying every key into a fresh
+   * object (one alloc + N copies per cell), style/comment are extracted and
+   * undefined-valued leftovers dropped — exactly what the old copy produced,
+   * since it skipped `style`/`comment`/`address` and any `undefined` value.
+   */
+  _setCompactFromModel(col: number, address: string, cellModel: RowModelCell): void {
+    const type = cellModel.type as number;
+    if (!isCompactLoadType(type)) {
+      const cell = this.getCellEx({
+        address,
+        row: this._number,
+        col,
+      });
+      cell.model = cellModel as never;
+      return;
+    }
+
+    const value = valueFromCellModel(cellModel);
+    const style = cellModel.style as Partial<Style> & Record<string, unknown>;
+    const comment = cellModel.comment as {type?: string} | undefined;
+    delete cellModel.style;
+    delete cellModel.comment;
+    // writeModelFromCellModel skipped undefined values — drop them so the
+    // reused object has exactly the same shape (e.g. reconciled `styleId`,
+    // hyperlink juggling leaves `styleId`/`result`/`value` undefined).
+    for (const key in cellModel) {
+      if (cellModel[key] === undefined) delete cellModel[key];
+    }
+    cellModel.address = address;
+
+    const compact: CompactCell = {
+      _c: 1,
+      col,
+      address,
+      type,
+      value: value as CellValue,
+      wm: cellModel,
+    };
+
+    if (style) {
+      compact.style = style;
+    }
+
+    if (comment) {
+      if (comment.type === 'note') {
+        compact.comment = Note.fromModel(comment as Parameters<typeof Note.fromModel>[0]);
+      }
+    }
+
     this._cells[col - 1] = compact;
   }
 
@@ -330,6 +479,49 @@ class Row {
           fn!(entry, index + 1);
         }
       });
+    }
+  }
+
+  /**
+   * Visit non-null cells without materializing CompactCell → Cell.
+   * Used by doc-to-plain (and similar projections) so load stays lazy.
+   */
+  eachValue(callback: (info: CellValueInfo, colNumber: number) => void): void {
+    const slots = this._cells;
+    const n = slots.length;
+    for (let i = 0; i < n; i++) {
+      const entry = slots[i];
+      if (!entry) continue;
+
+      if (isCompact(entry)) {
+        if (entry.type === Enums.ValueType.Null) continue;
+        const note = entry.comment ? entry.comment.note : undefined;
+        callback(
+          {
+            col: entry.col,
+            address: entry.address,
+            type: entry.type,
+            value: entry.value,
+            style: entry.style,
+            note,
+          },
+          entry.col,
+        );
+        continue;
+      }
+
+      if (entry.type === Enums.ValueType.Null) continue;
+      callback(
+        {
+          col: entry.col,
+          address: entry.address,
+          type: entry.type,
+          value: entry.value,
+          style: entry.style,
+          note: entry.note,
+        },
+        entry.col,
+      );
     }
   }
 
@@ -606,8 +798,8 @@ class Row {
             };
           }
           previousAddress = address;
-          const cell = this.getCellEx(address!);
-          cell.model = cellModel as never;
+          // Prefer CompactCell on load — avoid Cell/Value strategy for common types
+          this._setCompactFromModel(address!.col, address!.address, cellModel);
           break;
         }
       }

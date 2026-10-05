@@ -238,11 +238,7 @@ class CellXform extends BaseXform<CellXformModel> {
       case Enums.ValueType.Error:
         xmlStream.addAttribute('t', 'e');
         xmlStream.leafNode('f', attrs as Record<string, unknown> | undefined, model.formula);
-        xmlStream.leafNode(
-          'v',
-          undefined,
-          (model.result as {error: string}).error,
-        );
+        xmlStream.leafNode('v', undefined, (model.result as {error: string}).error);
         break;
 
       case Enums.ValueType.Date:
@@ -263,6 +259,12 @@ class CellXform extends BaseXform<CellXformModel> {
     }
     if (model.type === Enums.ValueType.Null && !model.styleId) {
       // if null and no style, exit
+      return;
+    }
+
+    // Fast path: plain number cell — single XML chunk (address is A1-style, value is numeric)
+    if (model.type === Enums.ValueType.Number && !model.styleId) {
+      xmlStream.writeXml(`<c r="${model.address}"><v>${model.value as number}</v></c>`);
       return;
     }
 
@@ -303,11 +305,11 @@ class CellXform extends BaseXform<CellXformModel> {
         ) {
           xmlStream.addAttribute('t', 'inlineStr');
           xmlStream.openNode('is');
-          ((model.value as {richText: import('../strings/rich-text-xform.js').RichTextModel[]}).richText).forEach(
-            text => {
-              this.richTextXForm.render(xmlStream, text);
-            },
-          );
+          (
+            model.value as {richText: import('../strings/rich-text-xform.js').RichTextModel[]}
+          ).richText.forEach(text => {
+            this.richTextXForm.render(xmlStream, text);
+          });
           xmlStream.closeNode();
         } else {
           xmlStream.addAttribute('t', 'str');
@@ -319,8 +321,26 @@ class CellXform extends BaseXform<CellXformModel> {
         xmlStream.leafNode('v', undefined, utils.dateToExcel(model.value as Date, model.date1904));
         break;
 
-      case Enums.ValueType.Hyperlink:
-        if (model.ssId !== undefined) {
+      case Enums.ValueType.Hyperlink: {
+        // CT_Cell orders children f, v, is — <f> must precede <v> or readers
+        // (including our own) mis-parse the cell, and the t attribute belongs on
+        // <c> itself, so both are set before the first leafNode.
+        //
+        // A formula-backed hyperlink must use t="str" with the literal text,
+        // never t="s": a shared-string cell carrying <f> reads back as a plain
+        // Formula cell and loses the hyperlink.
+        const hasFormula = model.formula !== undefined;
+        if (hasFormula) {
+          xmlStream.addAttribute('t', 'str');
+          const fAttrs: Record<string, unknown> = {};
+          if (model.shareType === 'shared' && model.si !== undefined) {
+            fAttrs.t = 'shared';
+            fAttrs.si = model.si;
+            if (model.ref !== undefined) fAttrs.ref = model.ref;
+          }
+          xmlStream.leafNode('f', hasFormula ? fAttrs : undefined, model.formula);
+          xmlStream.leafNode('v', undefined, model.text);
+        } else if (model.ssId !== undefined) {
           xmlStream.addAttribute('t', 's');
           xmlStream.leafNode('v', undefined, model.ssId);
         } else {
@@ -328,6 +348,7 @@ class CellXform extends BaseXform<CellXformModel> {
           xmlStream.leafNode('v', undefined, model.text);
         }
         break;
+      }
 
       case Enums.ValueType.Formula:
         this.renderFormula(xmlStream, model);

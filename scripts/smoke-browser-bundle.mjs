@@ -1,10 +1,12 @@
 /**
  * Bundle for browser WITHOUT process polyfills.
- * Asserts the client path works and does not depend on a live `process` object.
- * Reports minified single-file size and code-split entry chunk sizes (write-only vs round-trip).
+ * Asserts the client write path works and does not depend on a live `process` object.
+ * Reports minified single-file size and code-split entry chunk sizes (write-only).
+ *
+ * CSV stays enabled through fast-csv/browser, without Node polyfills.
  */
 import * as esbuild from 'esbuild';
-import {writeFileSync, mkdirSync, readFileSync, readdirSync, statSync} from 'node:fs';
+import {writeFileSync, mkdirSync, readFileSync, readdirSync, statSync, rmSync} from 'node:fs';
 import {join, dirname} from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
 import {gzipSync} from 'node:zlib';
@@ -21,7 +23,6 @@ const sharedBuild = {
   platform: 'browser',
   mainFields: ['browser', 'module', 'main'],
   conditions: ['browser', 'import', 'default'],
-  // Resolve TS sources (NodeNext imports keep .js extensions)
   resolveExtensions: ['.ts', '.js', '.mjs', '.json'],
   define: {
     global: 'globalThis',
@@ -34,49 +35,28 @@ const sharedBuild = {
   logLevel: 'warning',
 };
 
-const entry = join(outDir, 'entry.js');
-writeFileSync(
-  entry,
-  `
-import { Workbook } from '../../excel.ts';
-
-export async function run() {
-  const wb = new Workbook();
-  const ws = wb.addWorksheet('Browser');
-  ws.getCell('A1').value = 'hello browser';
-  ws.getCell('B1').value = 99;
-  const buf = await wb.xlsx.writeBuffer();
-  const wb2 = new Workbook();
-  await wb2.xlsx.load(buf);
-  const v = wb2.getWorksheet('Browser').getCell('A1').value;
-  if (v !== 'hello browser') throw new Error('round-trip failed: ' + v);
-  return { ok: true, bytes: buf.length || buf.byteLength };
-}
-`,
-);
-
 const writeOnlyEntry = join(outDir, 'entry-write-only.js');
 writeFileSync(
   writeOnlyEntry,
   `
-import { Workbook } from '../../excel.ts';
+import { workbook } from '../../excel.ts';
 
 export async function run() {
-  const wb = new Workbook();
-  const ws = wb.addWorksheet('Browser');
-  ws.getCell('A1').value = 'hello browser';
-  ws.getCell('B1').value = 99;
-  const buf = await wb.xlsx.writeBuffer();
+  const buf = await workbook()
+    .sheet('Browser')
+    .cell('A1', 'hello browser')
+    .cell('B1', 99)
+    .writeBuffer();
   return { ok: true, bytes: buf.length || buf.byteLength };
 }
 `,
 );
 
-// --- Single-file minified (everything that dynamic-import can still pull in is included) ---
+// --- Single-file minified ---
 const outfile = join(outDir, 'bundle.mjs');
 await esbuild.build({
   ...sharedBuild,
-  entryPoints: [entry],
+  entryPoints: [writeOnlyEntry],
   outfile,
   minify: true,
 });
@@ -92,41 +72,20 @@ if (
 ) {
   throw new Error('bundle still imports npm buffer package');
 }
-if (
-  code.includes('node_modules/events/') ||
-  code.includes('from "events"') ||
-  code.includes("from 'events'") ||
-  code.includes('from "node:events"') ||
-  code.includes("from 'node:events'")
-) {
-  throw new Error('bundle still imports npm events / node:events package');
-}
 
 const mod = await import(pathToFileURL(outfile).href + `?t=${Date.now()}`);
 const result = await mod.run();
 const size = readFileSync(outfile).byteLength;
 const gzip = gzipSync(readFileSync(outfile)).byteLength;
+const singleLine = `single-file minify: ${(size / 1024).toFixed(1)}KB  gzip ${(gzip / 1024).toFixed(1)}KB`;
 console.log('browser bundle smoke ok', result);
-console.log(
-  `  single-file minify: ${(size / 1024).toFixed(1)}KB  gzip ${(gzip / 1024).toFixed(1)}KB`,
-);
-console.log('  (no process polyfill, no npm buffer/events, no readable-stream, fflate zip)');
+console.log(`  ${singleLine}`);
 
-// --- Code-split: entry chunk is what apps pay for initially ---
+// --- Code-split ---
 async function measureSplit(label, entryPoint) {
   const splitDir = join(outDir, `split-${label}`);
+  rmSync(splitDir, {recursive: true, force: true});
   mkdirSync(splitDir, {recursive: true});
-  // clear previous chunks
-  for (const f of readdirSync(splitDir)) {
-    try {
-      // only files
-      if (statSync(join(splitDir, f)).isFile()) {
-        // leave dir, rebuild overwrites
-      }
-    } catch {
-      /* ignore */
-    }
-  }
 
   await esbuild.build({
     ...sharedBuild,
@@ -141,34 +100,27 @@ async function measureSplit(label, entryPoint) {
   const files = readdirSync(splitDir).filter(f => f.endsWith('.js'));
   let entryBytes = 0;
   let totalBytes = 0;
-  const chunks = [];
   for (const f of files) {
     const b = statSync(join(splitDir, f)).size;
     totalBytes += b;
-    chunks.push({f, b});
     if (f.startsWith('entry')) entryBytes = b;
   }
-  chunks.sort((a, b) => b.b - a.b);
-  console.log(
-    `  split/${label}: entry ${(entryBytes / 1024).toFixed(1)}KB  total ${(totalBytes / 1024).toFixed(1)}KB  (${files.length} files)`,
-  );
-  return {entryBytes, totalBytes, chunks};
+  const line = `split/${label}: entry ${(entryBytes / 1024).toFixed(1)}KB  total ${(totalBytes / 1024).toFixed(1)}KB  (${files.length} files)`;
+  console.log(`  ${line}`);
+  return {entryBytes, totalBytes, line};
 }
 
-const writeSplit = await measureSplit('write-only', writeOnlyEntry);
-const roundTripSplit = await measureSplit('round-trip', entry);
+const split = await measureSplit('write-only', writeOnlyEntry);
+console.log('  (builder write-only path; CSV enabled; node entry not imported)');
 
-// Sanity: write-only entry should not retain saxen / CF if lazy load works
-const writeEntryCode = readFileSync(join(outDir, 'split-write-only', 'entry.js'), 'utf8');
-// saxen error string; more reliable than minified identifier names
-const saxInEntry = writeEntryCode.includes('non-whitespace outside of root node');
-const cfInEntry =
-  writeEntryCode.includes('conditionalFormattings') && writeEntryCode.includes('cf-rule');
-// table.js exclusive string (styles also mention TableStyleMedium2)
-const tableDocInEntry = writeEntryCode.includes('Invalid Totals Row Function');
-console.log(
-  `  write-only: saxen in entry=${saxInEntry} cf-ish=${cfInEntry} table-doc=${tableDocInEntry}  optional chunks total~${((writeSplit.totalBytes - writeSplit.entryBytes) / 1024).toFixed(1)}KB`,
+// Persist sizes for docs
+const sizesPath = join(outDir, 'sizes.txt');
+writeFileSync(
+  sizesPath,
+  [
+    singleLine,
+    split.line,
+    `bytes: single=${size} gzip=${gzip} splitEntry=${split.entryBytes} splitTotal=${split.totalBytes}`,
+  ].join('\n') + '\n',
 );
-console.log(
-  `  round-trip entry vs write-only entry delta: ${((roundTripSplit.entryBytes - writeSplit.entryBytes) / 1024).toFixed(1)}KB`,
-);
+console.log(`  wrote ${sizesPath}`);

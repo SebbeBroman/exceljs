@@ -45,11 +45,7 @@ class HyperlinkReader extends EventEmitter {
   }
 
   each(
-    fn: (
-      value: HyperlinkRelationship,
-      index: number,
-      array: HyperlinkRelationship[],
-    ) => void,
+    fn: (value: HyperlinkRelationship, index: number, array: HyperlinkRelationship[]) => void,
   ): void {
     return (this.hyperlinks as HyperlinkRelationship[]).forEach(fn);
   }

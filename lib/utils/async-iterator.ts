@@ -2,14 +2,19 @@
  * Tiny helpers so XML parse paths don't need readable-stream / PassThrough.
  */
 
-/** Async-iterate string content in chunks (or one shot if small). */
+/**
+ * Async-iterate string content for SAX.
+ * When the full string is already in memory (post-unzip), yield once — chunking
+ * only adds async-generator overhead for the buffered load path.
+ * Pass `chunkSize` for true streaming scenarios that need bounded writes.
+ */
 export async function* stringChunks(
   content: unknown,
-  chunkSize = 16 * 1024,
+  chunkSize?: number,
 ): AsyncGenerator<string, void, unknown> {
   if (content == null) return;
   const str = typeof content === 'string' ? content : String(content);
-  if (str.length <= chunkSize) {
+  if (chunkSize == null || chunkSize <= 0 || str.length <= chunkSize) {
     yield str;
     return;
   }
@@ -35,9 +40,7 @@ interface ReadableLike {
  * Turn a Node-style readable (or any event emitter with data/end/error)
  * into an async iterable without PassThrough / readable-stream.
  */
-export async function* fromReadable(
-  stream: unknown,
-): AsyncGenerator<unknown, void, unknown> {
+export async function* fromReadable(stream: unknown): AsyncGenerator<unknown, void, unknown> {
   if (stream == null) return;
 
   const s = stream as ReadableLike;

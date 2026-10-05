@@ -363,11 +363,14 @@ class WorksheetWriter {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   set columns(value: any[]) {
     // calculate max header row count
-    this._headerRowCount = value.reduce((pv: number, cv: {header?: unknown; headers?: unknown[]}) => {
-      const headerCount: number =
-        (cv.header ? 1 : 0) || (cv.headers ? cv.headers.length : 0) || 0;
-      return Math.max(pv, headerCount);
-    }, 0);
+    this._headerRowCount = value.reduce(
+      (pv: number, cv: {header?: unknown; headers?: unknown[]}) => {
+        const headerCount: number =
+          (cv.header ? 1 : 0) || (cv.headers ? cv.headers.length : 0) || 0;
+        return Math.max(pv, headerCount);
+      },
+      0,
+    );
 
     // construct Column objects
     let count = 1;

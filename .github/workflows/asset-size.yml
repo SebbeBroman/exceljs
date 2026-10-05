@@ -9,8 +9,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - uses: pnpm/action-setup@v4
         with:
           version: 11.20.0
@@ -21,9 +19,12 @@ jobs:
       - run: pnpm install --frozen-lockfile
       # Browser smoke bundle via esbuild (no Grunt/Babel)
       - run: pnpm run test:browser-bundle
-      - uses: chrysanthos/simple-asset-size-reporter@1.0.2
-        with:
-          repo-token: '${{ secrets.GITHUB_TOKEN }}'
-          files: '["build/browser-smoke/bundle.mjs"]'
-          with-same: 'false'
-          build-assets: 'pnpm install --frozen-lockfile && pnpm run test:browser-bundle'
+      # Fails the PR when the browser bundle grows past its budgets.
+      #
+      # This replaced chrysanthos/simple-asset-size-reporter@1.0.2. That action
+      # is unmaintained (last code change April 2020) and loads the `esm` shim,
+      # which patches CommonJS module loading and crashes on the Node 24 that
+      # GitHub forces Actions onto. It failed on every run in this repo's
+      # history, including on master, so it was never actually gating anything.
+      # Budgets live in scripts/check-asset-size.mjs.
+      - run: pnpm run check:asset-size

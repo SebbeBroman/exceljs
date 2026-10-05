@@ -61,11 +61,7 @@ class RowXform extends BaseXform<RowXformModel> {
     });
   }
 
-  override render(
-    xmlStream: XmlStreamLike,
-    model?: RowXformModel | null,
-    options?: unknown,
-  ): void {
+  override render(xmlStream: XmlStreamLike, model?: RowXformModel | null, options?: unknown): void {
     if (!model) {
       return;
     }

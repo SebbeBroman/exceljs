@@ -10,7 +10,13 @@ function slideFormula(formula: string, fromCell: string, toCell: string): string
   const to = colCache.decode(toCell) as CellAddress;
   return formula.replace(
     replacementCandidateRx,
-    (refMatch, sheet: string | undefined, _sheetMaybe: string | undefined, addrPart: string, trailingParen: string | undefined) => {
+    (
+      refMatch,
+      sheet: string | undefined,
+      _sheetMaybe: string | undefined,
+      addrPart: string,
+      trailingParen: string | undefined,
+    ) => {
       if (trailingParen) {
         return refMatch;
       }

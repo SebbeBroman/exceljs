@@ -1,10 +1,11 @@
 /**
- * Optional CSV support entry.
- * Side-effect: enables workbook.csv on Workbook.
+ * INTERNAL — not a package export.
  *
- *   import '@sebbebroman/excel-ts/csv';
- *   // or
- *   import {enableCsv, CSV} from '@sebbebroman/excel-ts/csv';
+ * Side-effect entry that attaches CSV to the legacy Doc Workbook class for
+ * vitest / historical tests (verquire). Public CSV API is named `csv` from
+ * `@sebbebroman/exceljs` (see lib/csv/public.ts).
+ *
+ *   import {enableCsv} from '../lib/csv-entry.js'; // tests only
  */
 import CSV from './csv/csv.js';
 import Workbook from './doc/workbook.js';

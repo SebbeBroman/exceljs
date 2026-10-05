@@ -337,8 +337,9 @@ class FillXform extends BaseXform<FillModel> {
     if (this.parser) {
       if (!this.parser.parseClose(name)) {
         this.model = this.parser.model as FillModel;
-        (this.model as {type?: string}).type = (this.parser as PatternFillXform | GradientFillXform)
-          .name;
+        (this.model as {type?: string}).type = (
+          this.parser as PatternFillXform | GradientFillXform
+        ).name;
         this.parser = undefined;
       }
       return true;

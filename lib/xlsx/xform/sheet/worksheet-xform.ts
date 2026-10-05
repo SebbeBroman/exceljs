@@ -149,7 +149,61 @@ const mergeConditionalFormattings = (
   return model;
 };
 
-/** No-op CF xforms so write paths without CF never load the CF tree. */
+export interface SheetRelMaps {
+  rels: Record<string, WorksheetRel>;
+  hyperlinkMap: Record<string, string>;
+  commentsMap: Record<string, unknown>;
+}
+
+/**
+ * Build relationship / hyperlink / comment lookup maps for a parsed worksheet
+ * model. Extracted from reconcile so the fast sheetData path can resolve
+ * hyperlinks/comments inline; reconcile itself calls this (same behavior).
+ */
+export function buildSheetRelMaps(
+  model: WorksheetXformModel,
+  relationships: WorksheetRel[] | undefined,
+  commentsByTarget: Record<string, {comments: Array<Record<string, unknown>>}> | undefined,
+  vmlDrawings: Record<string, {comments: unknown[]}> | undefined,
+): SheetRelMaps {
+  const rels = (relationships || []).reduce(
+    (h: Record<string, WorksheetRel>, rel: WorksheetRel) => {
+      h[rel.Id] = rel;
+      if (rel.Type === RelType.Comments) {
+        model.comments = (commentsByTarget as unknown as Record<string, {comments: unknown[]}>)[
+          rel.Target
+        ].comments as Array<Record<string, unknown>>;
+      }
+      if (rel.Type === RelType.VmlDrawing && model.comments && model.comments.length) {
+        const vmlComment = vmlDrawings![rel.Target].comments;
+        model.comments.forEach((comment, index) => {
+          comment.note = Object.assign({}, comment.note, vmlComment[index]);
+        });
+      }
+      return h;
+    },
+    {},
+  );
+  const commentsMap = (model.comments || []).reduce(
+    (h: Record<string, unknown>, comment: Record<string, unknown>) => {
+      if (comment.ref) {
+        h[comment.ref as string] = comment;
+      }
+      return h;
+    },
+    {},
+  );
+  const hyperlinkMap = (model.hyperlinks || []).reduce(
+    (h: Record<string, string>, hyperlink: Record<string, unknown>) => {
+      if (hyperlink.rId) {
+        h[hyperlink.address as string] = rels[hyperlink.rId as string].Target;
+      }
+      return h;
+    },
+    {},
+  );
+  return {rels, hyperlinkMap, commentsMap};
+}
 class EmptyConditionalFormattingsXform extends BaseXform<unknown[]> {
   constructor() {
     super();
@@ -540,7 +594,7 @@ class WorkSheetXform extends BaseXform<WorksheetXformModel> {
     switch (name) {
       case 'worksheet': {
         const properties: Record<string, unknown> = {
-          ...((this.map.sheetFormatPr.model as object) || {}),
+          ...(this.map.sheetFormatPr.model as object),
         };
         const sheetPrModel = this.map.sheetPr.model as Record<string, unknown> | null | undefined;
         if (sheetPrModel && sheetPrModel.tabColor) {
@@ -606,42 +660,14 @@ class WorkSheetXform extends BaseXform<WorksheetXformModel> {
     }
     // options.merges = new Merges();
     // options.merges.reconcile(model.mergeCells, model.rows);
-    const rels = (model.relationships || []).reduce(
-      (h: Record<string, WorksheetRel>, rel: WorksheetRel) => {
-        h[rel.Id] = rel;
-        if (rel.Type === RelType.Comments) {
-          model.comments = (options.comments as unknown as Record<string, {comments: unknown[]}>)[
-            rel.Target
-          ].comments as Array<Record<string, unknown>>;
-        }
-        if (rel.Type === RelType.VmlDrawing && model.comments && model.comments.length) {
-          const vmlComment = options.vmlDrawings![rel.Target].comments;
-          model.comments.forEach((comment, index) => {
-            comment.note = Object.assign({}, comment.note, vmlComment[index]);
-          });
-        }
-        return h;
-      },
-      {},
+    const {rels, hyperlinkMap, commentsMap} = buildSheetRelMaps(
+      model,
+      model.relationships,
+      options.comments as unknown as Record<string, {comments: Array<Record<string, unknown>>}>,
+      options.vmlDrawings as unknown as Record<string, {comments: unknown[]}>,
     );
-    options.commentsMap = (model.comments || []).reduce(
-      (h: Record<string, unknown>, comment: Record<string, unknown>) => {
-        if (comment.ref) {
-          h[comment.ref as string] = comment;
-        }
-        return h;
-      },
-      {},
-    );
-    options.hyperlinkMap = (model.hyperlinks || []).reduce(
-      (h: Record<string, string>, hyperlink: Record<string, unknown>) => {
-        if (hyperlink.rId) {
-          h[hyperlink.address as string] = rels[hyperlink.rId as string].Target;
-        }
-        return h;
-      },
-      {},
-    );
+    options.commentsMap = commentsMap;
+    options.hyperlinkMap = hyperlinkMap;
     options.formulae = {};
 
     // compact the rows and cells
@@ -651,7 +677,11 @@ class WorkSheetXform extends BaseXform<WorksheetXformModel> {
     });
 
     this.map.cols.reconcile(model.cols as never, options);
-    this.map.sheetData.reconcile(model.rows as never, options);
+    // Fast-path rows are already reconciled (see fast-sheet-data) — skip the
+    // per-cell pass but still reconcile cols/CF below.
+    if (!(model as {fastRows?: boolean}).fastRows) {
+      this.map.sheetData.reconcile(model.rows as never, options);
+    }
     this.map.conditionalFormatting.reconcile(model.conditionalFormattings as never, options);
 
     model.media = [];
@@ -660,9 +690,9 @@ class WorkSheetXform extends BaseXform<WorksheetXformModel> {
       const match = drawingRel.Target.match(/\/drawings\/([a-zA-Z0-9]+)[.][a-zA-Z]{3,4}$/);
       if (match) {
         const drawingName = match[1];
-        const drawing = (options.drawings as unknown as Record<string, {anchors: Array<Record<string, unknown>>}>)[
-          drawingName
-        ];
+        const drawing = (
+          options.drawings as unknown as Record<string, {anchors: Array<Record<string, unknown>>}>
+        )[drawingName];
         drawing.anchors.forEach(anchor => {
           if (anchor.medium) {
             const image = {

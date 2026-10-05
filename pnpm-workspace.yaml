@@ -3,6 +3,8 @@ allowBuilds:
 catalog:
   vite: npm:@voidzero-dev/vite-plus-core@0.2.7
   vite-plus: 0.2.7
+minimumReleaseAgeExclude:
+  - '@sebbebroman/fast-csv@0.1.0'
 overrides:
   vite: 'catalog:'
 peerDependencyRules:

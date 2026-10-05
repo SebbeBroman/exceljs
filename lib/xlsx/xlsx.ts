@@ -1,8 +1,8 @@
 import fs from 'fs';
-import {fromReadable, once, stringChunks} from '../utils/async-iterator.js';
+import {fromReadable, once} from '../utils/async-iterator.js';
 import {entryToBuffer, entryToString, unzipToFiles} from '../utils/zip-reader.js';
+import BufferZipWriter, {resolveZipLevel} from '../utils/buffer-zip.js';
 import ZipStream from '../utils/zip-stream.js';
-import StreamBuf from '../utils/stream-buf.js';
 import utils from '../utils/utils.js';
 import XmlStream from '../utils/xml-stream.js';
 import {
@@ -20,7 +20,7 @@ import RelationshipsXform from './xform/core/relationships-xform.js';
 import ContentTypesXform from './xform/core/content-types-xform.js';
 import AppXform from './xform/core/app-xform.js';
 import WorkbookXform from './xform/book/workbook-xform.js';
-import WorksheetXform from './xform/sheet/worksheet-xform.js';
+import WorksheetXform, {buildSheetRelMaps} from './xform/sheet/worksheet-xform.js';
 import {
   loadDrawingXform,
   loadTableXform,
@@ -81,6 +81,13 @@ function modelNeedsDocFeatures(model: XlsxModel): boolean {
   return false;
 }
 
+// The fused cell reader is never needed when exporting a workbook.
+// Cache the import promise so concurrent worksheet reads share its first load.
+let fastSheetDataPromise: Promise<typeof import('./xform/sheet/fast-sheet-data.js')> | undefined;
+function loadFastSheetData(): Promise<typeof import('./xform/sheet/fast-sheet-data.js')> {
+  return (fastSheetDataPromise ??= import('./xform/sheet/fast-sheet-data.js'));
+}
+
 // theme1 XML is large (~8KB min); load only when writing default theme
 let theme1XmlPromise: Promise<string> | undefined;
 function loadTheme1Xml(): Promise<string> {
@@ -95,13 +102,17 @@ function fsReadFileAsync(
   options?: Parameters<typeof fs.readFile>[1],
 ): Promise<Buffer | string> {
   return new Promise((resolve, reject) => {
-    fs.readFile(filename, options as any, (error: NodeJS.ErrnoException | null, data: Buffer | string) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(data);
-      }
-    });
+    fs.readFile(
+      filename,
+      options as any,
+      (error: NodeJS.ErrnoException | null, data: Buffer | string) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(data);
+        }
+      },
+    );
   });
 }
 
@@ -248,16 +259,93 @@ class XLSX {
     delete model.vmlDrawings;
   }
 
-  async _processWorksheetEntry(stream: XmlSource, model: XlsxModel, sheetNo: string | number, options: XlsxReadOptions | undefined, path: string): Promise<void> {
+  /**
+   * Fused fast path: sheet structure (cols, merges, validations, CF, page
+   * setup, …) parses with the regular xforms over head/tail, while
+   * `<sheetData>` cells parse + reconcile in one saxen pass. Falls back to
+   * the classic path when the sheet is ineligible or fusion throws —
+   * correctness first, speed second.
+   */
+  async _processWorksheetFast(
+    split: {head: string; content: string; tail: string},
+    xform: WorksheetXform,
+    model: XlsxModel,
+    sheetNo: string | number,
+  ): Promise<XlsxModel | null> {
+    const worksheet = (await xform.parseStream([
+      `${split.head}<sheetData></sheetData>${split.tail}`,
+    ])) as XlsxModel | null | undefined;
+    if (!worksheet) {
+      return null;
+    }
+    const {hyperlinkMap, commentsMap} = buildSheetRelMaps(
+      worksheet,
+      model.worksheetRels?.[sheetNo as string],
+      model.comments,
+      model.vmlDrawings,
+    );
+    const styles = model.styles as
+      | {getStyleModel(id: number): Record<string, unknown> | null}
+      | undefined;
+    const fastCtx = {
+      sharedStrings: model.sharedStrings,
+      getStyleModel: (id: number) => styles?.getStyleModel(id),
+      // Mirrors row reconcile: throws when styles are absent but used.
+      getRowStyleModel: (id: number) => styles!.getStyleModel(id),
+      date1904: model.properties && model.properties.date1904,
+      hyperlinkMap,
+      commentsMap,
+      formulae: {},
+    };
+    // Fused saxen pass (parse + reconcile); classic path on bail/throw.
+    const {parseFastSheetData} = await loadFastSheetData();
+    const fastRows = parseFastSheetData(split.content, fastCtx);
+    worksheet.rows = fastRows;
+    worksheet.fastRows = true;
+    return worksheet;
+  }
+
+  async _processWorksheetEntry(
+    entryBytes: Uint8Array,
+    model: XlsxModel,
+    sheetNo: string | number,
+    options: XlsxReadOptions | undefined,
+    path: string,
+  ): Promise<void> {
     const xform = new WorksheetXform(options);
-    // Always install CF parsers for read — sheets may contain conditionalFormatting/extLst
+    // Always install CF parsers for read — sheets may contain conditionalFormatting/extLst.
+    // loadCfXforms is module-cached; concurrent sheets share one import.
     await xform.installCfXforms();
-    const worksheet = await xform.parseStream(stream);
+    const xml = entryToString(entryBytes);
+
+    const {isFastSheetDataEnabled, splitSheetData, canUseFastSheetData} = await loadFastSheetData();
+    let worksheet: XlsxModel | null | undefined;
+    const fastEligible =
+      isFastSheetDataEnabled() &&
+      !options?.ignoreNodes?.length &&
+      !(options as {maxRows?: number; maxCols?: number} | undefined)?.maxRows &&
+      !(options as {maxRows?: number; maxCols?: number} | undefined)?.maxCols;
+    if (fastEligible) {
+      const split = splitSheetData(xml);
+      if (split && canUseFastSheetData(split.content)) {
+        try {
+          worksheet = await this._processWorksheetFast(split, xform, model, sheetNo);
+        } catch {
+          worksheet = undefined;
+          // Fall through to the classic path below.
+        }
+      }
+    }
+    if (!worksheet) {
+      worksheet = (await xform.parseStream([xml])) as XlsxModel | null | undefined;
+    }
     if (!worksheet) {
       return;
     }
     worksheet.sheetNo = sheetNo;
     model.worksheetHash[path] = worksheet;
+    // reconcile() rebuilds worksheets from worksheetHash in workbook sheet order,
+    // so concurrent push order does not matter for correctness.
     model.worksheets.push(worksheet);
   }
 
@@ -275,7 +363,11 @@ class XLSX {
     model.tables[`../tables/${name}.xml`] = table;
   }
 
-  async _processWorksheetRelsEntry(stream: XmlSource, model: XlsxModel, sheetNo: string | number): Promise<void> {
+  async _processWorksheetRelsEntry(
+    stream: XmlSource,
+    model: XlsxModel,
+    sheetNo: string | number,
+  ): Promise<void> {
     const xform = new RelationshipsXform();
     const relationships = await xform.parseStream(stream);
     model.worksheetRels[sheetNo] = relationships;
@@ -289,7 +381,11 @@ class XLSX {
       const name = filename.substr(0, lastDot);
       const chunks: Uint8Array[] = [];
       for await (const chunk of fromReadable(entry)) {
-        chunks.push(isBytes(chunk) ? chunk : bytesFrom(chunk as string | ArrayBuffer | ArrayLike<number> | ArrayBufferView));
+        chunks.push(
+          isBytes(chunk)
+            ? chunk
+            : bytesFrom(chunk as string | ArrayBuffer | ArrayLike<number> | ArrayBufferView),
+        );
       }
       model.mediaIndex[filename] = model.media.length;
       model.mediaIndex[name] = model.media.length;
@@ -323,11 +419,34 @@ class XLSX {
   }
 
   async _processThemeEntry(entry: XmlSource, model: XlsxModel, name: string): Promise<void> {
-    const chunks: Uint8Array[] = [];
-    for await (const chunk of fromReadable(entry)) {
-      chunks.push(isBytes(chunk) ? chunk : bytesFrom(chunk as string | ArrayBuffer | ArrayLike<number> | ArrayBufferView));
+    // Theme is stored as raw XML text for round-trip rewrite fidelity.
+    // Prefer a single string chunk (buffered load); fall back to concat for streams.
+    if (typeof entry === 'string') {
+      model.themes[name] = entry;
+      return;
     }
-    model.themes[name] = bytesToString(concat(chunks));
+    const chunks: Uint8Array[] = [];
+    let sawString = false;
+    let stringAcc = '';
+    for await (const chunk of fromReadable(entry)) {
+      if (typeof chunk === 'string') {
+        sawString = true;
+        stringAcc += chunk;
+      } else {
+        chunks.push(
+          isBytes(chunk)
+            ? chunk
+            : bytesFrom(chunk as string | ArrayBuffer | ArrayLike<number> | ArrayBufferView),
+        );
+      }
+    }
+    if (sawString && chunks.length === 0) {
+      model.themes[name] = stringAcc;
+    } else if (chunks.length) {
+      model.themes[name] = bytesToString(concat(chunks));
+    } else {
+      model.themes[name] = stringAcc;
+    }
   }
 
   /**
@@ -339,17 +458,25 @@ class XLSX {
     );
   }
 
-  async read(stream: Readable | AsyncIterable<unknown>, options?: XlsxReadOptions): Promise<XlsxWorkbookHost> {
+  async read(
+    stream: Readable | AsyncIterable<unknown>,
+    options?: XlsxReadOptions,
+  ): Promise<XlsxWorkbookHost> {
     const chunks: unknown[] = [];
     for await (const chunk of fromReadable(stream)) {
       chunks.push(chunk);
     }
     // Normalize to Uint8Array (accepts Buffer / Uint8Array from streams)
-    const parts = chunks.map(c => (isBytes(c) ? c : bytesFrom(c as string | ArrayBuffer | ArrayLike<number> | ArrayBufferView)));
+    const parts = chunks.map(c =>
+      isBytes(c) ? c : bytesFrom(c as string | ArrayBuffer | ArrayLike<number> | ArrayBufferView),
+    );
     return this.load(concat(parts), options);
   }
 
-  async load(data: Uint8Array | ArrayBuffer | ArrayBufferView | string | Buffer, options?: XlsxReadOptions): Promise<XlsxWorkbookHost> {
+  async load(
+    data: Uint8Array | ArrayBuffer | ArrayBufferView | string | Buffer,
+    options?: XlsxReadOptions,
+  ): Promise<XlsxWorkbookHost> {
     let buffer: Uint8Array | Buffer | string;
     if (options && options.base64) {
       buffer = bytesFrom(String(data), 'base64');
@@ -378,115 +505,163 @@ class XLSX {
     };
 
     const zipFiles = await unzipToFiles(buffer as ArrayBuffer | ArrayBufferView);
-    for (const [rawName, entryBytes] of Object.entries(zipFiles)) {
+
+    // Two phases so sheets never wait on each other and never wait on the
+    // global reconcile barrier for their dependencies:
+    //  1. package-level parts (workbook, rels, shared strings, styles, media,
+    //     comments, …) — all small; parsed concurrently.
+    //  2. sheets — each parses (fused fast path when eligible) with SST,
+    //     styles, rels and comments already resolved, flowing straight into
+    //     reconcile-ready models. Sheets pipeline past each other.
+    const partTasks: Promise<void>[] = [];
+    const sheetEntries: Array<{entryBytes: Uint8Array; sheetNo: string; path: string}> = [];
+
+    for (const rawName of Object.keys(zipFiles)) {
       // fflate omits pure directory entries; still skip trailing-slash keys if present
       if (!rawName || rawName.endsWith('/')) {
         continue;
       }
       const entryName = rawName[0] === '/' ? rawName.slice(1) : rawName;
-      // Async iterables of chunks for SAX parsers
-      let xmlSource;
-      if (
-        entryName.match(/xl\/media\//) ||
-        // themes are stored as raw bytes then stringified later
-        entryName.match(/xl\/theme\/([a-zA-Z0-9]+)[.]xml/)
-      ) {
-        xmlSource = once(entryToBuffer(entryBytes));
-      } else {
-        xmlSource = stringChunks(entryToString(entryBytes));
+      const entryBytes = zipFiles[rawName]!;
+
+      const sheetMatch = /^xl\/worksheets\/sheet(\d+)[.]xml$/.exec(entryName);
+      if (sheetMatch) {
+        sheetEntries.push({entryBytes, sheetNo: sheetMatch[1]!, path: entryName});
+        continue;
       }
-      switch (entryName) {
-        case '_rels/.rels':
-          model.globalRels = await this.parseRels(xmlSource);
-          break;
 
-        case 'xl/workbook.xml': {
-          const workbook = await this.parseWorkbook(xmlSource);
-          model.sheets = workbook.sheets;
-          model.definedNames = workbook.definedNames;
-          model.views = workbook.views;
-          model.properties = workbook.properties;
-          model.calcProperties = workbook.calcProperties;
-          break;
-        }
+      // Media keeps binary; theme is kept as raw XML text for rewrite fidelity.
+      const isMedia = /xl\/media\//.test(entryName);
+      const isTheme = /xl\/theme\/[a-zA-Z0-9]+[.]xml/.test(entryName);
 
-        case 'xl/_rels/workbook.xml.rels':
-          model.workbookRels = await this.parseRels(xmlSource);
-          break;
+      partTasks.push(
+        (async () => {
+          let xmlSource: XmlSource;
+          if (isMedia) {
+            xmlSource = once(entryToBuffer(entryBytes));
+          } else if (isTheme) {
+            // Decode once to string — skip buffer→chunk→concat round-trip.
+            xmlSource = entryToString(entryBytes);
+          } else {
+            // Sync one-shot iterable: full string is already in memory after unzip.
+            // Avoids async-generator overhead from stringChunks for the buffered path.
+            xmlSource = [entryToString(entryBytes)];
+          }
 
-        case 'xl/sharedStrings.xml':
-          model.sharedStrings = new SharedStringsXform();
-          await model.sharedStrings.parseStream(xmlSource);
-          break;
+          switch (entryName) {
+            case '_rels/.rels':
+              model.globalRels = await this.parseRels(xmlSource);
+              return;
 
-        case 'xl/styles.xml':
-          model.styles = new StylesXform();
-          await model.styles.parseStream(xmlSource);
-          break;
+            case 'xl/workbook.xml': {
+              const workbook = await this.parseWorkbook(xmlSource);
+              model.sheets = workbook.sheets;
+              model.definedNames = workbook.definedNames;
+              model.views = workbook.views;
+              model.properties = workbook.properties;
+              model.calcProperties = workbook.calcProperties;
+              return;
+            }
 
-        case 'docProps/app.xml': {
-          const appXform = new AppXform();
-          const appProperties = await appXform.parseStream(xmlSource);
-          model.company = appProperties?.company;
-          model.manager = appProperties?.manager;
-          break;
-        }
+            case 'xl/_rels/workbook.xml.rels':
+              model.workbookRels = await this.parseRels(xmlSource);
+              return;
 
-        case 'docProps/core.xml': {
-          const coreXform = new CoreXform();
-          const coreProperties = await coreXform.parseStream(xmlSource);
-          Object.assign(model, coreProperties);
-          break;
-        }
+            case 'xl/sharedStrings.xml':
+              model.sharedStrings = new SharedStringsXform();
+              await model.sharedStrings.parseStream(xmlSource);
+              return;
 
-        default: {
-          let match = entryName.match(/xl\/worksheets\/sheet(\d+)[.]xml/);
-          if (match) {
-            await this._processWorksheetEntry(xmlSource, model, match[1], options, entryName);
-            break;
+            case 'xl/styles.xml':
+              model.styles = new StylesXform();
+              await model.styles.parseStream(xmlSource);
+              return;
+
+            case 'docProps/app.xml': {
+              const appXform = new AppXform();
+              const appProperties = await appXform.parseStream(xmlSource);
+              model.company = appProperties?.company;
+              model.manager = appProperties?.manager;
+              return;
+            }
+
+            case 'docProps/core.xml': {
+              const coreXform = new CoreXform();
+              const coreProperties = await coreXform.parseStream(xmlSource);
+              Object.assign(model, coreProperties);
+              return;
+            }
+
+            default: {
+              let match = entryName.match(/xl\/worksheets\/_rels\/sheet(\d+)[.]xml.rels/);
+              if (match) {
+                await this._processWorksheetRelsEntry(xmlSource, model, match[1]);
+                return;
+              }
+              match = entryName.match(/xl\/theme\/([a-zA-Z0-9]+)[.]xml/);
+              if (match) {
+                await this._processThemeEntry(xmlSource, model, match[1]);
+                return;
+              }
+              match = entryName.match(/xl\/media\/([a-zA-Z0-9]+[.][a-zA-Z0-9]{3,4})$/);
+              if (match) {
+                await this._processMediaEntry(xmlSource, model, match[1]);
+                return;
+              }
+              match = entryName.match(/xl\/drawings\/([a-zA-Z0-9]+)[.]xml/);
+              if (match) {
+                await this._processDrawingEntry(xmlSource, model, match[1]);
+                return;
+              }
+              match = entryName.match(/xl\/(comments\d+)[.]xml/);
+              if (match) {
+                await this._processCommentEntry(xmlSource, model, match[1]);
+                return;
+              }
+              match = entryName.match(/xl\/tables\/(table\d+)[.]xml/);
+              if (match) {
+                await this._processTableEntry(xmlSource, model, match[1]);
+                return;
+              }
+              match = entryName.match(/xl\/drawings\/_rels\/([a-zA-Z0-9]+)[.]xml[.]rels/);
+              if (match) {
+                await this._processDrawingRelsEntry(xmlSource, model, match[1]);
+                return;
+              }
+              match = entryName.match(/xl\/drawings\/(vmlDrawing\d+)[.]vml/);
+              if (match) {
+                await this._processVmlDrawingEntry(xmlSource, model, match[1]);
+                return;
+              }
+            }
           }
-          match = entryName.match(/xl\/worksheets\/_rels\/sheet(\d+)[.]xml.rels/);
-          if (match) {
-            await this._processWorksheetRelsEntry(xmlSource, model, match[1]);
-            break;
-          }
-          match = entryName.match(/xl\/theme\/([a-zA-Z0-9]+)[.]xml/);
-          if (match) {
-            await this._processThemeEntry(xmlSource, model, match[1]);
-            break;
-          }
-          match = entryName.match(/xl\/media\/([a-zA-Z0-9]+[.][a-zA-Z0-9]{3,4})$/);
-          if (match) {
-            await this._processMediaEntry(xmlSource, model, match[1]);
-            break;
-          }
-          match = entryName.match(/xl\/drawings\/([a-zA-Z0-9]+)[.]xml/);
-          if (match) {
-            await this._processDrawingEntry(xmlSource, model, match[1]);
-            break;
-          }
-          match = entryName.match(/xl\/(comments\d+)[.]xml/);
-          if (match) {
-            await this._processCommentEntry(xmlSource, model, match[1]);
-            break;
-          }
-          match = entryName.match(/xl\/tables\/(table\d+)[.]xml/);
-          if (match) {
-            await this._processTableEntry(xmlSource, model, match[1]);
-            break;
-          }
-          match = entryName.match(/xl\/drawings\/_rels\/([a-zA-Z0-9]+)[.]xml[.]rels/);
-          if (match) {
-            await this._processDrawingRelsEntry(xmlSource, model, match[1]);
-            break;
-          }
-          match = entryName.match(/xl\/drawings\/(vmlDrawing\d+)[.]vml/);
-          if (match) {
-            await this._processVmlDrawingEntry(xmlSource, model, match[1]);
-            break;
-          }
-        }
-      }
+        })(),
+      );
+    }
+
+    await Promise.all(partTasks);
+
+    // Phase 2: sheets pipeline past each other, each with dependencies ready.
+    await Promise.all(
+      sheetEntries.map(({entryBytes, sheetNo, path}) =>
+        this._processWorksheetEntry(entryBytes, model, sheetNo, options, path),
+      ),
+    );
+
+    // Media entries complete in nondeterministic order under Promise.all, but
+    // each `_processMediaEntry` assigns index+push atomically so index and array
+    // stay consistent. Re-sort by filename here for deterministic output bytes:
+    // drawings resolve via mediaIndex (by name), so reordering + rebuilding the
+    // index before reconcile() is safe.
+    if (model.media.length > 1) {
+      model.media.sort((a: XlsxModel, b: XlsxModel) =>
+        `${a.name}.${a.extension}`.localeCompare(`${b.name}.${b.extension}`),
+      );
+      model.mediaIndex = {};
+      model.media.forEach((medium: XlsxModel, i: number) => {
+        model.mediaIndex[`${medium.name}.${medium.extension}`] = i;
+        model.mediaIndex[medium.name] = i;
+      });
     }
 
     await this.reconcile(model, options);
@@ -731,7 +906,9 @@ class XLSX {
       await worksheetXform.installCfXforms();
     }
 
-    const hasComments = model.worksheets.some((ws: XlsxModel) => ws.comments && ws.comments.length > 0);
+    const hasComments = model.worksheets.some(
+      (ws: XlsxModel) => ws.comments && ws.comments.length > 0,
+    );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let commentsXform: any;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -839,12 +1016,25 @@ class XLSX {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async write(stream: Writable | any, options?: XlsxWriteOptions): Promise<this> {
     options = options || {};
-    const {model} = this.workbook;
+    const model = this.workbook.getXlsxModel?.() ?? this.workbook.model;
     const zip = new ZipStream.ZipWriter(options.zip);
     zip.pipe(stream);
 
     await this.prepareModel(model, options);
+    await this.renderParts(zip, model);
+    return this._finalize(zip);
+  }
 
+  /**
+   * Render every package part into `zip.append`. Shared by the streaming
+   * `write()` and the buffered `writeBuffer()` (collect + zipSync) paths —
+   * keep the sequence identical in both.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async renderParts(
+    zip: {append(data: unknown, options: {name: string; [key: string]: any}): unknown},
+    model: XlsxModel,
+  ): Promise<void> {
     // render
     await this.addContentTypes(zip, model);
     await this.addOfficeRels(zip, model);
@@ -858,7 +1048,6 @@ class XLSX {
     await this.addMedia(zip, model);
     await Promise.all([this.addApp(zip, model), this.addCore(zip, model)]);
     await this.addWorkbook(zip, model);
-    return this._finalize(zip);
   }
 
   writeFile(filename: string, options?: XlsxWriteOptions): Promise<void> {
@@ -883,9 +1072,15 @@ class XLSX {
   }
 
   async writeBuffer(options?: XlsxWriteOptions): Promise<unknown> {
-    const stream = new StreamBuf();
-    await this.write(stream, options);
-    return stream.read();
+    options = options || {};
+    const model = this.workbook.getXlsxModel?.() ?? this.workbook.model;
+    await this.prepareModel(model, options);
+    // Buffered fast path: every part is already materialized (XML strings,
+    // media buffers), so collect + single synchronous zipSync instead of the
+    // streaming ZipWriter's event-loop hops. Same parts, same level.
+    const zip = new BufferZipWriter();
+    await this.renderParts(zip, model);
+    return zip.toBytes(resolveZipLevel(options.zip));
   }
 }
 

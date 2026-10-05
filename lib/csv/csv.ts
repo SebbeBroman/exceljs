@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import utils from '../utils/utils.js';
 import fs from 'fs';
-import fastCsv from 'fast-csv';
+import * as fastCsv from '@sebbebroman/fast-csv/node';
 import customParseFormat from 'dayjs/plugin/customParseFormat.js';
 import utc from 'dayjs/plugin/utc.js';
 import type {Readable, Writable} from 'node:stream';

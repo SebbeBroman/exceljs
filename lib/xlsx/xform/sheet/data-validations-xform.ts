@@ -103,7 +103,9 @@ function optimiseDataValidations(model: DataValidationsModel): DataValidationEnt
         // iterate rightwards...
 
         let width = 1;
-        while (matchCol({row: addr.row, col: addr.col, address: dv.address}, height, addr.col + width)) {
+        while (
+          matchCol({row: addr.row, col: addr.col, address: dv.address}, height, addr.col + width)
+        ) {
           width++;
         }
 

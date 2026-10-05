@@ -1,6 +1,9 @@
 /**
- * Legacy namespace assembly (kept for deep imports).
- * Prefer package root `excel.js` named exports.
+ * INTERNAL — not a package export.
+ *
+ * Legacy namespace assembly for vitest (verquire) and historical tests that
+ * still exercise the Doc Workbook / stream writer classes. Public package
+ * surface is builder-first: excel.ts + node.ts only.
  */
 import Workbook from './doc/workbook.js';
 import ModelContainer from './doc/modelcontainer.js';

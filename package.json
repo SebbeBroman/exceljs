@@ -1,9 +1,12 @@
 {
-  "name": "@sebbebroman/excel-ts",
-  "version": "4.5.0",
-  "description": "Read and write Excel workbooks (xlsx/csv). ESM TypeScript fork of ExcelJS for modern bundlers.",
+  "name": "@sebbebroman/exceljs",
+  "version": "5.0.0-alpha.1",
+  "description": "Builder-first Excel (xlsx) for modern bundlers. ESM TypeScript fork of ExcelJS.",
   "private": false,
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "author": {
     "name": "SebbeBroman",
@@ -38,7 +41,7 @@
   },
   "main": "./dist/excel.js",
   "module": "./dist/excel.js",
-  "types": "./index.d.ts",
+  "types": "./excel.d.ts",
   "browser": {
     "fs": "./dist/lib/shims/fs-browser.js",
     "node:module": "./dist/lib/shims/node-module-browser.js",
@@ -46,55 +49,60 @@
   },
   "exports": {
     ".": {
-      "types": "./index.d.ts",
+      "types": "./excel.d.ts",
       "browser": "./dist/excel.js",
       "import": "./dist/excel.js",
       "default": "./dist/excel.js"
     },
-    "./csv": {
-      "types": "./index.d.ts",
-      "import": "./dist/lib/csv-entry.js",
-      "default": "./dist/lib/csv-entry.js"
-    },
-    "./stream/xlsx": {
-      "types": "./index.d.ts",
-      "import": "./dist/lib/stream-xlsx-entry.js",
-      "default": "./dist/lib/stream-xlsx-entry.js"
+    "./node": {
+      "types": "./node.d.ts",
+      "import": "./dist/node.js",
+      "default": "./dist/node.js"
     },
     "./package.json": "./package.json"
   },
-  "sideEffects": [
-    "./dist/lib/csv-entry.js",
-    "./lib/csv-entry.ts"
-  ],
+  "sideEffects": false,
   "files": [
     "dist",
     "lib",
     "excel.ts",
+    "excel.d.ts",
+    "node.ts",
+    "node.d.ts",
     "LICENSE",
     "README.md",
     "README_zh.md",
-    "index.d.ts"
+    "index.d.ts",
+    "MIGRATION-5.0.md",
+    "ARCHITECTURE.md"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "typecheck:spec": "tsc -p tsconfig.spec.json --noEmit",
-    "typecheck:test": "tsc -p tsconfig.test.json --noEmit",
     "test": "vp test run",
     "test:watch": "vp test",
     "test:unit": "vp test run spec/unit",
     "test:integration": "vp test run spec/integration",
     "test:esm": "pnpm build && node scripts/smoke-esm.mjs",
     "test:browser-bundle": "pnpm build && node scripts/smoke-browser-bundle.mjs",
+    "check:asset-size": "node scripts/check-asset-size.mjs",
     "check": "vp check",
     "lint": "vp lint .",
     "lint:fix": "vp lint . --fix",
     "format": "vp fmt",
     "format:check": "vp fmt --check",
     "benchmark": "node --expose-gc benchmark.js",
+    "bench": "pnpm build && node --expose-gc scripts/bench/e2e.mjs",
+    "bench:write": "pnpm build && node --expose-gc scripts/bench/e2e.mjs --filter write",
+    "bench:read": "pnpm build && node --expose-gc scripts/bench/e2e.mjs --filter read",
+    "bench:roundtrip": "pnpm build && node --expose-gc scripts/bench/e2e.mjs --filter roundtrip",
+    "bench:dense": "pnpm build && node --expose-gc scripts/bench-dense-write.mjs",
+    "bench:browser": "pnpm build && node scripts/bench/browser.mjs",
+    "bench:view": "pnpm build && node --expose-gc scripts/bench/read.mjs",
     "prepare": "vp config",
-    "prepublishOnly": "pnpm typecheck && pnpm build"
+    "prepublishOnly": "pnpm typecheck && pnpm build && pnpm run test:esm && pnpm run test:browser-bundle",
+    "release": "pnpm publish --access public"
   },
   "keywords": [
     "xlsx",
@@ -108,17 +116,20 @@
     "exceljs"
   ],
   "dependencies": {
-    "@noble/hashes": "^2.2.0",
-    "dayjs": "^1.8.34",
-    "fast-csv": "^5.0.7",
-    "fflate": "^0.8.2",
-    "saxen": "^11.1.1"
+    "@noble/hashes": "2.2.0",
+    "dayjs": "1.11.21",
+    "fflate": "0.8.3",
+    "saxen": "11.1.1",
+    "@sebbebroman/fast-csv": "0.1.0"
   },
   "devDependencies": {
-    "@types/node": "^22.20.1",
+    "@types/node": "^24.10.1",
     "esbuild": "^0.28.1",
+    "exceljs": "^4.4.0",
+    "mitata": "^1.0.34",
+    "puppeteer-core": "^25.4.0",
     "typescript": "~7.0.2",
-    "vite": "catalog:",
-    "vite-plus": "catalog:"
+    "vite": "npm:@voidzero-dev/vite-plus-core@0.2.7",
+    "vite-plus": "0.2.7"
   }
 }
