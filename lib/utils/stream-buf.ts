@@ -3,7 +3,7 @@ import type {EventEmitter as EventEmitterInstance} from './event-emitter.js';
 import utils from './utils.js';
 import StringBuf from './string-buf.js';
 import {nextTick} from './env.js';
-import {alloc, asUint8Array, concat, copy, from, isBytes, toPublic, utf8Encode} from './bytes.js';
+import {alloc, asUint8Array, concat, copy, from, isBytes, toPublic} from './bytes.js';
 
 export interface StreamBufOptions {
   bufSize?: number;
@@ -26,11 +26,11 @@ interface PipeDestination {
 // =============================================================================
 // data chunks - encapsulating incoming data
 class StringChunk implements DataChunk {
-  _data: string | String | ArrayBuffer;
+  _data: string | ArrayBuffer;
   _encoding: string | undefined;
   _buffer: Uint8Array | undefined;
 
-  constructor(data: string | String | ArrayBuffer, encoding?: string) {
+  constructor(data: string | ArrayBuffer, encoding?: string) {
     this._data = data;
     this._encoding = encoding;
   }
@@ -46,12 +46,10 @@ class StringChunk implements DataChunk {
 
   toBuffer(): Uint8Array {
     if (!this._buffer) {
-      if (typeof this._data === 'string' || this._data instanceof String) {
-        this._buffer = from(String(this._data), this._encoding || 'utf8');
-      } else if (this._data instanceof ArrayBuffer) {
+      if (this._data instanceof ArrayBuffer) {
         this._buffer = from(this._data);
       } else {
-        this._buffer = utf8Encode(String(this._data));
+        this._buffer = from(this._data, this._encoding || 'utf8');
       }
     }
     return this._buffer;
@@ -225,10 +223,7 @@ export interface StreamBufConstructor {
   prototype: StreamBuf;
 }
 
-const StreamBuf = function StreamBuf(
-  this: StreamBuf,
-  options?: StreamBufOptions,
-) {
+const StreamBuf = function StreamBuf(this: StreamBuf, options?: StreamBufOptions) {
   EventEmitter.call(this);
   options = options || {};
   this.bufSize = options.bufSize || 1024 * 1024;
@@ -330,7 +325,11 @@ utils.inherits(StreamBuf, EventEmitter, {
       // other typed arrays from fflate / browser APIs
       chunk = new BufferChunk(asUint8Array(data));
     } else if (typeof data === 'string' || data instanceof String || data instanceof ArrayBuffer) {
-      chunk = new StringChunk(data, encoding as string | undefined);
+      // Unwrap boxed `new String(...)` so StringChunk only sees primitives.
+      chunk = new StringChunk(
+        typeof data === 'string' ? data : String(data),
+        encoding as string | undefined,
+      );
     } else {
       throw new Error('Chunk must be one of type String, Buffer, Uint8Array or StringBuf.');
     }
@@ -363,7 +362,7 @@ utils.inherits(StreamBuf, EventEmitter, {
   cork(this: StreamBuf) {
     this.corked = true;
   },
-  _flush(this: StreamBuf /* destination */) {
+  _flush(this: StreamBuf) /* destination */ {
     // if we have comsumers...
     if (this.pipes.length) {
       // and there's stuff not written

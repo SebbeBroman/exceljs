@@ -55,7 +55,15 @@ const a1b = plain2.sheets[0].rows.find(r => r.number === 1).cells[1].value;
 assert(a1b === 'updated esm', `edit loop A1 mismatch: ${a1b}`);
 
 const out = join(tmpdir(), `exceljs-esm-smoke-${Date.now()}.xlsx`);
-await writeFile(out, workbook().sheet('S').rows([['a', 1], ['b', 2]]));
+await writeFile(
+  out,
+  workbook()
+    .sheet('S')
+    .rows([
+      ['a', 1],
+      ['b', 2],
+    ]),
+);
 const disk = readFileSync(out);
 assert(disk.byteLength > 100, 'writeFile failed');
 
@@ -77,7 +85,15 @@ const csvText2 = await csv.stringify(workbook().sheet('Csv', csvInit));
 assert(csvText2.includes('name'), 'csv.stringify failed');
 
 const csvPath = join(tmpdir(), `exceljs-esm-smoke-${Date.now()}.csv`);
-await writeCsvFile(csvPath, workbook().sheet('S').rows([['a', 1], ['b', 2]]));
+await writeCsvFile(
+  csvPath,
+  workbook()
+    .sheet('S')
+    .rows([
+      ['a', 1],
+      ['b', 2],
+    ]),
+);
 const csvDisk = await readCsvFile(csvPath);
 assert(csvDisk.sheets[0].rows[0].cells[1].value === 'a', 'readCsvFile mismatch');
 unlinkSync(csvPath);
@@ -102,7 +118,10 @@ for await (const row of streamRead(streamPath)) {
 }
 assert(streamRows.length >= 2, `streamRead expected rows, got ${streamRows.length}`);
 assert(streamRows[0].sheetName === 'Stream', 'streamRead sheet name mismatch');
-assert(streamRows.some(r => r.values[2] === 'alpha' || r.values[1] === 'alpha'), 'streamRead values missing alpha');
+assert(
+  streamRows.some(r => r.values[2] === 'alpha' || r.values[1] === 'alpha'),
+  'streamRead values missing alpha',
+);
 unlinkSync(streamPath);
 
 // Public surface: no accidental Doc Workbook / default ExcelJS export

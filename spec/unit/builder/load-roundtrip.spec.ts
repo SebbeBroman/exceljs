@@ -1,4 +1,4 @@
-import {describe, it, expect} from 'vitest';
+import {describe, it, expect} from 'vite-plus/test';
 import {workbook, load, writeBuffer} from '../../../excel.ts';
 import {workbook as nodeWorkbook, writeFile, readFile} from '../../../node.ts';
 import {mkdtemp, rm} from 'node:fs/promises';

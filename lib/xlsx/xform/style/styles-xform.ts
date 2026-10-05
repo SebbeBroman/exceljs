@@ -349,7 +349,11 @@ class StylesXform extends BaseXform<StylesModel> {
       }
     }
 
-    const addStyle = (name: string, group: unknown[] | undefined, styleId: number | undefined): void => {
+    const addStyle = (
+      name: string,
+      group: unknown[] | undefined,
+      styleId: number | undefined,
+    ): void => {
       if (styleId || styleId === 0) {
         const part = group?.[styleId];
         if (part) {
@@ -534,7 +538,10 @@ class StylesXformMock extends StylesXform {
   // add a cell's style model to the collection
   // each style property is processed and cross-referenced, etc.
   // the styleId is returned. Note: cellType is used when numFmt not defined
-  override addStyleModel(_model: Record<string, unknown> | null | undefined, cellType?: number): number {
+  override addStyleModel(
+    _model: Record<string, unknown> | null | undefined,
+    cellType?: number,
+  ): number {
     switch (cellType) {
       case (Enums as {ValueType: {Date: number}}).ValueType.Date:
         return this.dateStyleId;

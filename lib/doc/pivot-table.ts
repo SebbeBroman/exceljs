@@ -54,7 +54,7 @@ function makePivotTable(worksheet: PivotWorksheet, model: PivotTableModelInput):
   validate(worksheet, model);
 
   const {sourceSheet} = model;
-  let {rows, columns, values} = model;
+  const {rows, columns, values} = model;
 
   const cacheFields = makeCacheFields(sourceSheet, [...rows, ...columns]);
 

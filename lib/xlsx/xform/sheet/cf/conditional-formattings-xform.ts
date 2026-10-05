@@ -53,10 +53,7 @@ class ConditionalFormattingsXform extends BaseXform<ConditionalFormattingModel[]
     });
   }
 
-  override render(
-    xmlStream: XmlStreamLike,
-    model?: ConditionalFormattingModel[] | null,
-  ): void {
+  override render(xmlStream: XmlStreamLike, model?: ConditionalFormattingModel[] | null): void {
     if (!model) {
       return;
     }

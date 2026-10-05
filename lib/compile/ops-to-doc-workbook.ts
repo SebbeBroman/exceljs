@@ -170,7 +170,11 @@ function applyProtect(ws: AnyWs, password?: string, options?: ProtectOptions): v
   ws.sheetProtection = sheetProtection;
 }
 
-function applyDefinedName(wb: InstanceType<typeof DocWorkbook>, name: string, refersTo: string): void {
+function applyDefinedName(
+  wb: InstanceType<typeof DocWorkbook>,
+  name: string,
+  refersTo: string,
+): void {
   // `refersTo` is a sheet-qualified range (Sheet1!$A$1) or similar.
   // DefinedNames.add expects locStr then name.
   try {

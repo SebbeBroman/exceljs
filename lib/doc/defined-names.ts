@@ -171,15 +171,18 @@ class DefinedNames {
   normaliseMatrix(matrix: CellMatrix, sheetName: string): void {
     // some of the cells might have shifted on specified sheet
     // need to reassign rows, cols
-    matrix.forEachInSheet(sheetName, (cell: DefinedNameCell | null | undefined, row: number, col: number) => {
-      if (cell) {
-        if (cell.row !== row || cell.col !== col) {
-          cell.row = row;
-          cell.col = col;
-          cell.address = colCache.n2l(col) + row;
+    matrix.forEachInSheet(
+      sheetName,
+      (cell: DefinedNameCell | null | undefined, row: number, col: number) => {
+        if (cell) {
+          if (cell.row !== row || cell.col !== col) {
+            cell.row = row;
+            cell.col = col;
+            cell.address = colCache.n2l(col) + row;
+          }
         }
-      }
-    });
+      },
+    );
   }
 
   spliceRows(sheetName: string, start: number, numDelete: number, numInsert: number): void {

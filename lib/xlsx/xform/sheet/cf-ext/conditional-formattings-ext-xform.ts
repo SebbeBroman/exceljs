@@ -31,10 +31,7 @@ class ConditionalFormattingsExtXform extends CompositeXform<ConditionalFormattin
     return model.hasExtContent;
   }
 
-  override prepare(
-    model?: ConditionalFormattingsExtModel | null,
-    options?: XformOptions,
-  ): void {
+  override prepare(model?: ConditionalFormattingsExtModel | null, options?: XformOptions): void {
     if (!model) {
       return;
     }
@@ -43,10 +40,7 @@ class ConditionalFormattingsExtXform extends CompositeXform<ConditionalFormattin
     });
   }
 
-  override render(
-    xmlStream: XmlStreamLike,
-    model?: ConditionalFormattingsExtModel | null,
-  ): void {
+  override render(xmlStream: XmlStreamLike, model?: ConditionalFormattingsExtModel | null): void {
     if (model && this.hasContent(model)) {
       xmlStream.openNode(this.tag);
       model.forEach(cf => this.cfXform.render(xmlStream, cf));

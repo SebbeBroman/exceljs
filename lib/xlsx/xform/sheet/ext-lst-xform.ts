@@ -14,8 +14,7 @@ class ExtXform extends CompositeXform<ExtLstModel> {
   constructor() {
     super();
     this.map = {
-      'x14:conditionalFormattings': (this.conditionalFormattings =
-        new ConditionalFormattingsExt()),
+      'x14:conditionalFormattings': (this.conditionalFormattings = new ConditionalFormattingsExt()),
     };
   }
 

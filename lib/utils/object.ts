@@ -46,10 +46,7 @@ export function isEqual(a: unknown, b: unknown): boolean {
       }
 
       return keys.every(key =>
-        isEqual(
-          (a as Record<string, unknown>)[key],
-          (b as Record<string, unknown>)[key],
-        ),
+        isEqual((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key]),
       );
     }
     default:

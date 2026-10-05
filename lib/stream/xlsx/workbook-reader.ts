@@ -19,7 +19,11 @@ export interface WorkbookStreamReaderOptions {
   entries?: 'emit' | 'ignore' | string;
 }
 
-export type WorkbookReaderInput = string | Readable | AsyncIterable<unknown> | NodeJS.ReadableStream;
+export type WorkbookReaderInput =
+  | string
+  | Readable
+  | AsyncIterable<unknown>
+  | NodeJS.ReadableStream;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SaxNode = any;

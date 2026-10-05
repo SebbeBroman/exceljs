@@ -1,4 +1,4 @@
-import {describe, it, expect, afterEach} from 'vitest';
+import {describe, it, expect, afterEach} from 'vite-plus/test';
 import {workbook, writeBuffer, load} from '../../../excel.ts';
 import type {Workbook} from '../../../lib/model/types.ts';
 import {

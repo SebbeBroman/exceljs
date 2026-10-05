@@ -1,8 +1,8 @@
-import {describe, it, expect} from 'vitest';
+import {describe, it, expect} from 'vite-plus/test';
 import {mkdtemp, readFile, rm, writeFile as fsWriteFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {workbook, csv, writeBuffer, load} from '../../../excel.ts';
+import {workbook, csv, load} from '../../../excel.ts';
 import {readCsvFile, writeCsvFile} from '../../../node.ts';
 
 describe('csv named API', () => {

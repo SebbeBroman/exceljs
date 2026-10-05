@@ -132,11 +132,7 @@ export async function writeBuffer(
   const opts: WriteOptions = {...options};
   // Skip real style bookkeeping when the builder never applied styles.
   // Plain Workbook snapshots may still carry styles without flags — leave default.
-  if (
-    isWorkbookBuilder(input) &&
-    !input._used.styles &&
-    opts.useStyles === undefined
-  ) {
+  if (isWorkbookBuilder(input) && !input._used.styles && opts.useStyles === undefined) {
     opts.useStyles = false;
   }
   const raw = await doc.xlsx.writeBuffer(opts);

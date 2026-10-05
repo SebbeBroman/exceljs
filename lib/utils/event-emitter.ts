@@ -38,7 +38,9 @@ export interface EventEmitterConstructor {
   prototype: EventEmitterInstance;
 }
 
-function ensureListeners(ee: EventEmitter): Record<string, ListenerEntry | ListenerEntry[] | undefined> {
+function ensureListeners(
+  ee: EventEmitter,
+): Record<string, ListenerEntry | ListenerEntry[] | undefined> {
   if (!ee._events || typeof ee._events !== 'object') {
     ee._events = Object.create(null) as Record<string, ListenerEntry | ListenerEntry[] | undefined>;
   }

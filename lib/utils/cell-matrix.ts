@@ -110,9 +110,7 @@ class CellMatrix {
     }
   }
 
-  forEach(
-    callback: (cell: MatrixCell, rowNumber: number, colNumber: number) => void,
-  ): void {
+  forEach(callback: (cell: MatrixCell, rowNumber: number, colNumber: number) => void): void {
     for (const sheetName of Object.keys(this.sheets)) {
       this.forEachInSheet(sheetName, callback);
     }

@@ -1,5 +1,5 @@
 import BaseXform from './base-xform.js';
-import type {XmlStreamLike, XmlNode} from './base-xform.js';
+import type {XmlStreamLike} from './base-xform.js';
 import XmlStream from '../../utils/xml-stream.js';
 
 // const model = {

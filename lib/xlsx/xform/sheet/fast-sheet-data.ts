@@ -57,7 +57,7 @@ export function splitSheetData(xml: string): {head: string; content: string; tai
   if (start === -1) return null;
   // The match must terminate the tag name (not e.g. `<sheetDatas…`).
   const after = xml[start + tag.length] ?? '';
-  if (after !== '' && /[A-Za-z0-9_:.\-]/.test(after)) return null;
+  if (after !== '' && /[A-Za-z0-9_:.-]/.test(after)) return null;
   const openEnd = findTagEnd(xml, start + tag.length);
   if (openEnd === -1) return null;
   const closeTag = '</sheetData>';
@@ -149,7 +149,7 @@ interface SharedFinalize {
 function createShared(ctx: FastSheetContext): SharedFinalize {
   const needRelMaps = Boolean(
     (ctx.hyperlinkMap && Object.keys(ctx.hyperlinkMap).length > 0) ||
-      (ctx.commentsMap && Object.keys(ctx.commentsMap).length > 0),
+    (ctx.commentsMap && Object.keys(ctx.commentsMap).length > 0),
   );
   return {
     ctx,
@@ -161,7 +161,10 @@ function createShared(ctx: FastSheetContext): SharedFinalize {
   };
 }
 
-function cachedStyle(shared: SharedFinalize, id: number): Record<string, unknown> | null | undefined {
+function cachedStyle(
+  shared: SharedFinalize,
+  id: number,
+): Record<string, unknown> | null | undefined {
   if (!shared.styleSeen[id]) {
     shared.styleSeen[id] = true;
     shared.styleCache[id] = shared.ctx.getStyleModel(id);
@@ -298,15 +301,15 @@ function finalizeCell(row: MutableRow, cell: FlatCell, shared: SharedFinalize): 
   if (out.type === Enums.ValueType.String && typeof out.value === 'number') {
     if (sharedStrings) out.value = sharedStrings.getString(out.value);
   }
-  if (
-    out.value &&
-    typeof out.value === 'object' &&
-    (out.value as {richText?: unknown}).richText
-  ) {
+  if (out.value && typeof out.value === 'object' && (out.value as {richText?: unknown}).richText) {
     out.type = Enums.ValueType.RichText;
   }
   // --- dates ---
-  if (out.type === Enums.ValueType.Number && style && cachedIsDate(shared, styleId as number, style)) {
+  if (
+    out.type === Enums.ValueType.Number &&
+    style &&
+    cachedIsDate(shared, styleId as number, style)
+  ) {
     out.type = Enums.ValueType.Date;
     out.value = utils.excelToDate(out.value as number, date1904);
   }
@@ -431,9 +434,7 @@ export function parseFastSheetData(content: string, ctx: FastSheetContext): RowX
 
   const finishRow = (): void => {
     if (!row) return;
-    rows.push(
-      finalizeRow(row.number, row.min, row.max, row.cells, row, ctx),
-    );
+    rows.push(finalizeRow(row.number, row.min, row.max, row.cells, row, ctx));
     row = null;
   };
 
@@ -448,7 +449,9 @@ export function parseFastSheetData(content: string, ctx: FastSheetContext): RowX
       if (name === 'row') {
         const attrs = getAttrs();
         const spans = attrs.spans
-          ? attr(attrs, 'spans', decodeEntities)!.split(':').map(s => parseInt(s, 10))
+          ? attr(attrs, 'spans', decodeEntities)!
+              .split(':')
+              .map(s => parseInt(s, 10))
           : [undefined, undefined];
         const s = attr(attrs, 's', decodeEntities);
         const next: MutableRow = {

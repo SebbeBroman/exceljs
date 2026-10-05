@@ -47,11 +47,7 @@ class VmlNotesXform extends BaseXform<VmlNotesModel> {
     xmlStream.closeNode();
 
     model!.comments.forEach((item, index) => {
-      this.map['v:shape'].render(
-        xmlStream,
-        item as unknown as VmlShapeRenderModel,
-        index,
-      );
+      this.map['v:shape'].render(xmlStream, item as unknown as VmlShapeRenderModel, index);
     });
 
     xmlStream.closeNode();

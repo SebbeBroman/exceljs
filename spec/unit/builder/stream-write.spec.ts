@@ -1,4 +1,4 @@
-import {describe, it, expect} from 'vitest';
+import {describe, it, expect} from 'vite-plus/test';
 import {createWriteStream} from 'node:fs';
 import {mkdtemp, rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';

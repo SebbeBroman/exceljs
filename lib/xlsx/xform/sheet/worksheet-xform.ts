@@ -166,21 +166,24 @@ export function buildSheetRelMaps(
   commentsByTarget: Record<string, {comments: Array<Record<string, unknown>>}> | undefined,
   vmlDrawings: Record<string, {comments: unknown[]}> | undefined,
 ): SheetRelMaps {
-  const rels = (relationships || []).reduce((h: Record<string, WorksheetRel>, rel: WorksheetRel) => {
-    h[rel.Id] = rel;
-    if (rel.Type === RelType.Comments) {
-      model.comments = (commentsByTarget as unknown as Record<string, {comments: unknown[]}>)[
-        rel.Target
-      ].comments as Array<Record<string, unknown>>;
-    }
-    if (rel.Type === RelType.VmlDrawing && model.comments && model.comments.length) {
-      const vmlComment = vmlDrawings![rel.Target].comments;
-      model.comments.forEach((comment, index) => {
-        comment.note = Object.assign({}, comment.note, vmlComment[index]);
-      });
-    }
-    return h;
-  }, {});
+  const rels = (relationships || []).reduce(
+    (h: Record<string, WorksheetRel>, rel: WorksheetRel) => {
+      h[rel.Id] = rel;
+      if (rel.Type === RelType.Comments) {
+        model.comments = (commentsByTarget as unknown as Record<string, {comments: unknown[]}>)[
+          rel.Target
+        ].comments as Array<Record<string, unknown>>;
+      }
+      if (rel.Type === RelType.VmlDrawing && model.comments && model.comments.length) {
+        const vmlComment = vmlDrawings![rel.Target].comments;
+        model.comments.forEach((comment, index) => {
+          comment.note = Object.assign({}, comment.note, vmlComment[index]);
+        });
+      }
+      return h;
+    },
+    {},
+  );
   const commentsMap = (model.comments || []).reduce(
     (h: Record<string, unknown>, comment: Record<string, unknown>) => {
       if (comment.ref) {
@@ -591,7 +594,7 @@ class WorkSheetXform extends BaseXform<WorksheetXformModel> {
     switch (name) {
       case 'worksheet': {
         const properties: Record<string, unknown> = {
-          ...((this.map.sheetFormatPr.model as object) || {}),
+          ...(this.map.sheetFormatPr.model as object),
         };
         const sheetPrModel = this.map.sheetPr.model as Record<string, unknown> | null | undefined;
         if (sheetPrModel && sheetPrModel.tabColor) {
@@ -687,9 +690,9 @@ class WorkSheetXform extends BaseXform<WorksheetXformModel> {
       const match = drawingRel.Target.match(/\/drawings\/([a-zA-Z0-9]+)[.][a-zA-Z]{3,4}$/);
       if (match) {
         const drawingName = match[1];
-        const drawing = (options.drawings as unknown as Record<string, {anchors: Array<Record<string, unknown>>}>)[
-          drawingName
-        ];
+        const drawing = (
+          options.drawings as unknown as Record<string, {anchors: Array<Record<string, unknown>>}>
+        )[drawingName];
         drawing.anchors.forEach(anchor => {
           if (anchor.medium) {
             const image = {

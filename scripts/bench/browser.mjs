@@ -16,13 +16,7 @@
  * Requires Google Chrome (or Chromium) on the machine. Override with CHROME_PATH.
  */
 import * as esbuild from 'esbuild';
-import {
-  writeFileSync,
-  mkdirSync,
-  readFileSync,
-  copyFileSync,
-  existsSync,
-} from 'node:fs';
+import {writeFileSync, mkdirSync, readFileSync, copyFileSync, existsSync} from 'node:fs';
 import {join, dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {gzipSync} from 'node:zlib';
@@ -51,25 +45,6 @@ const WARMUP = Number(flag('warmup', 2));
 
 const fsAlias = join(root, 'lib/shims/fs-browser.ts');
 const nodeModuleAlias = join(root, 'lib/shims/node-module-browser.ts');
-
-/** Optional CSV stub so write-only size doesn't drag fast-csv. */
-const writeOnlyCsvStubPlugin = {
-  name: 'write-only-csv-stub',
-  setup(build) {
-    build.onResolve({filter: /csv\/public(\.ts|\.js)?$/}, args => ({
-      path: args.path,
-      namespace: 'csv-stub',
-    }));
-    build.onLoad({filter: /.*/, namespace: 'csv-stub'}, () => ({
-      contents: `
-        export async function parseCsv() { throw new Error('csv omitted'); }
-        export async function stringifyCsv() { throw new Error('csv omitted'); }
-        export const csv = { parse: parseCsv, stringify: stringifyCsv };
-      `,
-      loader: 'js',
-    }));
-  },
-};
 
 const sharedEsbuild = {
   bundle: true,
@@ -192,13 +167,11 @@ await esbuild.build({
   ...sharedEsbuild,
   entryPoints: [excelTsWriteEntry],
   outfile: excelTsWriteOut,
-  plugins: [writeOnlyCsvStubPlugin],
 });
 await esbuild.build({
   ...sharedEsbuild,
   entryPoints: [excelTsRoundTripEntry],
   outfile: excelTsRoundOut,
-  plugins: [writeOnlyCsvStubPlugin],
 });
 
 // --- exceljs official browser builds (not re-bundled) ---

@@ -2,7 +2,11 @@ import {EventEmitter} from './event-emitter.js';
 import fs from 'fs';
 import {Writable} from 'stream';
 import {Zip, ZipDeflate, ZipPassThrough, strToU8} from 'fflate';
-import type {Zip as ZipType, ZipDeflate as ZipDeflateType, ZipPassThrough as ZipPassThroughType} from 'fflate';
+import type {
+  Zip as ZipType,
+  ZipDeflate as ZipDeflateType,
+  ZipPassThrough as ZipPassThroughType,
+} from 'fflate';
 import {asUint8Array, fromBase64, isBytes, toPublic} from './bytes.js';
 
 export interface StreamZipWriterOptions {

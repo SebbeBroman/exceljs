@@ -66,7 +66,9 @@ class Anchor {
   }
 
   static asInstance(model: Anchor | AnchorAddress | null | undefined): Anchor | null | undefined {
-    return model instanceof Anchor || model == null ? model : new Anchor(model as unknown as AnchorWorksheet);
+    return model instanceof Anchor || model == null
+      ? model
+      : new Anchor(model as unknown as AnchorWorksheet);
   }
 
   get col(): number {

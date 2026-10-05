@@ -78,10 +78,7 @@ const cellGrid = nRows === cellByCellN ? grid : makeGrid(cellByCellN);
 console.log(JSON.stringify({phase: 'start', nRows, nCols, node: process.version}));
 
 const builder = await time('builder.rows dense writeBuffer', async () => {
-  const buf = await workbook()
-    .sheet('data')
-    .rows(grid)
-    .writeBuffer({useSharedStrings: false});
+  const buf = await workbook().sheet('data').rows(grid).writeBuffer({useSharedStrings: false});
   if (buf.byteLength < 1000) throw new Error('tiny buffer');
 });
 

@@ -36,10 +36,7 @@ function resolveLevel(options: ZipOptions = {}): number {
 
 type ZipLevel = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
-function zipAsync(
-  files: Record<string, Uint8Array>,
-  level: number,
-): Promise<Uint8Array> {
+function zipAsync(files: Record<string, Uint8Array>, level: number): Promise<Uint8Array> {
   return new Promise((resolve, reject) => {
     zip(files, {level: level as ZipLevel}, (err, data) => {
       if (err) reject(err);

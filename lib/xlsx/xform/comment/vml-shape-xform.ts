@@ -48,11 +48,7 @@ class VmlShapeXform extends BaseXform<VmlShapeModel> {
     'o:insetmode': model.note.margins && model.note.margins.insetmode,
   });
 
-  override render(
-    xmlStream: XmlStreamLike,
-    model?: VmlShapeModel | null,
-    index?: number,
-  ): void {
+  override render(xmlStream: XmlStreamLike, model?: VmlShapeModel | null, index?: number): void {
     const renderModel = model as unknown as VmlShapeRenderModel;
     xmlStream.openNode('v:shape', VmlShapeXform.V_SHAPE_ATTRIBUTES(renderModel, index!));
 

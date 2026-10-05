@@ -189,33 +189,34 @@ class WorkbookXform extends BaseXform<WorkbookModel> {
     let worksheet: Record<string, unknown> | undefined;
     let index = 0;
 
-    ((m.sheets || []) as {rId: string; name: string; id: number; state?: string}[]).forEach(sheet => {
-      const rel = rels[sheet.rId];
-      if (!rel) {
-        return;
-      }
-      // if rel.Target start with `[space]/xl/` or `/xl/` , then it will be replaced with `''` and spliced behind `xl/`,
-      // otherwise it will be spliced directly behind `xl/`. i.g.
-      worksheet = m.worksheetHash![`xl/${rel.Target.replace(/^(\s|\/xl\/)+/, '')}`];
-      // If there are "chartsheets" in the file, rel.Target will
-      // come out as chartsheets/sheet1.xml or similar here, and
-      // that won't be in model.worksheetHash.
-      // As we don't have the infrastructure to support chartsheets,
-      // we will ignore them for now:
-      if (worksheet) {
-        worksheet.name = sheet.name;
-        worksheet.id = sheet.id;
-        worksheet.state = sheet.state;
-        worksheets[index++] = worksheet;
-      }
-    });
+    ((m.sheets || []) as {rId: string; name: string; id: number; state?: string}[]).forEach(
+      sheet => {
+        const rel = rels[sheet.rId];
+        if (!rel) {
+          return;
+        }
+        // if rel.Target start with `[space]/xl/` or `/xl/` , then it will be replaced with `''` and spliced behind `xl/`,
+        // otherwise it will be spliced directly behind `xl/`. i.g.
+        worksheet = m.worksheetHash![`xl/${rel.Target.replace(/^(\s|\/xl\/)+/, '')}`];
+        // If there are "chartsheets" in the file, rel.Target will
+        // come out as chartsheets/sheet1.xml or similar here, and
+        // that won't be in model.worksheetHash.
+        // As we don't have the infrastructure to support chartsheets,
+        // we will ignore them for now:
+        if (worksheet) {
+          worksheet.name = sheet.name;
+          worksheet.id = sheet.id;
+          worksheet.state = sheet.state;
+          worksheets[index++] = worksheet;
+        }
+      },
+    );
 
     // reconcile print areas
     const definedNames: unknown[] = [];
     const definedNameList =
-      (m.definedNames as
-        | {name: string; localSheetId: number; ranges: string[]}[]
-        | undefined) || [];
+      (m.definedNames as {name: string; localSheetId: number; ranges: string[]}[] | undefined) ||
+      [];
     for (const definedName of definedNameList) {
       if (definedName.name === '_xlnm.Print_Area') {
         worksheet = worksheets[definedName.localSheetId];

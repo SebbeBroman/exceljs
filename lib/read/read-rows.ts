@@ -39,7 +39,9 @@ export async function readRows(
   const {sheet, ...rest} = opts;
   const filename = rest.filename ?? rest.name;
   const binaryOrText =
-    typeof data === 'string' ? data : toUint8Array(data as ArrayBuffer | Uint8Array | ArrayBufferView);
+    typeof data === 'string'
+      ? data
+      : toUint8Array(data as ArrayBuffer | Uint8Array | ArrayBufferView);
 
   const format = sniffFormat(
     typeof data === 'string' ? data : (binaryOrText as Uint8Array),

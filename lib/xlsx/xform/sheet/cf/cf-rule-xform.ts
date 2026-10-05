@@ -92,9 +92,7 @@ const getTimePeriodFormula = (model: CfRuleModel): string | undefined => {
   }
 };
 
-const opType = (
-  attributes: Record<string, string>,
-): {type: string; operator?: string} => {
+const opType = (attributes: Record<string, string>): {type: string; operator?: string} => {
   const {type, operator} = attributes;
   switch (type) {
     case 'containsText':

@@ -40,9 +40,7 @@ interface ReadableLike {
  * Turn a Node-style readable (or any event emitter with data/end/error)
  * into an async iterable without PassThrough / readable-stream.
  */
-export async function* fromReadable(
-  stream: unknown,
-): AsyncGenerator<unknown, void, unknown> {
+export async function* fromReadable(stream: unknown): AsyncGenerator<unknown, void, unknown> {
   if (stream == null) return;
 
   const s = stream as ReadableLike;

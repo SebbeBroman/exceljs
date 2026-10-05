@@ -98,7 +98,8 @@ function mergesFromSheet(ws: AnyWs): string[] | undefined {
 function metaFromDoc(wb: InstanceType<typeof DocWorkbook>): WorkbookMeta {
   const meta: WorkbookMeta = {};
   if (wb.creator != null && wb.creator !== '') meta.creator = wb.creator;
-  if (wb.lastModifiedBy != null && wb.lastModifiedBy !== '') meta.lastModifiedBy = wb.lastModifiedBy;
+  if (wb.lastModifiedBy != null && wb.lastModifiedBy !== '')
+    meta.lastModifiedBy = wb.lastModifiedBy;
   if (wb.created) meta.created = wb.created;
   if (wb.modified) meta.modified = wb.modified;
   if (wb.company) meta.company = wb.company;
@@ -134,8 +135,7 @@ function notesFromSheet(ws: AnyWs): Record<string, NoteValue> | undefined {
     // eachValue avoids CompactCell → Cell materialization on the load path
     row.eachValue((info: {note?: unknown; address?: string; col: number}) => {
       if (info.note != null && info.note !== '') {
-        const address =
-          info.address || `${colCache.n2l(info.col)}${row.number as number}`;
+        const address = info.address || `${colCache.n2l(info.col)}${row.number as number}`;
         notes[address] = info.note as NoteValue;
       }
     });
@@ -284,7 +284,9 @@ export function docWorkbookToPlain(wb: InstanceType<typeof DocWorkbook>): Workbo
     if (tables) sheet.tables = tables;
 
     // Sheet images: store placements if media exists (range may be opaque model)
-    const images = (ws as AnyWs).getImages?.() as Array<{imageId: number | string; range: unknown}> | undefined;
+    const images = (ws as AnyWs).getImages?.() as
+      | Array<{imageId: number | string; range: unknown}>
+      | undefined;
     if (images?.length) {
       sheet.images = images.map(img => ({
         imageId: typeof img.imageId === 'string' ? Number(img.imageId) : img.imageId,

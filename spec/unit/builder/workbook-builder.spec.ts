@@ -1,4 +1,4 @@
-import {describe, it, expect} from 'vitest';
+import {describe, it, expect} from 'vite-plus/test';
 import {workbook, load} from '../../../excel.ts';
 import {writeBuffer} from '../../../lib/xlsx/write-buffer.ts';
 import {compileToPlainWorkbook} from '../../../lib/compile/ops-to-model.ts';

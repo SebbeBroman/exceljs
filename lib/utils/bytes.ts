@@ -18,9 +18,7 @@ type BufferConstructor = typeof globalThis extends {Buffer: infer B}
 /** @returns Node Buffer constructor or null */
 function nativeBuffer(): BufferConstructor | null {
   const B = (globalThis as {Buffer?: BufferConstructor}).Buffer;
-  return typeof B === 'function' && typeof (B as typeof Buffer).from === 'function'
-    ? B
-    : null;
+  return typeof B === 'function' && typeof (B as typeof Buffer).from === 'function' ? B : null;
 }
 
 /**
@@ -39,7 +37,10 @@ export function isBytes(value: unknown): value is Uint8Array {
 
 /**
  */
-export function concat(list: ArrayLike<Uint8Array | null | undefined>, totalLength?: number): Uint8Array {
+export function concat(
+  list: ArrayLike<Uint8Array | null | undefined>,
+  totalLength?: number,
+): Uint8Array {
   if (!list || list.length === 0) {
     return alloc(0);
   }
@@ -92,7 +93,10 @@ export function toString(bytes: Uint8Array, encoding = 'utf8'): string {
       return textDecoder.decode(bytes);
     }
     const B = nativeBuffer();
-    if (B) return (B as typeof Buffer).from(bytes.buffer, bytes.byteOffset, bytes.byteLength).toString('utf8');
+    if (B)
+      return (B as typeof Buffer)
+        .from(bytes.buffer, bytes.byteOffset, bytes.byteLength)
+        .toString('utf8');
     throw new Error('TextDecoder is required to decode UTF-8');
   }
   if (enc === 'base64') {

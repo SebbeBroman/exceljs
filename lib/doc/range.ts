@@ -25,7 +25,13 @@ class Range {
     this.decode(args);
   }
 
-  setTLBR(t: number | string, l: number | string, b?: number | string, r?: number, s?: string): void {
+  setTLBR(
+    t: number | string,
+    l: number | string,
+    b?: number | string,
+    r?: number,
+    s?: string,
+  ): void {
     if (arguments.length < 4) {
       // setTLBR(tl, br, s)
       const tl = colCache.decodeAddress(t as string);
@@ -59,7 +65,13 @@ class Range {
     const args = argv as unknown[];
     switch (args.length) {
       case 5: // [t,l,b,r,s]
-        this.setTLBR(args[0] as number, args[1] as number, args[2] as number, args[3] as number, args[4] as string);
+        this.setTLBR(
+          args[0] as number,
+          args[1] as number,
+          args[2] as number,
+          args[3] as number,
+          args[4] as string,
+        );
         break;
       case 4: // [t,l,b,r]
         this.setTLBR(args[0] as number, args[1] as number, args[2] as number, args[3] as number);

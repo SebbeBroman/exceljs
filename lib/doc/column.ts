@@ -1,15 +1,7 @@
 import {isEqual} from '../utils/object.js';
 import Enums from './enums.js';
 import colCache from '../utils/col-cache.js';
-import type {
-  Alignment,
-  Borders,
-  CellValue,
-  Fill,
-  Font,
-  Protection,
-  Style,
-} from '../../index.js';
+import type {Alignment, Borders, CellValue, Fill, Font, Protection, Style} from '../../index.js';
 import type Cell from './cell.js';
 import type Row from './row.js';
 

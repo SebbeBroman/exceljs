@@ -61,7 +61,13 @@ function getOrCreateRow(sheet: MutableSheet, row: number): Map<number, SheetCell
   return r;
 }
 
-function setCell(sheet: MutableSheet, row: number, col: number, value: CellValue, style?: Style): void {
+function setCell(
+  sheet: MutableSheet,
+  row: number,
+  col: number,
+  value: CellValue,
+  style?: Style,
+): void {
   const map = getOrCreateRow(sheet, row);
   const prev = map.get(col);
   map.set(col, {
@@ -87,7 +93,7 @@ function applyStyleRange(sheet: MutableSheet, range: string, style: Style): void
         const prev = map.get(c);
         map.set(c, {
           value: prev?.value ?? null,
-          style: {...(prev?.style ?? {}), ...style},
+          style: {...prev?.style, ...style},
         });
       }
     }
@@ -98,7 +104,7 @@ function applyStyleRange(sheet: MutableSheet, range: string, style: Style): void
     const prev = map.get(decoded.col);
     map.set(decoded.col, {
       value: prev?.value ?? null,
-      style: {...(prev?.style ?? {}), ...style},
+      style: {...prev?.style, ...style},
     });
   }
 }
@@ -137,7 +143,11 @@ function appendRow(sheet: MutableSheet, values: RowInput): void {
   if (sheet.nextRow <= rowNum) sheet.nextRow = rowNum + 1;
 }
 
-function fuseMetaAndRows(ops: BuilderOp[]): {meta: WorkbookMeta; fused: BuilderOp[]; sawCellOps: boolean} {
+function fuseMetaAndRows(ops: BuilderOp[]): {
+  meta: WorkbookMeta;
+  fused: BuilderOp[];
+  sawCellOps: boolean;
+} {
   let meta: WorkbookMeta = {};
   const fused: BuilderOp[] = [];
   let sawCellOps = false;
@@ -401,9 +411,7 @@ export function optimizeOps(ops: BuilderOp[]): BuilderOp[] {
       } else if (prev.op === 'cells') {
         const map = {...prev.map};
         delete map[address];
-        staged[prevIdx] = Object.keys(map).length
-          ? {op: 'cells', sheet: prev.sheet, map}
-          : null;
+        staged[prevIdx] = Object.keys(map).length ? {op: 'cells', sheet: prev.sheet, map} : null;
       }
     };
 
@@ -493,7 +501,10 @@ export function compileToPlainWorkbook(ops: BuilderOp[]): Workbook {
           Array.isArray(c.header) ? c.header[0] : (c.header as string | undefined),
         );
         if (headers.some(h => h != null && h !== '')) {
-          appendRow(s, headers.map(h => h ?? null));
+          appendRow(
+            s,
+            headers.map(h => h ?? null),
+          );
         }
         break;
       }
@@ -530,12 +541,12 @@ export function compileToPlainWorkbook(ops: BuilderOp[]): Workbook {
         break;
       case 'pageSetup': {
         const s = ensure(op.sheet);
-        s.pageSetup = {...(s.pageSetup ?? {}), ...op.pageSetup};
+        s.pageSetup = {...s.pageSetup, ...op.pageSetup};
         break;
       }
       case 'headerFooter': {
         const s = ensure(op.sheet);
-        s.headerFooter = {...(s.headerFooter ?? {}), ...op.headerFooter};
+        s.headerFooter = {...s.headerFooter, ...op.headerFooter};
         break;
       }
       case 'dataValidation': {

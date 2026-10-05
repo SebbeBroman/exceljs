@@ -184,7 +184,16 @@ class XmlStream {
 
     // Single chunk: <name attrs>text</name>
     // numbers / short plain strings skip full xmlEncode
-    xml.push(OPEN_ANGLE + name + attrs + CLOSE_ANGLE + encodeLeafText(text) + OPEN_ANGLE_SLASH + name + CLOSE_ANGLE);
+    xml.push(
+      OPEN_ANGLE +
+        name +
+        attrs +
+        CLOSE_ANGLE +
+        encodeLeafText(text) +
+        OPEN_ANGLE_SLASH +
+        name +
+        CLOSE_ANGLE,
+    );
   }
 
   closeAll(): void {

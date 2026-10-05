@@ -63,8 +63,7 @@ function zipLimitError(message: string): Error {
 export function isZipLimitError(err: unknown): boolean {
   return (
     err instanceof Error &&
-    ((err as {code?: string}).code === ZIP_LIMIT_EXCEEDED ||
-      /exceeds limit/i.test(err.message))
+    ((err as {code?: string}).code === ZIP_LIMIT_EXCEEDED || /exceeds limit/i.test(err.message))
   );
 }
 

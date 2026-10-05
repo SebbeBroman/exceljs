@@ -33,12 +33,12 @@ class PageMarginsXform extends BaseXform<PageMarginsModel> {
     switch (node.name) {
       case this.tag:
         this.model = {
-          left: parseFloat(node.attributes.left || 0.7 as unknown as string),
-          right: parseFloat(node.attributes.right || 0.7 as unknown as string),
-          top: parseFloat(node.attributes.top || 0.75 as unknown as string),
-          bottom: parseFloat(node.attributes.bottom || 0.75 as unknown as string),
-          header: parseFloat(node.attributes.header || 0.3 as unknown as string),
-          footer: parseFloat(node.attributes.footer || 0.3 as unknown as string),
+          left: parseFloat(node.attributes.left || (0.7 as unknown as string)),
+          right: parseFloat(node.attributes.right || (0.7 as unknown as string)),
+          top: parseFloat(node.attributes.top || (0.75 as unknown as string)),
+          bottom: parseFloat(node.attributes.bottom || (0.75 as unknown as string)),
+          header: parseFloat(node.attributes.header || (0.3 as unknown as string)),
+          footer: parseFloat(node.attributes.footer || (0.3 as unknown as string)),
         };
         return true;
       default:

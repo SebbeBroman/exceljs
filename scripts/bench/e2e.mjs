@@ -9,7 +9,7 @@
  *   node --expose-gc scripts/bench/e2e.mjs
  *
  * Contenders:
- *   - excel-ts (builder): public @sebbebroman/excel-ts API via dist/
+ *   - excel-ts (builder): public @sebbebroman/exceljs API via dist/
  *   - exceljs@4:          npm exceljs (devDependency)
  *   - excel-ts (legacy):  internal Doc Workbook (same encoder as builder bridge)
  */
@@ -22,8 +22,11 @@ import ExcelJS from 'exceljs';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '../..');
 
-const {workbook, writeBuffer, load} = await import(pathToFileURL(path.join(root, 'dist/excel.js')).href);
-const DocWorkbook = (await import(pathToFileURL(path.join(root, 'dist/lib/doc/workbook.js')).href)).default;
+const {workbook, writeBuffer, load} = await import(
+  pathToFileURL(path.join(root, 'dist/excel.js')).href
+);
+const DocWorkbook = (await import(pathToFileURL(path.join(root, 'dist/lib/doc/workbook.js')).href))
+  .default;
 
 // --- CLI ---
 const args = process.argv.slice(2);

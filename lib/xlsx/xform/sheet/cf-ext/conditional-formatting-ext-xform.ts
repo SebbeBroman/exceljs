@@ -24,10 +24,7 @@ class ConditionalFormattingExtXform extends CompositeXform<ConditionalFormatting
 
   override tag = 'x14:conditionalFormatting';
 
-  override prepare(
-    model?: ConditionalFormattingExtModel | null,
-    options?: XformOptions,
-  ): void {
+  override prepare(model?: ConditionalFormattingExtModel | null, options?: XformOptions): void {
     if (!model) {
       return;
     }
@@ -36,10 +33,7 @@ class ConditionalFormattingExtXform extends CompositeXform<ConditionalFormatting
     });
   }
 
-  override render(
-    xmlStream: XmlStreamLike,
-    model?: ConditionalFormattingExtModel | null,
-  ): void {
+  override render(xmlStream: XmlStreamLike, model?: ConditionalFormattingExtModel | null): void {
     if (!model || !model.rules.some(CfRuleExtXform.isExt)) {
       return;
     }

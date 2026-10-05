@@ -5,10 +5,7 @@
 
 import colCache from '../utils/col-cache.js';
 
-export type ColSlice =
-  | {start?: number; end?: number}
-  | number[]
-  | string[];
+export type ColSlice = {start?: number; end?: number} | number[] | string[];
 
 export interface SliceBounds {
   rowStart: number;

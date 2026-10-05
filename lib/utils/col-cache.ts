@@ -267,8 +267,8 @@ const colCache = {
 
     const parts = reference.split(':');
     if (parts.length > 1) {
-      let tl = this.decodeAddress(parts[0]);
-      let br = this.decodeAddress(parts[1]);
+      const tl = this.decodeAddress(parts[0]);
+      const br = this.decodeAddress(parts[1]);
       const top = Math.min(tl.row as number, br.row as number);
       const left = Math.min(tl.col as number, br.col as number);
       const bottom = Math.max(tl.row as number, br.row as number);

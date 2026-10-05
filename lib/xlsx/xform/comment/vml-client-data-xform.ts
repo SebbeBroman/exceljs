@@ -59,16 +59,8 @@ class VmlClientDataXform extends BaseXform<VmlClientDataModel> {
     const renderModel = model as unknown as VmlClientDataRenderModel;
     const {protection, editAs} = renderModel.note;
     xmlStream.openNode(this.tag, {ObjectType: 'Note'});
-    this.map['x:MoveWithCells'].render(
-      xmlStream,
-      editAs,
-      POSITION_TYPE as unknown as number,
-    );
-    this.map['x:SizeWithCells'].render(
-      xmlStream,
-      editAs,
-      POSITION_TYPE as unknown as number,
-    );
+    this.map['x:MoveWithCells'].render(xmlStream, editAs, POSITION_TYPE as unknown as number);
+    this.map['x:SizeWithCells'].render(xmlStream, editAs, POSITION_TYPE as unknown as number);
     this.map['x:Anchor'].render(xmlStream, renderModel);
     this.map['x:Locked'].render(xmlStream, protection.locked);
     xmlStream.leafNode('x:AutoFill', undefined, 'False');
