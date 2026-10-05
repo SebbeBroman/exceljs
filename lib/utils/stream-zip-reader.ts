@@ -1,12 +1,60 @@
 /**
- * Streaming ZIP reader built on fflate Unzip / UnzipInflate.
- * Yields entries as async-iterable objects (no unzipper / readable-stream).
+ * Streaming ZIP reader. Zip structure is fflate; DEFLATE payloads use Node zlib
+ * (this entry is Node-only). Yields entries as async-iterable objects.
  */
-import {Unzip, UnzipInflate} from 'fflate';
+import {createInflateRaw, type InflateRaw} from 'node:zlib';
+import {Unzip} from 'fflate';
 import type {UnzipFile} from 'fflate';
 import {fromReadable} from './async-iterator.js';
 import {from as bytesFrom, toPublic} from './bytes.js';
 import type {Writable} from 'node:stream';
+
+/** Buffers produced by zlib that the caller may retain without copying. */
+const ownedZipChunks = new WeakSet<object>();
+
+/**
+ * Streaming raw DEFLATE (ZIP method 8) via Node's native inflater.
+ * Registered with fflate Unzip in place of UnzipInflate.
+ */
+class NodeRawInflate {
+  static compression = 8;
+  ondata: (err: Error | null, data: Uint8Array | null, final: boolean) => void = () => {};
+  private infl: InflateRaw;
+  private failed = false;
+
+  constructor() {
+    this.infl = createInflateRaw();
+    this.infl.on('data', (dat: Buffer) => {
+      ownedZipChunks.add(dat.buffer);
+      this.ondata(null, dat, false);
+    });
+    this.infl.on('end', () => {
+      this.ondata(null, null, true);
+    });
+    this.infl.on('error', (err: Error) => {
+      if (this.failed) return;
+      this.failed = true;
+      this.ondata(err, null, true);
+    });
+  }
+
+  push(chunk: Uint8Array, final: boolean): void {
+    if (this.failed) return;
+    try {
+      if (chunk && chunk.length) {
+        // fflate hands out views of buffers it may reuse after push returns.
+        const copy = Buffer.from(chunk.buffer, chunk.byteOffset, chunk.byteLength);
+        this.infl.write(copy);
+      }
+      if (final) {
+        this.infl.end();
+      }
+    } catch (err) {
+      this.failed = true;
+      this.ondata(err instanceof Error ? err : new Error(String(err)), null, final);
+    }
+  }
+}
 
 /** Max decompressed chunks buffered per entry before pausing the input pump. */
 const HIGH_WATER_MARK = 16;
@@ -118,7 +166,7 @@ export class ZipStreamEntry {
         return;
       }
       if (dat && dat.length) {
-        this._queue.push(u8ToBuffer(dat));
+        this._queue.push(ownedZipChunks.has(dat.buffer) ? dat : u8ToBuffer(dat));
         this._pauseIfNeeded();
       }
       if (final) {
@@ -253,7 +301,7 @@ export async function* streamZipEntries(
     entryQueue.push(entry);
     notify();
   });
-  unzipper.register(UnzipInflate);
+  unzipper.register(NodeRawInflate);
 
   const pump = (async () => {
     try {

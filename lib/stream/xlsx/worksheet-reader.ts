@@ -1,5 +1,5 @@
 import {EventEmitter} from '../../utils/event-emitter.js';
-import parseSax from '../../utils/parse-sax.js';
+import {eachSaxChunk} from '../../utils/parse-sax.js';
 import utils from '../../utils/utils.js';
 import colCache from '../../utils/col-cache.js';
 import Dimensions from '../../doc/range.js';
@@ -202,225 +202,220 @@ class WorksheetReader extends EventEmitter {
     let row: AnyRow | null = null;
     let c: CellParseState | null = null;
     let current: {text: string} | null = null;
-    for await (const events of parseSax(iterator)) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const worksheetEvents: Array<{eventType: string; value: any}> = [];
-      for (const {eventType, value} of events) {
-        if (eventType === 'opentag') {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const node = value as any;
-          if (emitSheet) {
-            switch (node.name) {
-              case 'cols':
-                inCols = true;
-                cols = [];
-                break;
-              case 'sheetData':
-                inRows = true;
-                break;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const batch: Array<{eventType: string; value: any}> = [];
+    for await (const _chunk of eachSaxChunk(iterator, {
+      onOpen: (name, attr) => {
+        if (emitSheet) {
+          switch (name) {
+            case 'cols':
+              inCols = true;
+              cols = [];
+              break;
+            case 'sheetData':
+              inRows = true;
+              break;
 
-              case 'col':
-                if (inCols) {
-                  cols!.push({
-                    min: parseInt(node.attributes.min, 10),
-                    max: parseInt(node.attributes.max, 10),
-                    width: parseFloat(node.attributes.width),
-                    styleId: parseInt(node.attributes.style || '0', 10),
-                  });
-                }
-                break;
+            case 'col':
+              if (inCols) {
+                cols!.push({
+                  min: parseInt(attr('min') || '', 10),
+                  max: parseInt(attr('max') || '', 10),
+                  width: parseFloat(attr('width') || ''),
+                  styleId: parseInt(attr('style') || '0', 10),
+                });
+              }
+              break;
 
-              case 'row':
-                if (inRows) {
-                  const r = parseInt(node.attributes.r, 10);
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  row = new Row(this as any, r);
-                  if (node.attributes.ht) {
-                    row.height = parseFloat(node.attributes.ht);
-                  }
-                  if (node.attributes.s) {
-                    const styleId = parseInt(node.attributes.s, 10);
-                    const style = styles.getStyleModel(styleId);
-                    if (style) {
-                      row.style = style;
-                    }
-                  }
-                }
-                break;
-              case 'c':
-                if (row) {
-                  c = {
-                    ref: node.attributes.r,
-                    s: parseInt(node.attributes.s, 10),
-                    t: node.attributes.t,
-                  };
-                }
-                break;
-              case 'f':
-                if (c) {
-                  current = c.f = {text: ''};
-                }
-                break;
-              case 'v':
-                if (c) {
-                  current = c.v = {text: ''};
-                }
-                break;
-              case 'is':
-              case 't':
-                if (c) {
-                  current = c.v = {text: ''};
-                }
-                break;
-              case 'mergeCell':
-                break;
-              default:
-                break;
-            }
-          }
-
-          // =================================================================
-          //
-          if (emitHyperlinks || hyperlinks) {
-            switch (node.name) {
-              case 'hyperlinks':
-                inHyperlinks = true;
-                break;
-              case 'hyperlink':
-                if (inHyperlinks) {
-                  const hyperlink = {
-                    ref: node.attributes.ref,
-                    rId: node.attributes['r:id'],
-                  };
-                  if (emitHyperlinks) {
-                    worksheetEvents.push({eventType: 'hyperlink', value: hyperlink});
-                  } else {
-                    hyperlinks![hyperlink.ref] = hyperlink;
-                  }
-                }
-                break;
-              default:
-                break;
-            }
-          }
-        } else if (eventType === 'text') {
-          // only text data is for sheet values
-          if (emitSheet) {
-            if (current) {
-              current.text += value as string;
-            }
-          }
-        } else if (eventType === 'closetag') {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const node = value as any;
-          if (emitSheet) {
-            switch (node.name) {
-              case 'cols':
-                inCols = false;
+            case 'row':
+              if (inRows) {
+                const r = parseInt(attr('r') || '', 10);
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                this._columns = Column.fromModel(cols as any);
-                break;
-              case 'sheetData':
-                inRows = false;
-                break;
-
-              case 'row':
-                this._dimensions.expandRow(row);
-                worksheetEvents.push({eventType: 'row', value: row});
-                row = null;
-                break;
-
-              case 'c':
-                if (row && c) {
-                  const address = colCache.decodeAddress(c.ref);
-                  const cell = row.getCell(address.col);
-                  if (c.s) {
-                    const style = styles.getStyleModel(c.s);
-                    if (style) {
-                      cell.style = style;
-                    }
-                  }
-
-                  if (c.f) {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const cellValue: any = {
-                      formula: c.f.text,
-                    };
-                    if (c.v) {
-                      if (c.t === 'str') {
-                        cellValue.result = utils.xmlDecode(c.v.text);
-                      } else {
-                        cellValue.result = parseFloat(c.v.text);
-                      }
-                    }
-                    cell.value = cellValue;
-                  } else if (c.v) {
-                    switch (c.t) {
-                      case 's': {
-                        const index = parseInt(c.v.text, 10);
-                        if (sharedStrings) {
-                          cell.value = sharedStrings[index];
-                        } else {
-                          cell.value = {
-                            sharedString: index,
-                          };
-                        }
-                        break;
-                      }
-
-                      case 'inlineStr':
-                      case 'str':
-                        cell.value = utils.xmlDecode(c.v.text);
-                        break;
-
-                      case 'e':
-                        cell.value = {error: c.v.text};
-                        break;
-
-                      case 'b':
-                        cell.value = parseInt(c.v.text, 10) !== 0;
-                        break;
-
-                      default:
-                        if (utils.isDateFmt(cell.numFmt)) {
-                          cell.value = utils.excelToDate(
-                            parseFloat(c.v.text),
-                            properties.model && properties.model.date1904,
-                          );
-                        } else {
-                          cell.value = parseFloat(c.v.text);
-                        }
-                        break;
-                    }
-                  }
-                  if (hyperlinks) {
-                    const hyperlink = hyperlinks[c.ref];
-                    if (hyperlink) {
-                      cell.text = cell.value;
-                      cell.value = undefined;
-                      cell.hyperlink = hyperlink;
-                    }
-                  }
-                  c = null;
+                row = new Row(this as any, r);
+                const ht = attr('ht');
+                if (ht) {
+                  row.height = parseFloat(ht);
                 }
-                break;
-              default:
-                break;
-            }
-          }
-          if (emitHyperlinks || hyperlinks) {
-            switch (node.name) {
-              case 'hyperlinks':
-                inHyperlinks = false;
-                break;
-              default:
-                break;
-            }
+                const rowStyle = attr('s');
+                if (rowStyle) {
+                  const styleId = parseInt(rowStyle, 10);
+                  const style = styles.getStyleModel(styleId);
+                  if (style) {
+                    row.style = style;
+                  }
+                }
+              }
+              break;
+            case 'c':
+              if (row) {
+                c = {
+                  ref: attr('r') || '',
+                  s: parseInt(attr('s') || '', 10),
+                  t: attr('t') || '',
+                };
+              }
+              break;
+            case 'f':
+              if (c) {
+                current = c.f = {text: ''};
+              }
+              break;
+            case 'v':
+              if (c) {
+                current = c.v = {text: ''};
+              }
+              break;
+            case 'is':
+            case 't':
+              if (c) {
+                current = c.v = {text: ''};
+              }
+              break;
+            case 'mergeCell':
+              break;
+            default:
+              break;
           }
         }
-      }
-      if (worksheetEvents.length > 0) {
-        yield worksheetEvents;
+
+        if (emitHyperlinks || hyperlinks) {
+          switch (name) {
+            case 'hyperlinks':
+              inHyperlinks = true;
+              break;
+            case 'hyperlink':
+              if (inHyperlinks) {
+                const hyperlink = {
+                  ref: attr('ref') || '',
+                  rId: attr('r:id'),
+                };
+                if (emitHyperlinks) {
+                  batch.push({eventType: 'hyperlink', value: hyperlink});
+                } else {
+                  hyperlinks![hyperlink.ref] = hyperlink;
+                }
+              }
+              break;
+            default:
+              break;
+          }
+        }
+      },
+      onText: value => {
+        if (emitSheet && current) {
+          current.text += value;
+        }
+      },
+      onClose: name => {
+        if (emitSheet) {
+          switch (name) {
+            case 'cols':
+              inCols = false;
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              this._columns = Column.fromModel(cols as any);
+              break;
+            case 'sheetData':
+              inRows = false;
+              break;
+
+            case 'row':
+              this._dimensions.expandRow(row);
+              batch.push({eventType: 'row', value: row});
+              row = null;
+              break;
+
+            case 'c':
+              if (row && c) {
+                const address = colCache.decodeAddress(c.ref);
+                const cell = row.getCell(address.col);
+                if (c.s) {
+                  const style = styles.getStyleModel(c.s);
+                  if (style) {
+                    cell.style = style;
+                  }
+                }
+
+                if (c.f) {
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  const cellValue: any = {
+                    formula: c.f.text,
+                  };
+                  if (c.v) {
+                    if (c.t === 'str') {
+                      cellValue.result = utils.xmlDecode(c.v.text);
+                    } else {
+                      cellValue.result = parseFloat(c.v.text);
+                    }
+                  }
+                  cell.value = cellValue;
+                } else if (c.v) {
+                  switch (c.t) {
+                    case 's': {
+                      const index = parseInt(c.v.text, 10);
+                      if (sharedStrings) {
+                        cell.value = sharedStrings[index];
+                      } else {
+                        cell.value = {
+                          sharedString: index,
+                        };
+                      }
+                      break;
+                    }
+
+                    case 'inlineStr':
+                    case 'str':
+                      cell.value = utils.xmlDecode(c.v.text);
+                      break;
+
+                    case 'e':
+                      cell.value = {error: c.v.text};
+                      break;
+
+                    case 'b':
+                      cell.value = parseInt(c.v.text, 10) !== 0;
+                      break;
+
+                    default:
+                      if (utils.isDateFmt(cell.numFmt)) {
+                        cell.value = utils.excelToDate(
+                          parseFloat(c.v.text),
+                          properties.model && properties.model.date1904,
+                        );
+                      } else {
+                        cell.value = parseFloat(c.v.text);
+                      }
+                      break;
+                  }
+                }
+                if (hyperlinks) {
+                  const hyperlink = hyperlinks[c.ref];
+                  if (hyperlink) {
+                    cell.text = cell.value;
+                    cell.value = undefined;
+                    cell.hyperlink = hyperlink;
+                  }
+                }
+                c = null;
+              }
+              break;
+            default:
+              break;
+          }
+        }
+        if (emitHyperlinks || hyperlinks) {
+          switch (name) {
+            case 'hyperlinks':
+              inHyperlinks = false;
+              break;
+            default:
+              break;
+          }
+        }
+      },
+    })) {
+      if (batch.length > 0) {
+        const flushed = batch.splice(0, batch.length);
+        yield flushed;
       }
     }
   }

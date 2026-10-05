@@ -62,6 +62,9 @@ export default defineConfig({
           args: 'none',
           ignoreRestSiblings: true,
           caughtErrors: 'none',
+          // Leading-underscore bindings are intentionally discarded, e.g. the
+          // `for await (const _chunk of eachSaxChunk(...))` loop bindings.
+          varsIgnorePattern: '^_',
         },
       ],
       'no-empty': ['error', {allowEmptyCatch: true}],

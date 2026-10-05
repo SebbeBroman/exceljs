@@ -19,6 +19,6 @@ declare module 'saxen' {
     ): void;
     on(event: 'closeTag', handler: (name: string) => void): void;
     write(chunk: string): void;
-    end(): void;
+    end(): unknown;
   }
 }

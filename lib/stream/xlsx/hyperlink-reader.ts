@@ -1,5 +1,5 @@
 import {EventEmitter} from '../../utils/event-emitter.js';
-import parseSax from '../../utils/parse-sax.js';
+import {eachSaxChunk} from '../../utils/parse-sax.js';
 import Enums from '../../doc/enums.js';
 import RelType from '../../xlsx/rel-type.js';
 
@@ -71,38 +71,36 @@ class HyperlinkReader extends EventEmitter {
     }
 
     try {
-      for await (const events of parseSax(iterator)) {
-        for (const {eventType, value} of events) {
-          if (eventType === 'opentag') {
-            const node = value as {
-              name: string;
-              attributes: Record<string, string>;
-            };
-            if (node.name === 'Relationship') {
-              const rId = node.attributes.Id;
-              switch (node.attributes.Type) {
-                case RelType.Hyperlink:
-                  {
-                    const relationship: HyperlinkRelationship = {
-                      type: Enums.RelationshipType.Styles,
-                      rId,
-                      target: node.attributes.Target,
-                      targetMode: node.attributes.TargetMode,
-                    };
-                    if (emitHyperlinks) {
-                      this.emit('hyperlink', relationship);
-                    } else {
-                      hyperlinks![relationship.rId] = relationship;
-                    }
+      for await (const _chunk of eachSaxChunk(iterator, {
+        onOpen: (name, attr) => {
+          if (name === 'Relationship') {
+            const rId = attr('Id') || '';
+            switch (attr('Type')) {
+              case RelType.Hyperlink:
+                {
+                  const relationship: HyperlinkRelationship = {
+                    type: Enums.RelationshipType.Styles,
+                    rId,
+                    target: attr('Target') || '',
+                    targetMode: attr('TargetMode') || '',
+                  };
+                  if (emitHyperlinks) {
+                    this.emit('hyperlink', relationship);
+                  } else {
+                    hyperlinks![relationship.rId] = relationship;
                   }
-                  break;
+                }
+                break;
 
-                default:
-                  break;
-              }
+              default:
+                break;
             }
           }
-        }
+        },
+        onText: () => {},
+        onClose: () => {},
+      })) {
+        // Relationships are emitted as they are opened.
       }
       this.emit('finished');
     } catch (error) {
