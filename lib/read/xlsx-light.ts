@@ -7,7 +7,7 @@
 import {Parser} from 'saxen';
 import type {CellValue} from '../model/types.js';
 import colCache from '../utils/col-cache.js';
-import utils from '../utils/utils.js';
+import {xmlDecode} from '../utils/xml-decode.js';
 import {entryToString, unzipToFiles} from '../utils/zip-reader.js';
 import {cellToDisplayString} from './cells.js';
 
@@ -114,7 +114,7 @@ function scanTagAttrs(xml: string, tag: string): string[] {
     if (start === -1) break;
     // Avoid `</tag`, `<tagData` etc: next char must terminate the tag name.
     const after = xml[start + tag.length + 1] ?? '';
-    if (after === '/' || /[A-Za-z0-9_:.\-]/.test(after)) {
+    if (after === '/' || /[A-Za-z0-9_:.-]/.test(after)) {
       pos = start + needle.length;
       continue;
     }
@@ -155,7 +155,7 @@ function parseWorkbookSheets(xml: string): Array<{
     const sheetId = attrOf(attrs, 'sheetId');
     const state = attrOf(attrs, 'state');
     const entry: {name: string; id: number; rId: string; state?: string} = {
-      name: utils.xmlDecode(nameRaw),
+      name: xmlDecode(nameRaw),
       id: sheetId ? parseInt(sheetId, 10) : out.length + 1,
       rId,
     };
@@ -303,7 +303,9 @@ function colFromAddress(address: string): number {
   return (colCache.decodeAddress(address).col as number) || 0;
 }
 
-function normalizeColList(cols: LightParseSheetOptions['cols']): number[] | {start?: number; end?: number} | null {
+function normalizeColList(
+  cols: LightParseSheetOptions['cols'],
+): number[] | {start?: number; end?: number} | null {
   if (cols == null) return null;
   if (Array.isArray(cols)) {
     if (cols.length === 0) return [];
@@ -321,10 +323,7 @@ function normalizeColList(cols: LightParseSheetOptions['cols']): number[] | {sta
   return cols;
 }
 
-function resolveOutCols(
-  cols: LightParseSheetOptions['cols'],
-  maxCol: number,
-): number[] {
+function resolveOutCols(cols: LightParseSheetOptions['cols'], maxCol: number): number[] {
   const normalized = normalizeColList(cols);
   if (normalized == null) {
     const out: number[] = [];
@@ -688,8 +687,7 @@ export function parseLightSheet(
   }
 
   // blankrows: true — gap-fill absolute row numbers in [rowStart, last].
-  const rangeLast =
-    rowEnd != null ? Math.min(rowEnd, lastRow || rowEnd) : lastRow;
+  const rangeLast = rowEnd != null ? Math.min(rowEnd, lastRow || rowEnd) : lastRow;
   if (rangeLast < rowStart) {
     return {
       name: info.name,
