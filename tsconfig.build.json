@@ -8,7 +8,7 @@
     "rootDir": ".",
     "declaration": false,
     "declarationMap": false,
-    "sourceMap": true,
+    "sourceMap": false,
     "rewriteRelativeImportExtensions": true
   },
   "include": ["lib/**/*.ts", "lib/**/*.d.ts", "excel.ts", "node.ts"],
@@ -20,8 +20,6 @@
     "test",
     "scripts",
     "lib/csv-entry.ts",
-    "lib/stream-xlsx-entry.ts",
-    "lib/exceljs.bare.ts",
     "lib/exceljs.nodejs.ts"
   ]
 }

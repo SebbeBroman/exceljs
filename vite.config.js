@@ -15,7 +15,7 @@ const root = path.dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
   staged: {
     // Keep pre-commit scoped to maintained surface
-    '{lib,scripts,spec}/**/*.{ts,js,mjs},excel.ts,vite.config.js,package.json,index.d.ts,benchmark.js':
+    '{lib,scripts,spec}/**/*.{ts,js,mjs},excel.ts,vite.config.js,package.json,index.d.ts':
       'vp check --fix',
   },
 
@@ -36,9 +36,6 @@ export default defineConfig({
       'out/**',
       'coverage/**',
       'spec/out/**',
-      'spec/manual/**',
-      'spec/browser/**',
-      'spec/dist/**',
       'spec/typescript/**',
     ],
     rules: {
@@ -91,7 +88,7 @@ export default defineConfig({
         },
       },
       {
-        files: ['benchmark.js', 'scripts/**/*.{js,mjs,cjs}', '*.config.js'],
+        files: ['scripts/**/*.{js,mjs,cjs}', '*.config.js'],
         rules: {
           'no-console': 'off',
           'no-unused-vars': 'off',
@@ -128,7 +125,6 @@ export default defineConfig({
       'coverage/**',
       'spec/**',
       'spec/out/**',
-      'spec/manual/public/**',
       '.github/**',
       'package-lock.json',
       'pnpm-lock.yaml',
@@ -136,9 +132,6 @@ export default defineConfig({
       '*.min.js',
       'README.md',
       'README_zh.md',
-      'TODO.txt',
-      'MODEL.md',
-      'UPGRADE-4.0.md',
     ],
   },
 
@@ -153,9 +146,6 @@ export default defineConfig({
     ],
     exclude: [
       'node_modules/**',
-      'spec/browser/**',
-      'spec/dist/**',
-      'spec/manual/**',
       'spec/typescript/**',
       // Optional network e2e deps (express/got) — skip unless installed
       'spec/end-to-end/express.spec.ts',

@@ -58,10 +58,7 @@
   "sideEffects": false,
   "files": [
     "dist",
-    "lib",
-    "excel.ts",
     "excel.d.ts",
-    "node.ts",
     "node.d.ts",
     "LICENSE",
     "README.md",
@@ -71,7 +68,7 @@
     "ARCHITECTURE.md"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "node scripts/build.mjs",
     "typecheck": "tsc --noEmit",
     "typecheck:public": "node scripts/check-public-types.mjs",
     "typecheck:spec": "tsc -p tsconfig.spec.json --noEmit",
@@ -87,7 +84,6 @@
     "lint:fix": "vp lint . --fix",
     "format": "vp fmt",
     "format:check": "vp fmt --check",
-    "benchmark": "node --expose-gc benchmark.js",
     "bench": "pnpm build && node --expose-gc scripts/bench/e2e.mjs",
     "bench:write": "pnpm build && node --expose-gc scripts/bench/e2e.mjs --filter write",
     "bench:read": "pnpm build && node --expose-gc scripts/bench/e2e.mjs --filter read",

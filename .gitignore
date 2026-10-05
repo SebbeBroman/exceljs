@@ -42,10 +42,6 @@ node_modules
 # gold internals
 spec/integration/data/gold
 
-# optional manual browser copies
-/spec/manual/public/exceljs.js
-/spec/manual/public/exceljs.min.js
-
 package-lock.json
 
 # optional switch off tests
