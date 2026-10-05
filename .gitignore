@@ -56,4 +56,4 @@ package-lock.json
 
 # Ignore xlsx files generated during testing
 *.xlsx
-enpm-lock.yaml
+npm-lock.yaml
