@@ -4,7 +4,7 @@
 import {readFileSync, unlinkSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {workbook, writeBuffer, load, csv, ValueType} from '../dist/excel.js';
+import {workbook, writeBuffer, load, csv, ValueType} from '@sebbebroman/exceljs';
 import {
   writeFile,
   readFile,
@@ -12,7 +12,7 @@ import {
   writeCsvFile,
   streamWrite,
   streamRead,
-} from '../dist/node.js';
+} from '@sebbebroman/exceljs/node';
 import {unzipSync, strFromU8} from 'fflate';
 
 const assert = (cond, msg) => {
@@ -125,10 +125,20 @@ assert(
 unlinkSync(streamPath);
 
 // Public surface: no accidental Doc Workbook / default ExcelJS export
-const main = await import('../dist/excel.js');
+const main = await import('@sebbebroman/exceljs');
+for (const name of [
+  'writeFile',
+  'readFile',
+  'readCsvFile',
+  'writeCsvFile',
+  'streamWrite',
+  'streamRead',
+]) {
+  assert(typeof main[name] === 'undefined', `${name} must only be exported from /node`);
+}
 assert(typeof main.default === 'undefined', 'main entry must not default-export ExcelJS');
 assert(typeof main.Workbook !== 'function', 'main entry must not export Doc Workbook class');
-const nodeMod = await import('../dist/node.js');
+const nodeMod = await import('@sebbebroman/exceljs/node');
 assert(typeof nodeMod.Workbook !== 'function', 'node entry must not export Doc Workbook class');
 assert(typeof nodeMod.streamWrite === 'function', 'streamWrite missing on node entry');
 assert(typeof nodeMod.streamRead === 'function', 'streamRead missing on node entry');

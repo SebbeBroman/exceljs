@@ -4,7 +4,7 @@ Read, manipulate, and write Excel workbooks (`.xlsx`) with a **builder-first** E
 
 Fork of [ExcelJS](https://github.com/exceljs/exceljs) aimed at modern Node and bundlers (Vite, SvelteKit, Rollup, esbuild).
 
-> **5.0.0-alpha.1** — builder-first public API only (`.` + `./node`). Write, load, CSV, advanced sheet features, Node streaming. See [MIGRATION-5.0.md](./MIGRATION-5.0.md) and [ARCHITECTURE.md](./ARCHITECTURE.md).
+> **0.1.0** — builder-first public API only (`.` + `./node`). Write, load, CSV, advanced sheet features, Node streaming. See [MIGRATION.md](./MIGRATION.md) and [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ## Install
 
@@ -278,11 +278,11 @@ pnpm bench:browser         # Chrome headless: size + write/read vs exceljs brows
 pnpm bench:browser -- --rows 1000 --runs 5
 ```
 
-Contenders (Node): **excel-ts builder**, **exceljs@4** (npm), optionally **excel-ts legacy DocWorkbook**.
+Contenders (Node): **@sebbebroman/exceljs builder**, **exceljs@4** (npm), optionally **@sebbebroman/exceljs legacy DocWorkbook**.
 
-Contenders (browser): **excel-ts** esbuild browser bundle vs **exceljs** official `dist/exceljs.min.js` (their browser field). Node often favors exceljs; browser compares the polyfill-heavy UMD build against the ESM/fflate path. Needs Chrome (`CHROME_PATH` override supported).
+Contenders (browser): **@sebbebroman/exceljs** esbuild browser bundle vs **exceljs** official `dist/exceljs.min.js` (their browser field). Node often favors exceljs; browser compares the polyfill-heavy UMD build against the ESM/fflate path. Needs Chrome (`CHROME_PATH` override supported).
 
-## Status (5.0.0-alpha.1)
+## Status (0.1.0)
 
 | Phase / feature | Status |
 |-----------------|--------|
@@ -306,12 +306,12 @@ Contenders (browser): **excel-ts** esbuild browser bundle vs **exceljs** officia
 
 ### Bundle size (indicative — write-only fixture)
 
-Measured by `pnpm test:browser-bundle` (esbuild minify, write-only builder path, CSV omitted, 2-cell fixture):
+Measured by `pnpm test:browser-bundle` (esbuild minify, write-only builder path, CSV enabled, 2-cell fixture):
 
 | Build | Size |
 |-------|------|
-| Single-file minified | ~287 KB (gzip ~80 KB) |
-| Code-split entry | ~191 KB (excludes async chunks needed at runtime; total ~551 KB) |
+| Single-file minified | ~335 KB (gzip ~96 KB) |
+| Code-split entry | ~201 KB (excludes async chunks needed at runtime; total ~333 KB) |
 
 Not representative of `load`/styles/tables/comments/CSV builds. Quote with fixture + flags + commit hash.
 
@@ -319,7 +319,7 @@ Re-run after encoder changes. Details: [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ## API
 
-Public types: [`excel.d.ts`](./excel.d.ts). Migration from 4.x: [MIGRATION-5.0.md](./MIGRATION-5.0.md). Architecture: [ARCHITECTURE.md](./ARCHITECTURE.md).
+Public types: [`excel.d.ts`](./excel.d.ts). Migration from 4.x: [MIGRATION.md](./MIGRATION.md). Architecture: [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ## Attribution
 

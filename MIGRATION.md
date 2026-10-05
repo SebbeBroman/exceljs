@@ -1,6 +1,6 @@
-# Migration to 5.0 (builder-first API)
+# Migration from ExcelJS 4.x to @sebbebroman/exceljs 0.1
 
-Excel-ts 5.0 is a **breaking** redesign. The public API is a fluent **builder** plus two package entry points. The mutable ExcelJS-style `Workbook` / `Worksheet` classes are no longer exported.
+`@sebbebroman/exceljs` 0.1 is a **breaking** redesign of the ExcelJS 4.x API. The public API is a fluent **builder** plus two package entry points. The mutable ExcelJS-style `Workbook` / `Worksheet` classes are no longer exported.
 
 ## Entry points
 
@@ -17,7 +17,7 @@ Removed:
 
 ## API map
 
-| 4.x (mutable)                                                                               | 5.x (builder)                                                                          |
+| 4.x (mutable)                                                                               | 0.1.x (builder)                                                                        |
 | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
 | `new Workbook()`                                                                            | `workbook()`                                                                           |
 | `wb.creator = '…'`                                                                          | `workbook({ creator: '…' })` or `.props({ creator: '…' })`                             |
@@ -142,7 +142,7 @@ await writeCsvFile('out.csv', data);
 await writeCsvFile('sheet-b.csv', data, {sheetName: 'B'});
 ```
 
-**4.x → 5.x:** drop `import '@sebbebroman/exceljs/csv'`. There is no `workbook.csv` property on a class. Use `csv.parse` / `csv.stringify` or builder `.csv()`.
+**ExcelJS 4.x → fork 0.1.x:** drop `import '@sebbebroman/exceljs/csv'`. There is no `workbook.csv` property on a class. Use `csv.parse` / `csv.stringify` or builder `.csv()`.
 
 ### Advanced sheet features (Phase 5)
 
@@ -213,7 +213,7 @@ for (const row of source) {
 }
 await wb.commit();
 
-// 5.x — declarative
+// Fork 0.1.x — declarative
 import {streamWrite, streamRead} from '@sebbebroman/exceljs/node';
 
 await streamWrite('out.xlsx', {
@@ -230,7 +230,7 @@ await streamWrite('out.xlsx', {
   ],
 });
 
-// 5.x — callback (control flow)
+// Fork 0.1.x — callback (control flow)
 await streamWrite('out.xlsx', async w => {
   const sheet = w.sheet('Data', {
     columns: [
@@ -249,7 +249,7 @@ for await (const {sheetName, rowNumber, values} of streamRead('out.xlsx')) {
 
 `WorkbookWriter` / `WorkbookReader` are **not** public package exports. There is no `./stream/xlsx` export.
 
-## 5.0.0-alpha.1 status
+## 0.1.0 status
 
 Phases 1–7 of the builder rewrite are complete for the **public** product:
 

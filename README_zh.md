@@ -4,7 +4,7 @@
 
 基于 [ExcelJS](https://github.com/exceljs/exceljs) 的现代化分支，面向 Node 与 Vite / SvelteKit 等打包工具。
 
-> **5.0.0-alpha.1** — 仅两个包入口（`.` 与 `./node`）。完整英文说明见 [README.md](./README.md)；迁移见 [MIGRATION-5.0.md](./MIGRATION-5.0.md)；架构见 [ARCHITECTURE.md](./ARCHITECTURE.md)。
+> **0.1.0** — 仅两个包入口（`.` 与 `./node`）。完整英文说明见 [README.md](./README.md)；迁移见 [MIGRATION.md](./MIGRATION.md)；架构见 [ARCHITECTURE.md](./ARCHITECTURE.md)。
 
 ## 安装
 

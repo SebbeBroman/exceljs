@@ -1,6 +1,6 @@
 {
   "name": "@sebbebroman/exceljs",
-  "version": "5.0.0-alpha.1",
+  "version": "0.1.0",
   "description": "Builder-first Excel (xlsx) for modern bundlers. ESM TypeScript fork of ExcelJS.",
   "private": false,
   "license": "MIT",
@@ -23,11 +23,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SebbeBroman/excel-ts.git"
+    "url": "git+https://github.com/SebbeBroman/exceljs.git"
   },
-  "homepage": "https://github.com/SebbeBroman/excel-ts#readme",
+  "homepage": "https://github.com/SebbeBroman/exceljs#readme",
   "bugs": {
-    "url": "https://github.com/SebbeBroman/excel-ts/issues"
+    "url": "https://github.com/SebbeBroman/exceljs/issues"
   },
   "engines": {
     "node": ">=22"
@@ -73,12 +73,13 @@
     "README.md",
     "README_zh.md",
     "index.d.ts",
-    "MIGRATION-5.0.md",
+    "MIGRATION.md",
     "ARCHITECTURE.md"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
+    "typecheck:public": "node scripts/check-public-types.mjs",
     "typecheck:spec": "tsc -p tsconfig.spec.json --noEmit",
     "test": "vp test run",
     "test:watch": "vp test",
@@ -101,7 +102,7 @@
     "bench:browser": "pnpm build && node scripts/bench/browser.mjs",
     "bench:view": "pnpm build && node --expose-gc scripts/bench/read.mjs",
     "prepare": "vp config",
-    "prepublishOnly": "pnpm typecheck && pnpm build && pnpm run test:esm && pnpm run test:browser-bundle",
+    "prepublishOnly": "pnpm typecheck && pnpm typecheck:public && pnpm build && pnpm run test:esm && pnpm run test:browser-bundle",
     "release": "pnpm publish --access public"
   },
   "keywords": [

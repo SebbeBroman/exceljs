@@ -1,4 +1,4 @@
-# Architecture (5.0 alpha)
+# Architecture (0.1)
 
 Short map of how `@sebbebroman/exceljs` turns builder calls into `.xlsx` bytes.
 
@@ -116,14 +116,14 @@ Phase 7 does **not** delete `lib/doc/*`. The op-log → DocWorkbook → XLSX bri
 ## Bundle size (indicative)
 
 From `pnpm test:browser-bundle` (esbuild minify, **write-only** builder path;
-optional CSV module stubbed so sizes match a tree-shaken write client):
+CSV enabled, no Node polyfills):
 
-| Build                       | Size (5.0.0-alpha.1)         |
-| --------------------------- | ---------------------------- |
-| Single-file minified        | **287.2 KB**                 |
-| Single-file gzip            | **80.0 KB**                  |
-| Code-split write-only entry | **190.9 KB**                 |
-| Code-split write-only total | 550.9 KB (many small chunks) |
+| Build                       | Size (0.1.0)        |
+| --------------------------- | ------------------- |
+| Single-file minified        | **334.7 KB**        |
+| Single-file gzip            | **96.4 KB**         |
+| Code-split write-only entry | **201.2 KB**        |
+| Code-split write-only total | 332.6 KB (32 files) |
 
 Re-measure after dependency or encoder changes:
 
