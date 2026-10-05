@@ -1,7 +1,7 @@
 /**
  * Named CSV API (no side-effect registration).
  *
- *   import { csv, workbook } from '@sebbebroman/excel-ts';
+ *   import { csv, workbook } from '@sebbebroman/exceljs';
  *
  *   const init = await csv.parse('a,b\n1,2');
  *   const text = await workbook().sheet('Data', init).csv();
@@ -11,7 +11,7 @@
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat.js';
 import utc from 'dayjs/plugin/utc.js';
-import fastCsv from 'fast-csv';
+import {parseText, writeToString, type BrowserParseOptions} from '@sebbebroman/fast-csv';
 import type {CellValue, RowInput, SheetInit, SheetModel, Workbook} from '../model/types.js';
 import type {WorkbookBuilder} from '../builder/workbook-builder.js';
 
@@ -135,10 +135,10 @@ function defaultStringifyMap(options: CsvStringifyOptions) {
 function isBuilderLike(value: unknown): value is WorkbookBuilder {
   return Boolean(
     value &&
-      typeof value === 'object' &&
-      '_ops' in value &&
-      Array.isArray((value as WorkbookBuilder)._ops) &&
-      typeof (value as WorkbookBuilder).build === 'function',
+    typeof value === 'object' &&
+    '_ops' in value &&
+    Array.isArray((value as WorkbookBuilder)._ops) &&
+    typeof (value as WorkbookBuilder).build === 'function',
   );
 }
 
@@ -207,25 +207,19 @@ export async function parseCsv(text: string, opts?: CsvParseOptions): Promise<Sh
   const dateFormats = options.dateFormats || DEFAULT_DATE_FORMATS;
   const map = options.map || defaultParseMap(dateFormats);
 
-  const rows: RowInput[] = await new Promise((resolve, reject) => {
-    const collected: RowInput[] = [];
-    const stream = fastCsv.parseString(text, options.parserOptions as Parameters<typeof fastCsv.parseString>[1]);
-    stream
-      .on('data', (data: string[] | Record<string, string>) => {
-        if (Array.isArray(data)) {
-          collected.push(data.map((datum, i) => map(datum, i) as CellValue));
-        } else {
-          // headers: true → object rows; keep as keyed RowInput
-          const obj: Record<string, CellValue> = {};
-          for (const [key, datum] of Object.entries(data)) {
-            obj[key] = map(String(datum ?? ''), undefined) as CellValue;
-          }
-          collected.push(obj);
-        }
-      })
-      .on('end', () => resolve(collected))
-      .on('error', reject);
-  });
+  const rows: RowInput[] = parseText(text, options.parserOptions as BrowserParseOptions).map(
+    data => {
+      if (Array.isArray(data)) {
+        return data.map((datum, i) => map(datum, i) as CellValue);
+      }
+      // headers: true → object rows; keep as keyed RowInput
+      const obj: Record<string, CellValue> = {};
+      for (const [key, datum] of Object.entries(data)) {
+        obj[key] = map(String(datum ?? ''), undefined) as CellValue;
+      }
+      return obj;
+    },
+  );
 
   return {rows};
 }
@@ -241,9 +235,10 @@ export async function stringifyCsv(
   const wb = toPlainWorkbook(input);
   const sheet = resolveSheet(wb, options);
   const rows = sheetToRowArrays(sheet, options);
-  return fastCsv.writeToString(rows as string[][], options.formatterOptions as Parameters<
-    typeof fastCsv.writeToString
-  >[1]);
+  return writeToString(
+    rows as string[][],
+    options.formatterOptions as Parameters<typeof writeToString>[1],
+  );
 }
 
 /** Named CSV helpers. */
