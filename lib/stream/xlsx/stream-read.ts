@@ -1,5 +1,5 @@
 /**
- * Public streaming read API for Node (`streamRead` from `@sebbebroman/excel-ts/node`).
+ * Public streaming read API for Node (`streamRead` from `@sebbebroman/exceljs/node`).
  * Thin wrapper around the internal WorkbookReader (not re-exported).
  */
 

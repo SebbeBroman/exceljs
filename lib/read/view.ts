@@ -1,15 +1,15 @@
 /**
  * Read-only workbook view.
  *
- *   import { viewWorkbook } from '@sebbebroman/excel-ts';
- *   import { workbook, writeBuffer } from '@sebbebroman/excel-ts'; // write (separate)
+ *   import { viewWorkbook } from '@sebbebroman/exceljs';
+ *   import { workbook, writeBuffer } from '@sebbebroman/exceljs'; // write (separate)
  *
  *   const view = await viewWorkbook(data, { format: 'auto', filename: file.name });
  *   const rows = view.sheet(0).rows({ start: 1, end: 100, cols: { end: 4 } });
  *   const wb = workbook(view);
  */
 
-import fastCsv from 'fast-csv';
+import {parseText} from '@sebbebroman/fast-csv';
 import type {CellValue, SheetModel, Workbook, WorkbookMeta} from '../model/types.js';
 import colCache from '../utils/col-cache.js';
 import {cellToDisplayString} from './cells.js';
@@ -25,7 +25,7 @@ import {
 } from './xlsx-light.js';
 
 /** Brand for `workbook(view)` / `isWorkbookView`. */
-export const WORKBOOK_VIEW = Symbol.for('@sebbebroman/excel-ts.WorkbookView');
+export const WORKBOOK_VIEW = Symbol.for('@sebbebroman/exceljs.WorkbookView');
 
 export interface ViewWorkbookOptions {
   /** `'auto'` (default), `'csv'`, or OOXML `'xlsx'` (also .xlsm etc.). */
@@ -104,27 +104,14 @@ export interface WorkbookView {
 export function isWorkbookView(value: unknown): value is WorkbookView {
   return Boolean(
     value &&
-      typeof value === 'object' &&
-      (value as WorkbookView)[WORKBOOK_VIEW] === true &&
-      typeof (value as WorkbookView).toJSON === 'function',
+    typeof value === 'object' &&
+    (value as WorkbookView)[WORKBOOK_VIEW] === true &&
+    typeof (value as WorkbookView).toJSON === 'function',
   );
 }
 
 async function parseCsvGrid(text: string): Promise<string[][]> {
-  return new Promise((resolve, reject) => {
-    const rows: string[][] = [];
-    fastCsv
-      .parseString(text, {headers: false, ignoreEmpty: false, trim: false})
-      .on('error', reject)
-      .on('data', (row: string[] | Record<string, string>) => {
-        if (Array.isArray(row)) {
-          rows.push(row.map(c => (c == null ? '' : String(c))));
-        } else {
-          rows.push(Object.values(row).map(c => (c == null ? '' : String(c))));
-        }
-      })
-      .on('end', () => resolve(rows));
-  });
+  return parseText(text, {headers: false, ignoreEmpty: false, trim: false});
 }
 
 function gridToSheetModel(grid: string[][], name: string, id: number): SheetModel {
@@ -198,14 +185,9 @@ function buildRowMatrix(
   return {matrix, asString};
 }
 
-function headerKeys(
-  headerLine: (string | CellValue)[],
-  asString: boolean,
-): string[] {
+function headerKeys(headerLine: (string | CellValue)[], asString: boolean): string[] {
   return headerLine.map((h, i) => {
-    const raw = asString
-      ? String(h ?? '')
-      : cellToDisplayString(h as CellValue, '');
+    const raw = asString ? String(h ?? '') : cellToDisplayString(h as CellValue, '');
     const s = raw.trim();
     return s || `col${i + 1}`;
   });
@@ -509,7 +491,9 @@ export async function viewWorkbook(
   const opts = options ?? {};
   const filename = opts.filename ?? opts.name;
   const binaryOrText =
-    typeof data === 'string' ? data : toUint8Array(data as ArrayBuffer | Uint8Array | ArrayBufferView);
+    typeof data === 'string'
+      ? data
+      : toUint8Array(data as ArrayBuffer | Uint8Array | ArrayBufferView);
 
   const format = sniffFormat(
     typeof data === 'string' ? data : (binaryOrText as Uint8Array),

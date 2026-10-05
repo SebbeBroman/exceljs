@@ -3,7 +3,7 @@
  *
  * Re-exports legacy stream WorkbookWriter / WorkbookReader for deep imports
  * used by internal benches/tests. Public streaming API is `streamWrite` /
- * `streamRead` on `@sebbebroman/excel-ts/node`.
+ * `streamRead` on `@sebbebroman/exceljs/node`.
  */
 export {default as WorkbookWriter} from './stream/xlsx/workbook-writer.js';
 export {default as WorkbookReader} from './stream/xlsx/workbook-reader.js';

@@ -1,4 +1,4 @@
-# @sebbebroman/excel-ts
+# @sebbebroman/exceljs
 
 Read, manipulate, and write Excel workbooks (`.xlsx`) with a **builder-first** ESM API.
 
@@ -9,9 +9,9 @@ Fork of [ExcelJS](https://github.com/exceljs/exceljs) aimed at modern Node and b
 ## Install
 
 ```bash
-npm install @sebbebroman/excel-ts
+npm install @sebbebroman/exceljs
 # or
-pnpm add @sebbebroman/excel-ts
+pnpm add @sebbebroman/exceljs
 ```
 
 **Requirements:** Node.js `>= 22`.
@@ -19,7 +19,7 @@ pnpm add @sebbebroman/excel-ts
 ## Quick start
 
 ```ts
-import { workbook } from '@sebbebroman/excel-ts';
+import { workbook } from '@sebbebroman/exceljs';
 
 const buffer = await workbook({ creator: 'Reports' })
   .sheet('Data')
@@ -32,7 +32,7 @@ const buffer = await workbook({ creator: 'Reports' })
 ### Node file write
 
 ```ts
-import { workbook, writeFile } from '@sebbebroman/excel-ts/node';
+import { workbook, writeFile } from '@sebbebroman/exceljs/node';
 
 await writeFile(
   'out.xlsx',
@@ -88,7 +88,7 @@ const data = workbook().sheet('S').rows([[1, 2]]).build();
 ### Load + edit
 
 ```ts
-import { workbook, load } from '@sebbebroman/excel-ts';
+import { workbook, load } from '@sebbebroman/exceljs';
 
 const data = await load(buffer); // plain { meta, sheets }
 const out = await workbook(data)
@@ -100,9 +100,9 @@ const out = await workbook(data)
 ### Import CSV / xlsx — view + rows (recommended)
 
 ```ts
-import { viewWorkbook } from '@sebbebroman/excel-ts';
+import { viewWorkbook } from '@sebbebroman/exceljs';
 // writes are a separate import so pure readers tree-shake better:
-import { workbook, writeBuffer } from '@sebbebroman/excel-ts';
+import { workbook, writeBuffer } from '@sebbebroman/exceljs';
 
 const data = reader.result as ArrayBuffer;
 const view = await viewWorkbook(data, {
@@ -131,7 +131,7 @@ const buf = await writeBuffer(workbook(view));
 One-liner sugar (same as first sheet `.rows({ values: 'string' })`):
 
 ```ts
-import { readRows } from '@sebbebroman/excel-ts';
+import { readRows } from '@sebbebroman/exceljs';
 const rows = await readRows(data, { filename: file.name, start: 1, end: 50 });
 ```
 
@@ -146,7 +146,7 @@ Supports **CSV** and **OOXML** (`.xlsx` / `.xlsm` / …). Not `.xls` / `.xlsb`.
 ### Node file read
 
 ```ts
-import { readFile, writeFile, workbook } from '@sebbebroman/excel-ts/node';
+import { readFile, writeFile, workbook } from '@sebbebroman/exceljs/node';
 
 const data = await readFile('in.xlsx');
 await writeFile('out.xlsx', workbook(data).sheet('Sheet1').cell('A1', 'x'));
@@ -157,7 +157,7 @@ await writeFile('out.xlsx', workbook(data).sheet('Sheet1').cell('A1', 'x'));
 Prefer `streamWrite` when rows are produced incrementally or the sheet is huge — rows are committed as they are written (bounded memory). Not available from the browser entry.
 
 ```ts
-import { streamWrite, streamRead } from '@sebbebroman/excel-ts/node';
+import { streamWrite, streamRead } from '@sebbebroman/exceljs/node';
 
 // Declarative: async iterable / array / generator
 await streamWrite('big.xlsx', {
@@ -198,7 +198,7 @@ for await (const { sheetName, rowNumber, values } of streamRead('big.xlsx')) {
 ### CSV
 
 ```ts
-import { workbook, csv } from '@sebbebroman/excel-ts';
+import { workbook, csv } from '@sebbebroman/exceljs';
 
 // Parse text → sheet → xlsx
 const init = await csv.parse('name,value\nalpha,1');
@@ -217,7 +217,7 @@ const text = await workbook()
 Node:
 
 ```ts
-import { readCsvFile, writeCsvFile } from '@sebbebroman/excel-ts/node';
+import { readCsvFile, writeCsvFile } from '@sebbebroman/exceljs/node';
 
 const data = await readCsvFile('in.csv'); // plain Workbook (one sheet)
 await writeCsvFile('out.csv', data);
@@ -227,8 +227,8 @@ await writeCsvFile('out.csv', data);
 
 | Import | Purpose |
 |--------|---------|
-| `@sebbebroman/excel-ts` | Builder, `writeBuffer`, `load`, `csv`, enums (browser-safe) |
-| `@sebbebroman/excel-ts/node` | + `writeFile` / `readFile` / `streamWrite` / `streamRead` / `readCsvFile` / `writeCsvFile` |
+| `@sebbebroman/exceljs` | Builder, `writeBuffer`, `load`, `csv`, enums (browser-safe) |
+| `@sebbebroman/exceljs/node` | + `writeFile` / `readFile` / `streamWrite` / `streamRead` / `readCsvFile` / `writeCsvFile` |
 
 There are **no** other package exports (no `./csv`, no `./stream/xlsx`, no default `ExcelJS` class). Types resolve to [`excel.d.ts`](./excel.d.ts). Internal Doc Workbook / legacy stream classes are not public.
 
@@ -239,7 +239,7 @@ Pipeline overview: [ARCHITECTURE.md](./ARCHITECTURE.md) (op-log → materialize 
 Core path uses [fflate](https://github.com/101arrowz/fflate) for zip. No `readable-stream` / npm `buffer` polyfills required for `writeBuffer`.
 
 ```ts
-import { workbook } from '@sebbebroman/excel-ts';
+import { workbook } from '@sebbebroman/exceljs';
 
 const buffer = await workbook()
   .sheet('Sheet1')
@@ -252,7 +252,7 @@ const buffer = await workbook()
 
 - Named exports only (`workbook`, `writeBuffer`, `load`, `csv`, …).
 - `"sideEffects": false` (CSV `dayjs` plugins extend lazily on first use, so shared-`dayjs` consumers are unaffected).
-- Import `@sebbebroman/excel-ts/node` only in Node code paths.
+- Import `@sebbebroman/exceljs/node` only in Node code paths.
 - `writeBuffer` and `load` are separate modules (read does not pull write).
 - `csv` / builder `.csv()` load `fast-csv` only when used (`.csv()` uses a dynamic import).
 

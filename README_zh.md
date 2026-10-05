@@ -1,4 +1,4 @@
-# @sebbebroman/excel-ts
+# @sebbebroman/exceljs
 
 读写 Excel 工作簿（`.xlsx`）的 **builder-first** TypeScript / ESM 库。
 
@@ -9,9 +9,9 @@
 ## 安装
 
 ```bash
-npm install @sebbebroman/excel-ts
+npm install @sebbebroman/exceljs
 # 或
-pnpm add @sebbebroman/excel-ts
+pnpm add @sebbebroman/exceljs
 ```
 
 需要 **Node.js ≥ 22**。
@@ -19,7 +19,7 @@ pnpm add @sebbebroman/excel-ts
 ## 快速开始
 
 ```ts
-import { workbook } from '@sebbebroman/excel-ts';
+import { workbook } from '@sebbebroman/exceljs';
 
 const buffer = await workbook({ creator: 'Reports' })
   .sheet('Data')
@@ -32,7 +32,7 @@ const buffer = await workbook({ creator: 'Reports' })
 ### Node 写文件
 
 ```ts
-import { workbook, writeFile } from '@sebbebroman/excel-ts/node';
+import { workbook, writeFile } from '@sebbebroman/exceljs/node';
 
 await writeFile(
   'out.xlsx',
@@ -46,7 +46,7 @@ await writeFile(
 ### 加载与编辑
 
 ```ts
-import { workbook, load } from '@sebbebroman/excel-ts';
+import { workbook, load } from '@sebbebroman/exceljs';
 
 const data = await load(buffer); // 普通 { meta, sheets }
 const out = await workbook(data)
@@ -58,7 +58,7 @@ const out = await workbook(data)
 ### CSV
 
 ```ts
-import { workbook, csv } from '@sebbebroman/excel-ts';
+import { workbook, csv } from '@sebbebroman/exceljs';
 
 // 命名 API，无需 side-effect import（已无 `./csv` 包入口）
 const init = await csv.parse('name,value\nalpha,1');
@@ -69,7 +69,7 @@ const text = await workbook().sheet('Data', init).csv();
 ### Node 流式读写
 
 ```ts
-import { streamWrite, streamRead } from '@sebbebroman/excel-ts/node';
+import { streamWrite, streamRead } from '@sebbebroman/exceljs/node';
 
 await streamWrite('big.xlsx', {
   sheets: [{ name: 'Data', rows: largeAsyncIterable }],
@@ -84,8 +84,8 @@ for await (const { sheetName, rowNumber, values } of streamRead('big.xlsx')) {
 
 | 导入 | 用途 |
 |------|------|
-| `@sebbebroman/excel-ts` | builder、`writeBuffer`、`load`、`csv`、枚举（浏览器可用） |
-| `@sebbebroman/excel-ts/node` | 另含 `writeFile` / `readFile` / `streamWrite` / `streamRead` / `readCsvFile` / `writeCsvFile` |
+| `@sebbebroman/exceljs` | builder、`writeBuffer`、`load`、`csv`、枚举（浏览器可用） |
+| `@sebbebroman/exceljs/node` | 另含 `writeFile` / `readFile` / `streamWrite` / `streamRead` / `readCsvFile` / `writeCsvFile` |
 
 无其他包导出（无 `./csv`、无 `./stream/xlsx`、无默认 `ExcelJS` 类）。
 

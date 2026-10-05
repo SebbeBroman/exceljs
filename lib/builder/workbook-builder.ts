@@ -26,14 +26,14 @@ import {writeBuffer as encodeWriteBuffer} from '../xlsx/write-buffer.js';
 import type {CsvStringifyOptions} from '../csv/public.js';
 
 /** Duck-type BookView without importing the read graph (tree-shake). */
-const WORKBOOK_VIEW_BRAND = Symbol.for('@sebbebroman/excel-ts.WorkbookView');
+const WORKBOOK_VIEW_BRAND = Symbol.for('@sebbebroman/exceljs.WorkbookView');
 
 function isWorkbookViewLike(value: unknown): value is {toJSON(): Workbook} {
   return Boolean(
     value &&
-      typeof value === 'object' &&
-      (value as {[k: symbol]: unknown})[WORKBOOK_VIEW_BRAND] === true &&
-      typeof (value as {toJSON?: unknown}).toJSON === 'function',
+    typeof value === 'object' &&
+    (value as {[k: symbol]: unknown})[WORKBOOK_VIEW_BRAND] === true &&
+    typeof (value as {toJSON?: unknown}).toJSON === 'function',
   );
 }
 
@@ -335,7 +335,9 @@ class WorkbookBuilderImpl implements WorkbookBuilder {
   _pushCell(sheet: string, address: string, value: CellValue, style?: Style): void {
     noteFormulaValue(value, this._used);
     if (style) this._used.styles = true;
-    this._ops.push(style ? {op: 'cell', sheet, address, value, style} : {op: 'cell', sheet, address, value});
+    this._ops.push(
+      style ? {op: 'cell', sheet, address, value, style} : {op: 'cell', sheet, address, value},
+    );
   }
 
   private requireCursor(): string {
@@ -531,10 +533,7 @@ class WorkbookBuilderImpl implements WorkbookBuilder {
   }
 }
 
-function replaySheetFeatures(
-  wb: WorkbookBuilderImpl,
-  sheet: Workbook['sheets'][number],
-): void {
+function replaySheetFeatures(wb: WorkbookBuilderImpl, sheet: Workbook['sheets'][number]): void {
   const name = sheet.name;
   if (sheet.views?.length) {
     wb._used.views = true;
@@ -612,15 +611,18 @@ function isPlainWorkbook(value: WorkbookInit | Workbook): value is Workbook {
  * - plain `Workbook` snapshot (`build()` / `load()` / `view.toJSON()`)
  * - {@link WorkbookView} from `viewWorkbook` (`workbook(view)`)
  */
-export function workbook(
-  init?: WorkbookInit | Workbook | {toJSON(): Workbook},
-): WorkbookBuilder {
+export function workbook(init?: WorkbookInit | Workbook | {toJSON(): Workbook}): WorkbookBuilder {
   return new WorkbookBuilderImpl(init);
 }
 
 /** True if value looks like a builder (has op log). */
 export function isWorkbookBuilder(value: unknown): value is WorkbookBuilder {
-  return Boolean(value && typeof value === 'object' && '_ops' in value && Array.isArray((value as WorkbookBuilder)._ops));
+  return Boolean(
+    value &&
+    typeof value === 'object' &&
+    '_ops' in value &&
+    Array.isArray((value as WorkbookBuilder)._ops),
+  );
 }
 
 // --- address helpers (minimal; col-cache used at compile time for ranges) ---

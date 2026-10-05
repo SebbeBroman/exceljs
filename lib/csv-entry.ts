@@ -3,7 +3,7 @@
  *
  * Side-effect entry that attaches CSV to the legacy Doc Workbook class for
  * vitest / historical tests (verquire). Public CSV API is named `csv` from
- * `@sebbebroman/excel-ts` (see lib/csv/public.ts).
+ * `@sebbebroman/exceljs` (see lib/csv/public.ts).
  *
  *   import {enableCsv} from '../lib/csv-entry.js'; // tests only
  */

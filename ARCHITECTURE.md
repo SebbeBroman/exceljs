@@ -1,13 +1,13 @@
 # Architecture (5.0 alpha)
 
-Short map of how `@sebbebroman/excel-ts` turns builder calls into `.xlsx` bytes.
+Short map of how `@sebbebroman/exceljs` turns builder calls into `.xlsx` bytes.
 
 ## Public surface
 
-| Entry | Role |
-|-------|------|
-| `@sebbebroman/excel-ts` | Browser-safe: `workbook`, `writeBuffer`, `load`, `csv`, enums |
-| `@sebbebroman/excel-ts/node` | Same + `writeFile` / `readFile` / `streamWrite` / `streamRead` / CSV file helpers |
+| Entry                       | Role                                                                              |
+| --------------------------- | --------------------------------------------------------------------------------- |
+| `@sebbebroman/exceljs`      | Browser-safe: `workbook`, `writeBuffer`, `load`, `csv`, enums                     |
+| `@sebbebroman/exceljs/node` | Same + `writeFile` / `readFile` / `streamWrite` / `streamRead` / CSV file helpers |
 
 Nothing else is exported (`sideEffects: false`). Legacy modules under `lib/`
 (`exceljs.nodejs.ts`, `csv-entry.ts`, Doc classes, stream writers) are **internal**.
@@ -118,11 +118,11 @@ Phase 7 does **not** delete `lib/doc/*`. The op-log → DocWorkbook → XLSX bri
 From `pnpm test:browser-bundle` (esbuild minify, **write-only** builder path;
 optional CSV module stubbed so sizes match a tree-shaken write client):
 
-| Build | Size (5.0.0-alpha.1) |
-|-------|----------------------|
-| Single-file minified | **287.2 KB** |
-| Single-file gzip | **80.0 KB** |
-| Code-split write-only entry | **190.9 KB** |
+| Build                       | Size (5.0.0-alpha.1)         |
+| --------------------------- | ---------------------------- |
+| Single-file minified        | **287.2 KB**                 |
+| Single-file gzip            | **80.0 KB**                  |
+| Code-split write-only entry | **190.9 KB**                 |
 | Code-split write-only total | 550.9 KB (many small chunks) |
 
 Re-measure after dependency or encoder changes:
@@ -134,16 +134,16 @@ pnpm test:esm
 
 ## Key modules
 
-| Path | Purpose |
-|------|---------|
-| `excel.ts` / `node.ts` | Package entries |
-| `lib/builder/` | Op-log builder |
-| `lib/model/types.ts` | Plain workbook types |
-| `lib/compile/` | Ops ↔ DocWorkbook ↔ plain |
-| `lib/xlsx/` | Encode/decode OOXML |
-| `lib/csv/public.ts` | Public CSV API |
-| `lib/stream/xlsx/stream-write.ts` | Node `streamWrite` |
-| `lib/stream/xlsx/stream-read.ts` | Node `streamRead` |
-| `lib/doc/` | Internal mutable document model |
-| `excel.d.ts` | Public TypeScript types |
-| `index.d.ts` | Legacy typings (internal reference) |
+| Path                              | Purpose                             |
+| --------------------------------- | ----------------------------------- |
+| `excel.ts` / `node.ts`            | Package entries                     |
+| `lib/builder/`                    | Op-log builder                      |
+| `lib/model/types.ts`              | Plain workbook types                |
+| `lib/compile/`                    | Ops ↔ DocWorkbook ↔ plain           |
+| `lib/xlsx/`                       | Encode/decode OOXML                 |
+| `lib/csv/public.ts`               | Public CSV API                      |
+| `lib/stream/xlsx/stream-write.ts` | Node `streamWrite`                  |
+| `lib/stream/xlsx/stream-read.ts`  | Node `streamRead`                   |
+| `lib/doc/`                        | Internal mutable document model     |
+| `excel.d.ts`                      | Public TypeScript types             |
+| `index.d.ts`                      | Legacy typings (internal reference) |

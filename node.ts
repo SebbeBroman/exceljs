@@ -1,10 +1,10 @@
 /**
- * Node-only adapters for @sebbebroman/excel-ts.
+ * Node-only adapters for @sebbebroman/exceljs.
  *
  *   import {
  *     workbook, writeFile, readFile, streamWrite, streamRead,
  *     readCsvFile, writeCsvFile,
- *   } from '@sebbebroman/excel-ts/node';
+ *   } from '@sebbebroman/exceljs/node';
  *
  *   await writeFile('out.xlsx', workbook().sheet('A').row([1, 2]));
  *   await streamWrite('big.xlsx', { sheets: [{ name: 'Data', rows: source }] });

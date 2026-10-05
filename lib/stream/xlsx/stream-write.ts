@@ -1,5 +1,5 @@
 /**
- * Public streaming write API for Node (`streamWrite` from `@sebbebroman/excel-ts/node`).
+ * Public streaming write API for Node (`streamWrite` from `@sebbebroman/exceljs/node`).
  * Thin ergonomic wrapper around the internal WorkbookWriter (not re-exported).
  */
 
@@ -100,12 +100,14 @@ function hasAsyncIterator(
   rows: AsyncIterable<RowInput> | Iterable<RowInput>,
 ): rows is AsyncIterable<RowInput> {
   return (
-    rows != null &&
-    typeof (rows as AsyncIterable<RowInput>)[Symbol.asyncIterator] === 'function'
+    rows != null && typeof (rows as AsyncIterable<RowInput>)[Symbol.asyncIterator] === 'function'
   );
 }
 
-async function consumeRows(ws: AnyWs, rows: AsyncIterable<RowInput> | Iterable<RowInput>): Promise<void> {
+async function consumeRows(
+  ws: AnyWs,
+  rows: AsyncIterable<RowInput> | Iterable<RowInput>,
+): Promise<void> {
   if (hasAsyncIterator(rows)) {
     for await (const values of rows) {
       const row = ws.addRow(values);
@@ -196,7 +198,7 @@ function writerOptionsFrom(
   dest: string | Writable,
   base: StreamWriteOptions | undefined,
 ): Partial<WorkbookWriterOptions> {
-  const opts: Partial<WorkbookWriterOptions> = {...(base ?? {})};
+  const opts: Partial<WorkbookWriterOptions> = {...base};
   if (typeof dest === 'string') {
     opts.filename = dest;
   } else {

@@ -1,5 +1,5 @@
 /**
- * Public types for @sebbebroman/excel-ts 5.x (builder-first).
+ * Public types for @sebbebroman/exceljs 5.x (builder-first).
  *
  * Package `"types"` and `exports["."].types` / `exports["./node"].types` resolve here.
  * Legacy ExcelJS class typings remain in `index.d.ts` for internal shapes and
@@ -87,13 +87,15 @@ export interface ColumnInput {
 
 export type RowInput = ReadonlyArray<CellValue> | Record<string, CellValue>;
 
-export type SheetTitleInput = string | {
-  text: string;
-  /** Applied to `merge` when given, otherwise to the title cell. */
-  style?: Style;
-  /** Valid A1 range (e.g. `'A1:B1'`). Invalid ranges throw at build time. */
-  merge?: string;
-};
+export type SheetTitleInput =
+  | string
+  | {
+      text: string;
+      /** Applied to `merge` when given, otherwise to the title cell. */
+      style?: Style;
+      /** Valid A1 range (e.g. `'A1:B1'`). Invalid ranges throw at build time. */
+      merge?: string;
+    };
 
 export interface SheetCell {
   value: CellValue;
@@ -196,10 +198,7 @@ export interface LoadOptions {
 export type ReadRowsFormat = 'auto' | 'csv' | 'xlsx';
 export type ViewFormat = ReadRowsFormat;
 
-export type ColSlice =
-  | {start?: number; end?: number}
-  | number[]
-  | string[];
+export type ColSlice = {start?: number; end?: number} | number[] | string[];
 
 export interface ViewWorkbookOptions {
   format?: ViewFormat;
@@ -365,9 +364,7 @@ export function stringifyCsv(
  * re-encodes from values, so never use it for fidelity round-trips. Use `load()`
  * when formatting must survive.
  */
-export function workbook(
-  init?: WorkbookInit | Workbook | WorkbookView,
-): WorkbookBuilder;
+export function workbook(init?: WorkbookInit | Workbook | WorkbookView): WorkbookBuilder;
 export function isWorkbookBuilder(value: unknown): value is WorkbookBuilder;
 export function writeBuffer(
   input: Workbook | WorkbookBuilder,
@@ -403,7 +400,7 @@ export const ReadingOrder: typeof import('./index.js').ReadingOrder;
 export const ErrorValue: typeof import('./index.js').ErrorValue;
 export const enums: unknown;
 
-/** Node entry (`@sebbebroman/excel-ts/node`) also exports (Node-only — do not import from browser bundles): */
+/** Node entry (`@sebbebroman/exceljs/node`) also exports (Node-only — do not import from browser bundles): */
 export function writeFile(
   path: string,
   input: Workbook | WorkbookBuilder,

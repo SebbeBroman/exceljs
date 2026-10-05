@@ -1,7 +1,7 @@
 /**
- * Package entry for @sebbebroman/excel-ts (builder-first API).
+ * Package entry for @sebbebroman/exceljs (builder-first API).
  *
- *   import { workbook, writeBuffer, load, csv } from '@sebbebroman/excel-ts';
+ *   import { workbook, writeBuffer, load, csv } from '@sebbebroman/exceljs';
  *
  *   const buf = await workbook()
  *     .sheet('Data')
@@ -13,7 +13,7 @@
  *
  *   const text = await workbook().sheet('Data', await csv.parse('a,1\nb,2')).csv();
  *
- * Node filesystem helpers: `@sebbebroman/excel-ts/node`
+ * Node filesystem helpers: `@sebbebroman/exceljs/node`
  */
 
 export {workbook, isWorkbookBuilder} from './lib/builder/workbook-builder.js';
