@@ -238,11 +238,7 @@ class CellXform extends BaseXform<CellXformModel> {
       case Enums.ValueType.Error:
         xmlStream.addAttribute('t', 'e');
         xmlStream.leafNode('f', attrs as Record<string, unknown> | undefined, model.formula);
-        xmlStream.leafNode(
-          'v',
-          undefined,
-          (model.result as {error: string}).error,
-        );
+        xmlStream.leafNode('v', undefined, (model.result as {error: string}).error);
         break;
 
       case Enums.ValueType.Date:
@@ -309,11 +305,11 @@ class CellXform extends BaseXform<CellXformModel> {
         ) {
           xmlStream.addAttribute('t', 'inlineStr');
           xmlStream.openNode('is');
-          ((model.value as {richText: import('../strings/rich-text-xform.js').RichTextModel[]}).richText).forEach(
-            text => {
-              this.richTextXForm.render(xmlStream, text);
-            },
-          );
+          (
+            model.value as {richText: import('../strings/rich-text-xform.js').RichTextModel[]}
+          ).richText.forEach(text => {
+            this.richTextXForm.render(xmlStream, text);
+          });
           xmlStream.closeNode();
         } else {
           xmlStream.addAttribute('t', 'str');
@@ -332,6 +328,19 @@ class CellXform extends BaseXform<CellXformModel> {
         } else {
           xmlStream.addAttribute('t', 'str');
           xmlStream.leafNode('v', undefined, model.text);
+        }
+        // Formula-backed hyperlink: emit <f> so the formula survives a
+        // read -> write round-trip (mirrors the Formula render branch).
+        if (model.formula !== undefined) {
+          const fAttrs: Record<string, unknown> = {};
+          if (model.shareType === 'shared' && model.si !== undefined) {
+            fAttrs.t = 'shared';
+            fAttrs.si = model.si;
+            if (model.ref !== undefined) fAttrs.ref = model.ref;
+            xmlStream.leafNode('f', fAttrs, model.formula);
+          } else {
+            xmlStream.leafNode('f', undefined, model.formula);
+          }
         }
         break;
 

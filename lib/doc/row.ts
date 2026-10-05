@@ -91,7 +91,7 @@ function isCompact(entry: CellSlot | undefined | null): entry is CompactCell {
   return entry != null && (entry as CompactCell)._c === 1;
 }
 
-function styleHasKeys(style: Partial<Style> & Record<string, unknown> | undefined): boolean {
+function styleHasKeys(style: (Partial<Style> & Record<string, unknown>) | undefined): boolean {
   if (!style) return false;
   // faster than Object.keys alloc for the common empty-style case
   for (const _k in style) return true;
@@ -143,11 +143,26 @@ function valueFromCellModel(cellModel: RowModelCell): unknown {
       if (cellModel.rawValue !== undefined) return cellModel.rawValue;
       return cellModel.value;
     case Enums.ValueType.Hyperlink: {
-      const v: {text?: unknown; hyperlink?: unknown; tooltip?: unknown} = {
+      const v: {
+        text?: unknown;
+        hyperlink?: unknown;
+        tooltip?: unknown;
+        formula?: unknown;
+        sharedFormula?: unknown;
+        shareType?: unknown;
+        ref?: unknown;
+      } = {
         text: cellModel.text,
         hyperlink: cellModel.hyperlink,
       };
       if (cellModel.tooltip != null) v.tooltip = cellModel.tooltip;
+      // A formula cell reconciled to a hyperlink keeps its `formula` (the
+      // reconcile moves result -> text). Carry the formula fields through so
+      // `cell.model.formula` survives, matching the direct-model load path.
+      if (cellModel.formula != null) v.formula = cellModel.formula;
+      if (cellModel.sharedFormula != null) v.sharedFormula = cellModel.sharedFormula;
+      if (cellModel.shareType != null) v.shareType = cellModel.shareType;
+      if (cellModel.ref != null) v.ref = cellModel.ref;
       return v;
     }
     case Enums.ValueType.Formula: {
@@ -326,9 +341,7 @@ class Row {
 
     if (comment) {
       if (comment.type === 'note') {
-        compact.comment = Note.fromModel(
-          comment as Parameters<typeof Note.fromModel>[0],
-        );
+        compact.comment = Note.fromModel(comment as Parameters<typeof Note.fromModel>[0]);
       }
     }
 
