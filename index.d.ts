@@ -5,10 +5,9 @@
  * still describes the ExcelJS-era class surface (Workbook, Worksheet, Style,
  * Font, …) used by:
  *   - internal Doc model shapes
- *   - type imports from excel.d.ts (Style/Font/PageSetup aliases)
  *   - historical tests via verquire
  *
- * Do not treat `index.d.ts` as the package contract. Package `"types"` points
+ * This file is not published. Package `"types"` points
  * at `excel.d.ts`.
  */
 

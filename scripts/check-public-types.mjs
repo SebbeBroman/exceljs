@@ -10,7 +10,7 @@ const consumer = join(root, 'build', 'public-types');
 const pkg = join(consumer, 'node_modules', '@sebbebroman', 'exceljs');
 rmSync(consumer, {recursive: true, force: true});
 mkdirSync(pkg, {recursive: true});
-for (const file of ['package.json', 'excel.d.ts', 'node.d.ts', 'index.d.ts']) {
+for (const file of ['package.json', 'excel.d.ts', 'node.d.ts']) {
   copyFileSync(join(root, file), join(pkg, file));
 }
 cpSync(join(root, 'spec', 'typescript', 'public'), consumer, {recursive: true});
