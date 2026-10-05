@@ -22,12 +22,6 @@ import AppXform from './xform/core/app-xform.js';
 import WorkbookXform from './xform/book/workbook-xform.js';
 import WorksheetXform, {buildSheetRelMaps} from './xform/sheet/worksheet-xform.js';
 import {
-  canUseFastSheetData,
-  isFastSheetDataEnabled,
-  parseFastSheetData,
-  splitSheetData,
-} from './xform/sheet/fast-sheet-data.js';
-import {
   loadDrawingXform,
   loadTableXform,
   loadCommentsXform,
@@ -87,6 +81,13 @@ function modelNeedsDocFeatures(model: XlsxModel): boolean {
   return false;
 }
 
+// The fused cell reader is never needed when exporting a workbook.
+// Cache the import promise so concurrent worksheet reads share its first load.
+let fastSheetDataPromise: Promise<typeof import('./xform/sheet/fast-sheet-data.js')> | undefined;
+function loadFastSheetData(): Promise<typeof import('./xform/sheet/fast-sheet-data.js')> {
+  return (fastSheetDataPromise ??= import('./xform/sheet/fast-sheet-data.js'));
+}
+
 // theme1 XML is large (~8KB min); load only when writing default theme
 let theme1XmlPromise: Promise<string> | undefined;
 function loadTheme1Xml(): Promise<string> {
@@ -101,13 +102,17 @@ function fsReadFileAsync(
   options?: Parameters<typeof fs.readFile>[1],
 ): Promise<Buffer | string> {
   return new Promise((resolve, reject) => {
-    fs.readFile(filename, options as any, (error: NodeJS.ErrnoException | null, data: Buffer | string) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(data);
-      }
-    });
+    fs.readFile(
+      filename,
+      options as any,
+      (error: NodeJS.ErrnoException | null, data: Buffer | string) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(data);
+        }
+      },
+    );
   });
 }
 
@@ -293,6 +298,7 @@ class XLSX {
       formulae: {},
     };
     // Fused saxen pass (parse + reconcile); classic path on bail/throw.
+    const {parseFastSheetData} = await loadFastSheetData();
     const fastRows = parseFastSheetData(split.content, fastCtx);
     worksheet.rows = fastRows;
     worksheet.fastRows = true;
@@ -312,6 +318,7 @@ class XLSX {
     await xform.installCfXforms();
     const xml = entryToString(entryBytes);
 
+    const {isFastSheetDataEnabled, splitSheetData, canUseFastSheetData} = await loadFastSheetData();
     let worksheet: XlsxModel | null | undefined;
     const fastEligible =
       isFastSheetDataEnabled() &&
@@ -356,7 +363,11 @@ class XLSX {
     model.tables[`../tables/${name}.xml`] = table;
   }
 
-  async _processWorksheetRelsEntry(stream: XmlSource, model: XlsxModel, sheetNo: string | number): Promise<void> {
+  async _processWorksheetRelsEntry(
+    stream: XmlSource,
+    model: XlsxModel,
+    sheetNo: string | number,
+  ): Promise<void> {
     const xform = new RelationshipsXform();
     const relationships = await xform.parseStream(stream);
     model.worksheetRels[sheetNo] = relationships;
@@ -370,7 +381,11 @@ class XLSX {
       const name = filename.substr(0, lastDot);
       const chunks: Uint8Array[] = [];
       for await (const chunk of fromReadable(entry)) {
-        chunks.push(isBytes(chunk) ? chunk : bytesFrom(chunk as string | ArrayBuffer | ArrayLike<number> | ArrayBufferView));
+        chunks.push(
+          isBytes(chunk)
+            ? chunk
+            : bytesFrom(chunk as string | ArrayBuffer | ArrayLike<number> | ArrayBufferView),
+        );
       }
       model.mediaIndex[filename] = model.media.length;
       model.mediaIndex[name] = model.media.length;
@@ -418,7 +433,11 @@ class XLSX {
         sawString = true;
         stringAcc += chunk;
       } else {
-        chunks.push(isBytes(chunk) ? chunk : bytesFrom(chunk as string | ArrayBuffer | ArrayLike<number> | ArrayBufferView));
+        chunks.push(
+          isBytes(chunk)
+            ? chunk
+            : bytesFrom(chunk as string | ArrayBuffer | ArrayLike<number> | ArrayBufferView),
+        );
       }
     }
     if (sawString && chunks.length === 0) {
@@ -439,17 +458,25 @@ class XLSX {
     );
   }
 
-  async read(stream: Readable | AsyncIterable<unknown>, options?: XlsxReadOptions): Promise<XlsxWorkbookHost> {
+  async read(
+    stream: Readable | AsyncIterable<unknown>,
+    options?: XlsxReadOptions,
+  ): Promise<XlsxWorkbookHost> {
     const chunks: unknown[] = [];
     for await (const chunk of fromReadable(stream)) {
       chunks.push(chunk);
     }
     // Normalize to Uint8Array (accepts Buffer / Uint8Array from streams)
-    const parts = chunks.map(c => (isBytes(c) ? c : bytesFrom(c as string | ArrayBuffer | ArrayLike<number> | ArrayBufferView)));
+    const parts = chunks.map(c =>
+      isBytes(c) ? c : bytesFrom(c as string | ArrayBuffer | ArrayLike<number> | ArrayBufferView),
+    );
     return this.load(concat(parts), options);
   }
 
-  async load(data: Uint8Array | ArrayBuffer | ArrayBufferView | string | Buffer, options?: XlsxReadOptions): Promise<XlsxWorkbookHost> {
+  async load(
+    data: Uint8Array | ArrayBuffer | ArrayBufferView | string | Buffer,
+    options?: XlsxReadOptions,
+  ): Promise<XlsxWorkbookHost> {
     let buffer: Uint8Array | Buffer | string;
     if (options && options.base64) {
       buffer = bytesFrom(String(data), 'base64');
@@ -879,7 +906,9 @@ class XLSX {
       await worksheetXform.installCfXforms();
     }
 
-    const hasComments = model.worksheets.some((ws: XlsxModel) => ws.comments && ws.comments.length > 0);
+    const hasComments = model.worksheets.some(
+      (ws: XlsxModel) => ws.comments && ws.comments.length > 0,
+    );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let commentsXform: any;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -987,7 +1016,7 @@ class XLSX {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async write(stream: Writable | any, options?: XlsxWriteOptions): Promise<this> {
     options = options || {};
-    const {model} = this.workbook;
+    const model = this.workbook.getXlsxModel?.() ?? this.workbook.model;
     const zip = new ZipStream.ZipWriter(options.zip);
     zip.pipe(stream);
 
@@ -1002,7 +1031,10 @@ class XLSX {
    * keep the sequence identical in both.
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async renderParts(zip: {append(data: unknown, options: {name: string; [key: string]: any}): unknown}, model: XlsxModel): Promise<void> {
+  async renderParts(
+    zip: {append(data: unknown, options: {name: string; [key: string]: any}): unknown},
+    model: XlsxModel,
+  ): Promise<void> {
     // render
     await this.addContentTypes(zip, model);
     await this.addOfficeRels(zip, model);
@@ -1041,7 +1073,7 @@ class XLSX {
 
   async writeBuffer(options?: XlsxWriteOptions): Promise<unknown> {
     options = options || {};
-    const {model} = this.workbook;
+    const model = this.workbook.getXlsxModel?.() ?? this.workbook.model;
     await this.prepareModel(model, options);
     // Buffered fast path: every part is already materialized (XML strings,
     // media buffers), so collect + single synchronous zipSync instead of the
