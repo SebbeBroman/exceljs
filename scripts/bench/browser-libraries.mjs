@@ -219,7 +219,7 @@ try {
     }
     return {
       userAgent: navigator.userAgent,
-      versions: {sheetjs: sheetjs.version, exceljs: '4.4.0', local: '5.0.0-alpha.1'},
+      versions: {sheetjs: sheetjs.version, exceljs: '4.4.0', local: '0.1.0'},
       rows: rowCount,
       cols: 8,
       runs: 7,

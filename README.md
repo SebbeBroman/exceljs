@@ -92,7 +92,7 @@ import { workbook, load } from '@sebbebroman/exceljs';
 
 const data = await load(buffer); // plain { meta, sheets }
 const out = await workbook(data)
-  .sheet('Sheet1')
+  .sheet('Data')
   .cell('A1', 'updated')
   .writeBuffer();
 ```
@@ -137,8 +137,9 @@ const rows = await readRows(data, { filename: file.name, start: 1, end: 50 });
 
 Supports **CSV** and **OOXML** (`.xlsx` / `.xlsm` / …). Not `.xls` / `.xlsb`.
 
-> **Read path choice:** `load()` / `readFile()` parse full fidelity (values,
-> styles, merges, tables, …) for re-encode. `viewWorkbook()` / `readRows()`
+> **Read path choice:** `load()` / `readFile()` parse workbook models (values,
+> styles, merges, tables, …) for re-encode, with the round-trip limitations
+> listed below. `viewWorkbook()` / `readRows()`
 > are **values-only** (no styles, merges, formulas, hyperlinks, dates stay
 > numeric) and must not be used for round-trip writes expecting fidelity —
 > `workbook(view).writeBuffer()` keeps values only.
@@ -230,7 +231,7 @@ await writeCsvFile('out.csv', data);
 | `@sebbebroman/exceljs` | Builder, `writeBuffer`, `load`, `csv`, enums (browser-safe) |
 | `@sebbebroman/exceljs/node` | + `writeFile` / `readFile` / `streamWrite` / `streamRead` / `readCsvFile` / `writeCsvFile` |
 
-There are **no** other package exports (no `./csv`, no `./stream/xlsx`, no default `ExcelJS` class). Types resolve to [`excel.d.ts`](./excel.d.ts). Internal Doc Workbook / legacy stream classes are not public.
+The supported runtime entry points are the main entry and `/node`; `./package.json` is also exported. There is no `./csv`, `./stream/xlsx`, or default `ExcelJS` class. Types resolve to [`excel.d.ts`](./excel.d.ts) and [`node.d.ts`](./node.d.ts). Internal Doc Workbook / legacy stream classes are not public.
 
 Pipeline overview: [ARCHITECTURE.md](./ARCHITECTURE.md) (op-log → materialize → XLSX).
 
@@ -251,10 +252,10 @@ const buffer = await workbook()
 ### Tree-shaking
 
 - Named exports only (`workbook`, `writeBuffer`, `load`, `csv`, …).
-- `"sideEffects": false` (CSV `dayjs` plugins extend lazily on first use, so shared-`dayjs` consumers are unaffected).
+- `"sideEffects": false` (importing the package does not extend `dayjs`; CSV helpers extend it on first use).
 - Import `@sebbebroman/exceljs/node` only in Node code paths.
 - `writeBuffer` and `load` are separate modules (read does not pull write).
-- `csv` / builder `.csv()` load `fast-csv` only when used (`.csv()` uses a dynamic import).
+- Builder `.csv()` imports the CSV helper module dynamically. Bundlers can retain CSV chunks even in write-only clients because the builder exposes `.csv()`.
 
 Heavy OOXML features still load with the current encoder bridge; later milestones split more of the encoder. Optional drawings/tables/comments/pivots already use dynamic `import()`.
 
@@ -329,5 +330,8 @@ Derived from **ExcelJS**, originally created by [Guyon Roche](https://github.com
 
 [MIT](./LICENSE)
 
-Copyright (c) 2014–2019 Guyon Roche  
-Copyright (c) 2025–2026 SebbeBroman and contributors
+Copyright (c) 2014–2019 Guyon Roche.
+
+ExcelJS contributions by the ExcelJS team and contributors.
+
+Fork modifications copyright (c) 2026 SebbeBroman and contributors.

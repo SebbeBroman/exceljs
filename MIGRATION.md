@@ -9,7 +9,7 @@
 | `@sebbebroman/exceljs`      | Builder, `writeBuffer`, `load`, `csv`, types, enums (browser-safe)                |
 | `@sebbebroman/exceljs/node` | Same + `writeFile` / `readFile` / `streamWrite` / `streamRead` / CSV file helpers |
 
-Removed:
+Differences from ExcelJS 4.x:
 
 - `@sebbebroman/exceljs/csv` (side-effect import) — use named `csv` from the main entry instead
 - `@sebbebroman/exceljs/stream/xlsx` — use `streamWrite` / `streamRead` on `./node` (no public `WorkbookWriter` / `WorkbookReader`)
@@ -142,7 +142,7 @@ await writeCsvFile('out.csv', data);
 await writeCsvFile('sheet-b.csv', data, {sheetName: 'B'});
 ```
 
-**ExcelJS 4.x → fork 0.1.x:** drop `import '@sebbebroman/exceljs/csv'`. There is no `workbook.csv` property on a class. Use `csv.parse` / `csv.stringify` or builder `.csv()`.
+**ExcelJS 4.x → fork 0.1.x:** replace `wb.csv.read/write` with `csv.parse` / `csv.stringify` or builder `.csv()`. The fork has no `./csv` entry or mutable Workbook class.
 
 ### Advanced sheet features (Phase 5)
 
@@ -277,7 +277,7 @@ Phases 1–7 of the builder rewrite are complete for the **public** product:
 ## Tree-shaking
 
 - Prefer named imports: `import { workbook, writeBuffer } from '@sebbebroman/exceljs'`.
-- Import `csv` only when needed; write-only paths do not pull `fast-csv` unless you call `.csv()` or import `csv`.
+- Builder `.csv()` imports its helper module dynamically; bundlers can retain CSV chunks even in write-only clients.
 - Do not import `@sebbebroman/exceljs/node` from browser bundles.
 - `"sideEffects": false` on the package.
 - There is no `./csv` package export — CSV is folded into the main entry.

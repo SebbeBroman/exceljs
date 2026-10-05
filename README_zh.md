@@ -50,7 +50,7 @@ import { workbook, load } from '@sebbebroman/exceljs';
 
 const data = await load(buffer); // 普通 { meta, sheets }
 const out = await workbook(data)
-  .sheet('Sheet1')
+  .sheet('Data')
   .cell('A1', 'updated')
   .writeBuffer();
 ```
@@ -87,7 +87,7 @@ for await (const { sheetName, rowNumber, values } of streamRead('big.xlsx')) {
 | `@sebbebroman/exceljs` | builder、`writeBuffer`、`load`、`csv`、枚举（浏览器可用） |
 | `@sebbebroman/exceljs/node` | 另含 `writeFile` / `readFile` / `streamWrite` / `streamRead` / `readCsvFile` / `writeCsvFile` |
 
-无其他包导出（无 `./csv`、无 `./stream/xlsx`、无默认 `ExcelJS` 类）。
+运行时入口为主入口和 `/node`；另导出 `./package.json`。无 `./csv`、无 `./stream/xlsx`、无默认 `ExcelJS` 类。
 
 ## 许可与致谢
 

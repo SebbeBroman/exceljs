@@ -9,7 +9,7 @@ Short map of how `@sebbebroman/exceljs` turns builder calls into `.xlsx` bytes.
 | `@sebbebroman/exceljs`      | Browser-safe: `workbook`, `writeBuffer`, `load`, `csv`, enums                     |
 | `@sebbebroman/exceljs/node` | Same + `writeFile` / `readFile` / `streamWrite` / `streamRead` / CSV file helpers |
 
-Nothing else is exported (`sideEffects: false`). Legacy modules under `lib/`
+`./package.json` is also exported; the package declares `sideEffects: false`. Legacy modules under `lib/`
 (`exceljs.nodejs.ts`, `csv-entry.ts`, Doc classes, stream writers) are **internal**.
 
 ## Write path (builder → buffer)
@@ -44,7 +44,7 @@ writeBuffer(plain | builder)
 
 ## Read path
 
-### Full fidelity (`load` / `readFile`)
+### Workbook model (`load` / `readFile`)
 
 ```
 load(bytes) / readFile(path)
@@ -61,7 +61,7 @@ load(bytes) / readFile(path)
 
 Edit loop: `workbook(await load(buf)).sheet(…).cell(…).writeBuffer()`.
 
-Full-fidelity `load` runs in two phases: package parts first (workbook,
+Model-loading `load` runs in two phases: package parts first (workbook,
 SST, styles, rels, …), then sheets — each sheet flows parse → reconcile-ready
 without waiting on other sheets. Sheets eligible for the fused fast path
 (`lib/xlsx/xform/sheet/fast-sheet-data.ts`) parse + reconcile `sheetData`
@@ -75,8 +75,8 @@ via `setFastSheetDataEnabled(false)` (test-only hook).
 
 `writeBuffer` collects fully-materialized parts and runs one synchronous
 `zipSync` (`lib/utils/buffer-zip.ts`) instead of the streaming ZipWriter's
-event-loop hops (same parts, same level). Streaming `write()`/`writeFile`
-keep the streaming writer.
+event-loop hops (same parts, same level). Public Node `writeFile()` writes the bytes returned by `writeBuffer()`.
+Node `streamWrite()` uses the streaming writer.
 
 ### Values-only / lazy view (`viewWorkbook` / `readRows`)
 
@@ -95,13 +95,13 @@ viewWorkbook(bytes) / readRows(bytes)
 
 - **Lazy per sheet:** only the requested sheet’s XML is parsed.
 - **Early exit:** `rows({ end: 100 })` stops SAX after that row (does not walk the rest of `sheetData`).
-- **Tradeoff:** values only — no styles, merges, formulas, hyperlinks, or theme, and dates arrive numeric. Use `load()` for full-fidelity re-encode. Never round-trip `workbook(view)` expecting fidelity.
+- **Tradeoff:** values only — no styles, merges, formulas, hyperlinks, or theme, and dates arrive numeric. Use `load()` to preserve supported workbook features; complex image anchors and pivot tables remain best-effort. Never round-trip `workbook(view)` expecting fidelity.
 - Engine: `lib/read/xlsx-light.ts`.
 - **Zip limits:** `lib/utils/zip-reader.ts` caps entries (10k) and total uncompressed output (512 MiB); CRC is not re-verified (parse success ≠ integrity proof).
 
 ## CSV
 
-Named helpers in `lib/csv/public.ts` (`csv.parse` / `csv.stringify`). Builder `.csv()` dynamically imports the stringify path so write-only bundles can drop `fast-csv`. Node `readCsvFile` / `writeCsvFile` wrap the same helpers with `fs`.
+Named helpers in `lib/csv/public.ts` (`csv.parse` / `csv.stringify`). Builder `.csv()` dynamically imports the helper module. Bundlers can retain CSV chunks even in write-only clients because the builder exposes `.csv()`. Node `readCsvFile` / `writeCsvFile` wrap the same helpers with `fs`.
 
 ## Streaming (Node only)
 
