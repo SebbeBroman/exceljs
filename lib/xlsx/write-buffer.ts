@@ -13,7 +13,7 @@
 import type {Workbook, WriteOptions} from '../model/types.js';
 import {isWorkbookBuilder, type WorkbookBuilder} from '../builder/workbook-builder.js';
 import {compileToXlsxModel, plainToXlsxModel} from '../compile/ops-to-xlsx-model.js';
-import XLSX from './xlsx.js';
+import XlsxWriter from './xlsx-writer.js';
 import {compileToPlainWorkbook} from '../compile/ops-to-model.js';
 
 function toUint8Array(data: unknown): Uint8Array {
@@ -45,7 +45,7 @@ export async function writeBuffer(
   if (isWorkbookBuilder(input) && !input._used.styles && opts.useStyles === undefined) {
     opts.useStyles = false;
   }
-  const raw = await new XLSX({model}).writeBuffer(opts);
+  const raw = await new XlsxWriter({model}).writeBuffer(opts);
   return toUint8Array(raw);
 }
 

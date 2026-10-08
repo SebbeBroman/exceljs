@@ -4,10 +4,10 @@
  */
 
 import type {LoadOptions, Workbook} from '../model/types.js';
-import XLSX from './xlsx.js';
+import XlsxReader from './xlsx-reader.js';
 import type {XlsxWorkbookModel} from '../compile/ops-to-xlsx-model.js';
 import {xlsxModelToPlain} from '../compile/xlsx-model-to-plain.js';
-import type {XlsxReadOptions} from './xlsx.js';
+import type {XlsxReadOptions} from './xlsx-reader.js';
 
 export type {LoadOptions} from '../model/types.js';
 
@@ -25,6 +25,6 @@ export async function load(
         ignoreNodes: opts.ignoreNodes,
       }
     : undefined;
-  await new XLSX(host).load(data, xlsxOpts);
+  await new XlsxReader(host).load(data, xlsxOpts);
   return xlsxModelToPlain(host.model);
 }
