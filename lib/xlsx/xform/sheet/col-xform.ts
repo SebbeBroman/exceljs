@@ -1,4 +1,4 @@
-import utils from '../../../utils/utils.js';
+import {parseBoolean} from '../../../utils/utils.js';
 import BaseXform from '../base-xform.js';
 import type {XmlStreamLike, XmlNode, XformOptions} from '../base-xform.js';
 
@@ -82,16 +82,16 @@ class ColXform extends BaseXform<ColModel> {
       if (node.attributes.style) {
         model.styleId = parseInt(node.attributes.style, 10);
       }
-      if (utils.parseBoolean(node.attributes.hidden)) {
+      if (parseBoolean(node.attributes.hidden)) {
         model.hidden = true;
       }
-      if (utils.parseBoolean(node.attributes.bestFit)) {
+      if (parseBoolean(node.attributes.bestFit)) {
         model.bestFit = true;
       }
       if (node.attributes.outlineLevel) {
         model.outlineLevel = parseInt(node.attributes.outlineLevel, 10);
       }
-      if (utils.parseBoolean(node.attributes.collapsed)) {
+      if (parseBoolean(node.attributes.collapsed)) {
         model.collapsed = true;
       }
       return true;

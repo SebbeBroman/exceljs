@@ -232,6 +232,62 @@
         "medianMs": 0.11262500000000131,
         "checksum": 21546000
       }
+    },
+    "utilities": {
+      "stage": "utilities",
+      "bundles": {
+        "write": {
+          "minified": 223812,
+          "gzip": 60653,
+          "initialMinified": 132402,
+          "initialGzip": 41025,
+          "splitTotal": 228410
+        },
+        "load": {
+          "minified": 186798,
+          "gzip": 51191,
+          "initialMinified": 132293,
+          "initialGzip": 41168,
+          "splitTotal": 202640
+        },
+        "readRows": {
+          "minified": 34968,
+          "gzip": 14050,
+          "initialMinified": 34781,
+          "initialGzip": 14742,
+          "splitTotal": 139640
+        }
+      },
+      "runtime": {
+        "write": {
+          "medianMs": 6.496291999999983,
+          "minMs": 5.731167000000028,
+          "maxMs": 7.289333999999997
+        },
+        "load": {
+          "medianMs": 9.888333999999986,
+          "minMs": 7.891999999999996,
+          "maxMs": 11.252957999999978
+        },
+        "readRows": {
+          "medianMs": 4.605334000000084,
+          "minMs": 4.279290999999944,
+          "maxMs": 5.2999999999999545
+        },
+        "tableEdit": {
+          "works": true,
+          "medianMs": 1.248666999999955,
+          "minMs": 1.0927920000000313,
+          "maxMs": 1.4925829999999678
+        }
+      },
+      "addresses": {
+        "value": "XFD",
+        "coldMs": 5.693707999999997,
+        "retainedBytes": 1372416,
+        "warmMs": 1.0478330000000007,
+        "checksum": 294904
+      }
     }
   }
 }

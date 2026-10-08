@@ -1,4 +1,4 @@
-import utils from './utils.js';
+import {xmlEncode} from './utils.js';
 
 // constants
 const OPEN_ANGLE = '<';
@@ -6,7 +6,7 @@ const CLOSE_ANGLE = '>';
 const OPEN_ANGLE_SLASH = '</';
 const CLOSE_SLASH_ANGLE = '/>';
 
-// Matches utils.xmlEncode special chars — used to skip encode on hot path
+// Matches xmlEncode special chars — used to skip encode on hot path
 const XML_SPECIAL = /[<>&'"\x7F\x00-\x08\x0B-\x0C\x0E-\x1F]/;
 
 type XmlAttributes = Record<string, unknown> | null | undefined;
@@ -19,7 +19,7 @@ interface RollbackState {
 }
 
 function pushAttribute(xml: string[], name: string, value: unknown): void {
-  xml.push(` ${name}="${utils.xmlEncode(String(value))}"`);
+  xml.push(` ${name}="${xmlEncode(String(value))}"`);
 }
 
 /** Build attribute string in one allocation (no per-attr array). */
@@ -29,7 +29,7 @@ function attributesToString(attributes: XmlAttributes): string {
   for (const name of Object.keys(attributes)) {
     const value = attributes[name];
     if (value !== undefined) {
-      out += ` ${name}="${utils.xmlEncode(String(value))}"`;
+      out += ` ${name}="${xmlEncode(String(value))}"`;
     }
   }
   return out;
@@ -51,7 +51,7 @@ function encodeLeafText(text: unknown): string {
   if (s.length <= 32 && !XML_SPECIAL.test(s)) {
     return s;
   }
-  return utils.xmlEncode(s);
+  return xmlEncode(s);
 }
 
 class XmlStream {
@@ -135,7 +135,7 @@ class XmlStream {
       this.open = false;
     }
     this.leaf = false;
-    xml.push(utils.xmlEncode(String(text)));
+    xml.push(xmlEncode(String(text)));
   }
 
   writeXml(xml: string): void {

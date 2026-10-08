@@ -1,5 +1,5 @@
 import Enums from '../../../model/enums.js';
-import utils from '../../../utils/utils.js';
+import {parseBoolean, validInt} from '../../../utils/utils.js';
 import BaseXform from '../base-xform.js';
 import type {XmlStreamLike, XmlNode} from '../base-xform.js';
 
@@ -55,13 +55,13 @@ const validation = {
       case 'vertical':
         return value;
       default: {
-        const intVal = utils.validInt(value);
+        const intVal = validInt(value);
         return intVal >= -90 && intVal <= 90 ? intVal : undefined;
       }
     }
   },
   indent(value: number | undefined): number {
-    const intVal = utils.validInt(value);
+    const intVal = validInt(value);
     return Math.max(0, intVal);
   },
   readingOrder(value: string | undefined): number | undefined {
@@ -98,7 +98,7 @@ const textRotationXform = {
     return undefined;
   },
   toModel(textRotation: string | undefined): number | string | undefined {
-    const tr = utils.validInt(textRotation);
+    const tr = validInt(textRotation);
     if (tr !== undefined) {
       if (tr === 255) {
         return 'vertical';
@@ -162,12 +162,8 @@ class AlignmentXform extends BaseXform<AlignmentModel | null> {
       'vertical',
       node.attributes.vertical === 'center' ? 'middle' : node.attributes.vertical,
     );
-    add(node.attributes.wrapText, 'wrapText', utils.parseBoolean(node.attributes.wrapText));
-    add(
-      node.attributes.shrinkToFit,
-      'shrinkToFit',
-      utils.parseBoolean(node.attributes.shrinkToFit),
-    );
+    add(node.attributes.wrapText, 'wrapText', parseBoolean(node.attributes.wrapText));
+    add(node.attributes.shrinkToFit, 'shrinkToFit', parseBoolean(node.attributes.shrinkToFit));
     add(node.attributes.indent, 'indent', parseInt(node.attributes.indent, 10));
     add(
       node.attributes.textRotation,

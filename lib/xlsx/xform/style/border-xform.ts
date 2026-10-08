@@ -1,6 +1,6 @@
 import BaseXform from '../base-xform.js';
 import type {XmlStreamLike, XmlNode} from '../base-xform.js';
-import utils from '../../../utils/utils.js';
+import {parseBoolean} from '../../../utils/utils.js';
 import ColorXform from './color-xform.js';
 import type {ColorModel} from './color-xform.js';
 
@@ -188,8 +188,8 @@ class BorderXform extends BaseXform<BorderModel> {
     switch (node.name) {
       case 'border':
         this.reset();
-        this.diagonalUp = utils.parseBoolean(node.attributes.diagonalUp);
-        this.diagonalDown = utils.parseBoolean(node.attributes.diagonalDown);
+        this.diagonalUp = parseBoolean(node.attributes.diagonalUp);
+        this.diagonalDown = parseBoolean(node.attributes.diagonalDown);
         return true;
       default:
         this.parser = this.map[node.name as keyof typeof this.map];

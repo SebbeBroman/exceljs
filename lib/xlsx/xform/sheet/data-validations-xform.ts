@@ -1,5 +1,5 @@
 import {isEqual} from '../../../utils/object.js';
-import utils from '../../../utils/utils.js';
+import {dateToExcel, excelToDate, parseBoolean} from '../../../utils/utils.js';
 import colCache from '../../../utils/col-cache.js';
 import BaseXform from '../base-xform.js';
 import type {XmlStreamLike, XmlNode} from '../base-xform.js';
@@ -47,7 +47,7 @@ function assignBool(
 ): void {
   const value = attributes[name];
   if (value !== undefined) {
-    definedName[name] = utils.parseBoolean(value);
+    definedName[name] = parseBoolean(value);
   } else if (defaultValue !== undefined) {
     definedName[name] = defaultValue;
   }
@@ -157,7 +157,7 @@ class DataValidationsXform extends BaseXform<DataValidationsModel> {
         (value.formulae || []).forEach((formula, index) => {
           xmlStream.openNode(`formula${index + 1}`);
           if (value.type === 'date') {
-            xmlStream.writeText(utils.dateToExcel(new Date(formula as string | number | Date)));
+            xmlStream.writeText(dateToExcel(new Date(formula as string | number | Date)));
           } else {
             xmlStream.writeText(formula);
           }
@@ -273,7 +273,7 @@ class DataValidationsXform extends BaseXform<DataValidationsModel> {
             formula = parseFloat(formula as string);
             break;
           case 'date':
-            formula = utils.excelToDate(parseFloat(formula as string));
+            formula = excelToDate(parseFloat(formula as string));
             break;
           default:
             break;

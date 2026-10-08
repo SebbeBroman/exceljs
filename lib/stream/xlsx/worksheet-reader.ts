@@ -1,6 +1,6 @@
 import {EventEmitter} from 'node:events';
 import {eachSaxChunk} from '../../utils/parse-sax.js';
-import utils from '../../utils/utils.js';
+import {excelToDate, isDateFmt, xmlDecode} from '../../utils/utils.js';
 import colCache from '../../utils/col-cache.js';
 import {mergeStyles} from '../../model/cell-model.js';
 
@@ -274,7 +274,7 @@ class WorksheetReader extends EventEmitter {
                   };
                   if (c.v) {
                     if (c.t === 'str') {
-                      cellValue.result = utils.xmlDecode(c.v.text);
+                      cellValue.result = xmlDecode(c.v.text);
                     } else {
                       cellValue.result = parseFloat(c.v.text);
                     }
@@ -299,7 +299,7 @@ class WorksheetReader extends EventEmitter {
 
                     case 'inlineStr':
                     case 'str':
-                      cell.value = utils.xmlDecode(c.v.text);
+                      cell.value = xmlDecode(c.v.text);
                       break;
 
                     case 'e':
@@ -311,8 +311,8 @@ class WorksheetReader extends EventEmitter {
                       break;
 
                     default:
-                      if (utils.isDateFmt(cell.style.numFmt)) {
-                        cell.value = utils.excelToDate(
+                      if (isDateFmt(cell.style.numFmt)) {
+                        cell.value = excelToDate(
                           parseFloat(c.v.text),
                           properties.model && properties.model.date1904,
                         );

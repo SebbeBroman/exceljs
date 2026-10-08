@@ -1,6 +1,6 @@
 import BaseXform from '../base-xform.js';
 import type {XmlStreamLike, XmlNode, XformOptions} from '../base-xform.js';
-import utils from '../../../utils/utils.js';
+import {parseBoolean} from '../../../utils/utils.js';
 import CellXform from './cell-xform.js';
 import type {CellXformModel, CellXformOptions} from './cell-xform.js';
 
@@ -118,10 +118,10 @@ class RowXform extends BaseXform<RowXformModel> {
       if (node.attributes.s) {
         model.styleId = parseInt(node.attributes.s, 10);
       }
-      if (utils.parseBoolean(node.attributes.hidden)) {
+      if (parseBoolean(node.attributes.hidden)) {
         model.hidden = true;
       }
-      if (utils.parseBoolean(node.attributes.bestFit)) {
+      if (parseBoolean(node.attributes.bestFit)) {
         model.bestFit = true;
       }
       if (node.attributes.ht) {
@@ -130,7 +130,7 @@ class RowXform extends BaseXform<RowXformModel> {
       if (node.attributes.outlineLevel) {
         model.outlineLevel = parseInt(node.attributes.outlineLevel, 10);
       }
-      if (utils.parseBoolean(node.attributes.collapsed)) {
+      if (parseBoolean(node.attributes.collapsed)) {
         model.collapsed = true;
       }
       return true;

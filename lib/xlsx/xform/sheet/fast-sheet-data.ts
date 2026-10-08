@@ -24,7 +24,7 @@
 import {Parser} from 'saxen';
 import Enums from '../../../model/enums.js';
 import colCache from '../../../utils/col-cache.js';
-import utils from '../../../utils/utils.js';
+import {excelToDate, isDateFmt, parseBoolean, xmlDecode} from '../../../utils/utils.js';
 import type {CellXformModel} from './cell-xform.js';
 import type {RowXformModel} from './row-xform.js';
 
@@ -178,7 +178,7 @@ function cachedIsDate(
   style: Record<string, unknown> | null | undefined,
 ): boolean {
   if (shared.dateCache[id] === undefined) {
-    shared.dateCache[id] = !!style && utils.isDateFmt((style as {numFmt?: string}).numFmt);
+    shared.dateCache[id] = !!style && isDateFmt((style as {numFmt?: string}).numFmt);
   }
   return shared.dateCache[id]!;
 }
@@ -241,7 +241,7 @@ function finalizeCell(row: MutableRow, cell: FlatCell, shared: SharedFinalize): 
     if (cell.ref !== undefined) out.ref = cell.ref;
     if (cell.val !== undefined) {
       const v = cell.val as string;
-      if (t === 'str') out.result = utils.xmlDecode(v);
+      if (t === 'str') out.result = xmlDecode(v);
       else if (t === 'b') out.result = parseInt(v, 10) !== 0;
       else if (t === 'e') out.result = {error: v};
       else out.result = parseFloat(v);
@@ -265,7 +265,7 @@ function finalizeCell(row: MutableRow, cell: FlatCell, shared: SharedFinalize): 
         break;
       case 'str':
         out.type = Enums.ValueType.String;
-        out.value = utils.xmlDecode(v as string);
+        out.value = xmlDecode(v as string);
         break;
       case 'inlineStr':
         out.type = Enums.ValueType.String;
@@ -311,11 +311,11 @@ function finalizeCell(row: MutableRow, cell: FlatCell, shared: SharedFinalize): 
     cachedIsDate(shared, styleId as number, style)
   ) {
     out.type = Enums.ValueType.Date;
-    out.value = utils.excelToDate(out.value as number, date1904);
+    out.value = excelToDate(out.value as number, date1904);
   }
   if (out.type === Enums.ValueType.Formula && out.result !== undefined && style) {
     if (cachedIsDate(shared, styleId as number, style)) {
-      out.result = utils.excelToDate(out.result as number, date1904);
+      out.result = excelToDate(out.result as number, date1904);
     }
   }
   // --- hyperlinks / comments (raw address, exactly like cell reconcile) ---
@@ -462,13 +462,13 @@ export function parseFastSheetData(content: string, ctx: FastSheetContext): RowX
           lastCol: 0,
         };
         if (s !== undefined) next.styleId = parseInt(s, 10);
-        if (utils.parseBoolean(attr(attrs, 'hidden', decodeEntities))) next.hidden = true;
-        if (utils.parseBoolean(attr(attrs, 'bestFit', decodeEntities))) next.bestFit = true;
+        if (parseBoolean(attr(attrs, 'hidden', decodeEntities))) next.hidden = true;
+        if (parseBoolean(attr(attrs, 'bestFit', decodeEntities))) next.bestFit = true;
         const ht = attr(attrs, 'ht', decodeEntities);
         if (ht !== undefined) next.height = parseFloat(ht);
         const outlineLevel = attr(attrs, 'outlineLevel', decodeEntities);
         if (outlineLevel !== undefined) next.outlineLevel = parseInt(outlineLevel, 10);
-        if (utils.parseBoolean(attr(attrs, 'collapsed', decodeEntities))) next.collapsed = true;
+        if (parseBoolean(attr(attrs, 'collapsed', decodeEntities))) next.collapsed = true;
         row = next;
         cell = null;
         return;

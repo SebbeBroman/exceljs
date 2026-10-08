@@ -1,4 +1,4 @@
-import utils from '../../utils/utils.js';
+import {xmlEncode} from '../../utils/utils.js';
 import RelType from '../../xlsx/rel-type.js';
 
 export interface SheetRelsHyperlink {
@@ -130,7 +130,7 @@ class SheetRelsWriter {
       this.stream.write(
         `<Relationship Id="${rId}"` +
           ` Type="${relationship.Type}"` +
-          ` Target="${(utils as {xmlEncode: (s: string) => string}).xmlEncode(relationship.Target)}"` +
+          ` Target="${xmlEncode(relationship.Target)}"` +
           ` TargetMode="${relationship.TargetMode}"` +
           '/>',
       );

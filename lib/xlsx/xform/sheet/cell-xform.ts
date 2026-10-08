@@ -1,4 +1,4 @@
-import utils from '../../../utils/utils.js';
+import {dateToExcel, excelToDate, isDateFmt, xmlDecode} from '../../../utils/utils.js';
 import BaseXform from '../base-xform.js';
 import type {XmlStreamLike, XmlNode, XformOptions} from '../base-xform.js';
 import Range from '../../../model/range.js';
@@ -243,7 +243,7 @@ class CellXform extends BaseXform<CellXformModel> {
 
       case Enums.ValueType.Date:
         xmlStream.leafNode('f', attrs as Record<string, unknown> | undefined, model.formula);
-        xmlStream.leafNode('v', undefined, utils.dateToExcel(model.result as Date, model.date1904));
+        xmlStream.leafNode('v', undefined, dateToExcel(model.result as Date, model.date1904));
         break;
 
       // case Enums.ValueType.Hyperlink: // ??
@@ -318,7 +318,7 @@ class CellXform extends BaseXform<CellXformModel> {
         break;
 
       case Enums.ValueType.Date:
-        xmlStream.leafNode('v', undefined, utils.dateToExcel(model.value as Date, model.date1904));
+        xmlStream.leafNode('v', undefined, dateToExcel(model.value as Date, model.date1904));
         break;
 
       case Enums.ValueType.Hyperlink: {
@@ -447,7 +447,7 @@ class CellXform extends BaseXform<CellXformModel> {
           model.type = Enums.ValueType.Formula;
           if (model.value) {
             if (this.t === 'str') {
-              model.result = utils.xmlDecode(model.value as string);
+              model.result = xmlDecode(model.value as string);
             } else if (this.t === 'b') {
               model.result = parseInt(model.value as string, 10) !== 0;
             } else if (this.t === 'e') {
@@ -465,7 +465,7 @@ class CellXform extends BaseXform<CellXformModel> {
               break;
             case 'str':
               model.type = Enums.ValueType.String;
-              model.value = utils.xmlDecode(model.value as string);
+              model.value = xmlDecode(model.value as string);
               break;
             case 'inlineStr':
               model.type = Enums.ValueType.String;
@@ -557,15 +557,15 @@ class CellXform extends BaseXform<CellXformModel> {
         break;
 
       case Enums.ValueType.Number:
-        if (style && utils.isDateFmt(style.numFmt)) {
+        if (style && isDateFmt(style.numFmt)) {
           model.type = Enums.ValueType.Date;
-          model.value = utils.excelToDate(model.value as number, options.date1904);
+          model.value = excelToDate(model.value as number, options.date1904);
         }
         break;
 
       case Enums.ValueType.Formula:
-        if (model.result !== undefined && style && utils.isDateFmt(style.numFmt)) {
-          model.result = utils.excelToDate(model.result as number, options.date1904);
+        if (model.result !== undefined && style && isDateFmt(style.numFmt)) {
+          model.result = excelToDate(model.result as number, options.date1904);
         }
         if (model.shareType === 'shared') {
           if (model.ref) {

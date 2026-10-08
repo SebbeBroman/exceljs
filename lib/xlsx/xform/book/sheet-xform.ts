@@ -1,4 +1,4 @@
-import utils from '../../../utils/utils.js';
+import {xmlDecode} from '../../../utils/utils.js';
 import BaseXform from '../base-xform.js';
 import type {XmlStreamLike, XmlNode} from '../base-xform.js';
 
@@ -22,7 +22,7 @@ class WorksheetXform extends BaseXform<SheetModel> {
   override parseOpen(node: XmlNode): boolean {
     if (node.name === 'sheet') {
       this.model = {
-        name: utils.xmlDecode(node.attributes.name),
+        name: xmlDecode(node.attributes.name),
         id: parseInt(node.attributes.sheetId, 10),
         state: node.attributes.state,
         rId: node.attributes['r:id'],
