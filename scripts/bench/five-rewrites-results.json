@@ -165,6 +165,72 @@
         "retainedBytes": 1372416,
         "warmMs": 0.9861249999999977,
         "checksum": 294904
+      },
+      "minimalStyles": {
+        "workload": "1000 minimal styles constructions and serializations",
+        "medianMs": 10.80012499999998,
+        "checksum": 21546000
+      }
+    },
+    "styles": {
+      "stage": "styles",
+      "bundles": {
+        "write": {
+          "minified": 225075,
+          "gzip": 61074,
+          "initialMinified": 133461,
+          "initialGzip": 41458,
+          "splitTotal": 229613
+        },
+        "load": {
+          "minified": 188146,
+          "gzip": 51665,
+          "initialMinified": 133424,
+          "initialGzip": 41613,
+          "splitTotal": 203843
+        },
+        "readRows": {
+          "minified": 34968,
+          "gzip": 14050,
+          "initialMinified": 34781,
+          "initialGzip": 14742,
+          "splitTotal": 140778
+        }
+      },
+      "runtime": {
+        "write": {
+          "medianMs": 6.24129099999999,
+          "minMs": 5.575208000000032,
+          "maxMs": 7.908582999999965
+        },
+        "load": {
+          "medianMs": 10.143624999999986,
+          "minMs": 8.11975000000001,
+          "maxMs": 11.626082999999994
+        },
+        "readRows": {
+          "medianMs": 4.613292000000001,
+          "minMs": 4.331542000000013,
+          "maxMs": 5.58504199999993
+        },
+        "tableEdit": {
+          "works": true,
+          "medianMs": 1.2504159999999729,
+          "minMs": 1.1938750000000482,
+          "maxMs": 1.7485830000000533
+        }
+      },
+      "addresses": {
+        "value": "XFD",
+        "coldMs": 5.664209,
+        "retainedBytes": 1372416,
+        "warmMs": 1.0335409999999996,
+        "checksum": 294904
+      },
+      "minimalStyles": {
+        "workload": "1000 minimal styles constructions and serializations",
+        "medianMs": 0.11262500000000131,
+        "checksum": 21546000
       }
     }
   }

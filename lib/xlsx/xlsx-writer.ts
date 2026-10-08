@@ -1,7 +1,7 @@
 import fs from 'fs';
 import BufferZipWriter, {resolveZipLevel} from '../utils/buffer-zip.js';
 import XmlStream from '../utils/xml-stream.js';
-import StylesXform from './xform/style/styles-xform.js';
+import MinimalStyles from './xform/style/minimal-styles.js';
 import CoreXform from './xform/core/core-xform.js';
 import SharedStringsXform from './xform/strings/shared-strings-xform.js';
 import RelationshipsXform from './xform/core/relationships-xform.js';
@@ -287,7 +287,8 @@ class XlsxWriter {
   }
 
   async addStyles(zip: any, model: XlsxModel): Promise<void> {
-    const {xml} = model.styles;
+    const result = model.styles instanceof MinimalStyles ? model.styles.toXml() : model.styles.xml;
+    const xml = typeof result === 'string' ? result : await result;
     if (xml) {
       zip.append(xml, {name: 'xl/styles.xml'});
     }
@@ -360,7 +361,9 @@ class XlsxWriter {
     model.sharedStrings = new SharedStringsXform();
 
     // add a style manager to handle cell formats, fonts, etc.
-    model.styles = model.useStyles ? new StylesXform(true) : new StylesXform.Mock();
+    model.styles = model.useStyles
+      ? new (await import('./xform/style/styles-xform.js')).default(true)
+      : new MinimalStyles();
 
     // prepare all of the things before the render
     const workbookXform = new WorkbookXform();

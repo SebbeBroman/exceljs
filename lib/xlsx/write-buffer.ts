@@ -3,11 +3,10 @@
  * Compiles directly into the existing XLSX encoder model.
  *
  * usedFlags (builder `_used`): when the op log never set styles, default
- * `useStyles: false` so XLSX uses StylesXform.Mock and skips style bookkeeping.
+ * `useStyles: false` so XLSX uses the minimal styles encoder and skips style bookkeeping.
  * Callers can still force styles with `{ useStyles: true }`.
  *
- * Note: the current XLSX encoder still loads the styles module (Mock path);
- * this flag avoids building a real stylesheet, not the import itself.
+ * The full stylesheet manager loads only when requested or inferred from styles.
  */
 
 import type {Workbook, WriteOptions} from '../model/types.js';

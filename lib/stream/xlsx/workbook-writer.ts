@@ -4,6 +4,7 @@ import {finished} from 'node:stream/promises';
 import StreamZipWriter from '../../utils/stream-zip-writer.js';
 import RelType from '../../xlsx/rel-type.js';
 import StylesXform from '../../xlsx/xform/style/styles-xform.js';
+import MinimalStyles from '../../xlsx/xform/style/minimal-styles.js';
 import SharedStrings from '../../utils/shared-strings.js';
 import CoreXform from '../../xlsx/xform/core/core-xform.js';
 import RelationshipsXform from '../../xlsx/xform/core/relationships-xform.js';
@@ -47,7 +48,7 @@ class WorkbookWriter {
   lastPrinted: Date | undefined;
   useSharedStrings: boolean;
   sharedStrings: SharedStrings;
-  styles: StylesXform;
+  styles: StylesXform | MinimalStyles;
   _worksheets: (WorksheetWriterInstance | undefined)[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   views: any[];
@@ -71,7 +72,7 @@ class WorkbookWriter {
     this.sharedStrings = new SharedStrings();
 
     // style manager
-    this.styles = options.useStyles ? new StylesXform(true) : new StylesXform.Mock();
+    this.styles = options.useStyles ? new StylesXform(true) : new MinimalStyles();
 
     this._worksheets = [];
     this.views = [];
@@ -173,11 +174,9 @@ class WorkbookWriter {
     return worksheet;
   }
 
-  addStyles(): Promise<void> {
-    return new Promise(resolve => {
-      this.zip.append(this.styles.xml, {name: 'xl/styles.xml'});
-      resolve();
-    });
+  async addStyles(): Promise<void> {
+    const xml = this.styles instanceof MinimalStyles ? await this.styles.toXml() : this.styles.xml;
+    this.zip.append(xml, {name: 'xl/styles.xml'});
   }
 
   addThemes(): Promise<void> {

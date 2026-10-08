@@ -43,7 +43,6 @@ class StylesXform extends BaseXform<StylesModel> {
   declare map: Record<string, any>;
   index?: StylesIndex;
   weakMap?: WeakMap<object, number>;
-  _dateStyleId?: number;
 
   constructor(initialise?: boolean) {
     super();
@@ -503,72 +502,7 @@ class StylesXform extends BaseXform<StylesModel> {
       ],
     }),
   };
-
-  static Mock: typeof StylesXformMock;
 }
-
-// the stylemanager mock acts like StyleManager except that it always returns 0 or {}
-class StylesXformMock extends StylesXform {
-  constructor() {
-    super();
-
-    this.model = {
-      styles: [{numFmtId: 0, fontId: 0, fillId: 0, borderId: 0, xfId: 0}],
-      numFmts: [],
-      fonts: [{size: 11, color: {theme: 1}, name: 'Calibri', family: 2, scheme: 'minor'}],
-      borders: [{}],
-      fills: [
-        {type: 'pattern', pattern: 'none'},
-        {type: 'pattern', pattern: 'gray125'},
-      ],
-      dxfs: [],
-    };
-  }
-
-  // =========================================================================
-  // Style Manager Interface
-
-  // override normal behaviour - consume and dispose
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  override parseStream(stream: any): Promise<any> {
-    stream.autodrain();
-    return Promise.resolve();
-  }
-
-  // add a cell's style model to the collection
-  // each style property is processed and cross-referenced, etc.
-  // the styleId is returned. Note: cellType is used when numFmt not defined
-  override addStyleModel(
-    _model: Record<string, unknown> | null | undefined,
-    cellType?: number,
-  ): number {
-    switch (cellType) {
-      case (Enums as {ValueType: {Date: number}}).ValueType.Date:
-        return this.dateStyleId;
-      default:
-        return 0;
-    }
-  }
-
-  get dateStyleId(): number {
-    if (!this._dateStyleId) {
-      const dateStyle = {
-        numFmtId: NumFmtXform.getDefaultFmtId('mm-dd-yy'),
-      };
-      this._dateStyleId = this.model!.styles.length;
-      this.model!.styles.push(dateStyle);
-    }
-    return this._dateStyleId;
-  }
-
-  // given a styleId (i.e. s="n"), get the cell's style model
-  // objects are shared where possible.
-  override getStyleModel(/* id */): Record<string, unknown> {
-    return {};
-  }
-}
-
-StylesXform.Mock = StylesXformMock;
 
 export default StylesXform;
 export {StylesXform};
