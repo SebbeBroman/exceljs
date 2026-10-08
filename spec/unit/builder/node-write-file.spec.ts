@@ -1,8 +1,9 @@
 import {describe, it, expect} from 'vite-plus/test';
+
 import {mkdtemp, readFile, rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {workbook, writeFile} from '../../../node.ts';
+import {workbook, writeFile} from '../../../node.js';
 import {unzipSync, strFromU8} from 'fflate';
 
 describe('excel/node writeFile', () => {
@@ -18,11 +19,11 @@ describe('excel/node writeFile', () => {
         ]),
       );
       const bytes = new Uint8Array(await readFile(path));
-      expect(bytes.byteLength).to.be.greaterThan(500);
+      expect(bytes.byteLength).toBeGreaterThan(500);
       const files = unzipSync(bytes);
       const sheetName = Object.keys(files).find(n => n.includes('worksheets/sheet'));
-      expect(sheetName).to.be.ok;
-      expect(strFromU8(files[sheetName!]!)).to.include('a');
+      expect(sheetName).toBeTruthy();
+      expect(strFromU8(files[sheetName!]!)).toContain('a');
     } finally {
       await rm(dir, {recursive: true, force: true});
     }

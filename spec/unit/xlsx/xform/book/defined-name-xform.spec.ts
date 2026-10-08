@@ -1,7 +1,7 @@
-// @vitest-migrated
+import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
-const DefinedNameXform = verquire('xlsx/xform/book/defined-name-xform');
+import DefinedNameXform from '../../../../../lib/xlsx/xform/book/defined-name-xform.js';
 
 const expectations = [
   {

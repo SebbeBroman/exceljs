@@ -91,7 +91,7 @@
     "bench:browser": "pnpm build && node scripts/bench/browser.mjs",
     "bench:view": "pnpm build && node --expose-gc scripts/bench/read.mjs",
     "prepare": "vp config",
-    "prepublishOnly": "pnpm check && pnpm test && pnpm typecheck && pnpm typecheck:public && pnpm build && pnpm run test:esm && pnpm run test:browser-bundle && pnpm check:asset-size",
+    "prepublishOnly": "pnpm check && pnpm test && pnpm typecheck && pnpm typecheck:spec && pnpm typecheck:public && pnpm build && pnpm run test:esm && pnpm run test:browser-bundle && pnpm check:asset-size",
     "release": "pnpm publish --access public"
   },
   "keywords": [

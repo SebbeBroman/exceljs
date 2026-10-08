@@ -1,28 +1,29 @@
 import {describe, it, expect} from 'vite-plus/test';
+
 import {mkdtemp, readFile, rm, writeFile as fsWriteFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {workbook, csv, load} from '../../../excel.ts';
-import {readCsvFile, writeCsvFile} from '../../../node.ts';
+import {workbook, csv, load} from '../../../excel.js';
+import {readCsvFile, writeCsvFile} from '../../../node.js';
 
 describe('csv named API', () => {
   it('parses CSV text into SheetInit for builder.sheet', async () => {
     const init = await csv.parse('name,value\nalpha,1\nbeta,2');
-    expect(init.rows).to.have.length(3);
+    expect(init.rows).toHaveLength(3);
 
     const plain = workbook().sheet('Data', init).build();
-    expect(plain.sheets[0]!.name).to.equal('Data');
-    expect(plain.sheets[0]!.rows[0]!.cells[1]!.value).to.equal('name');
-    expect(plain.sheets[0]!.rows[1]!.cells[1]!.value).to.equal('alpha');
-    expect(plain.sheets[0]!.rows[1]!.cells[2]!.value).to.equal(1);
+    expect(plain.sheets[0]!.name).toBe('Data');
+    expect(plain.sheets[0]!.rows[0]!.cells[1]!.value).toBe('name');
+    expect(plain.sheets[0]!.rows[1]!.cells[1]!.value).toBe('alpha');
+    expect(plain.sheets[0]!.rows[1]!.cells[2]!.value).toBe(1);
   });
 
   it('parse → builder → writeBuffer round-trips values', async () => {
     const init = await csv.parse('a,b\n10,20');
     const buf = await workbook().sheet('S', init).writeBuffer();
     const plain = await load(buf);
-    expect(plain.sheets[0]!.rows[0]!.cells[1]!.value).to.equal('a');
-    expect(plain.sheets[0]!.rows[1]!.cells[2]!.value).to.equal(20);
+    expect(plain.sheets[0]!.rows[0]!.cells[1]!.value).toBe('a');
+    expect(plain.sheets[0]!.rows[1]!.cells[2]!.value).toBe(20);
   });
 
   it('stringifies a builder sheet', async () => {
@@ -34,7 +35,7 @@ describe('csv named API', () => {
           ['alpha', 1],
         ]),
     );
-    expect(text).to.equal('name,value\nalpha,1');
+    expect(text).toBe('name,value\nalpha,1');
   });
 
   it('builder .csv() exports the active sheet', async () => {
@@ -44,7 +45,7 @@ describe('csv named API', () => {
       .sheet('B')
       .row(['x', 'y'])
       .csv();
-    expect(text).to.equal('x,y');
+    expect(text).toBe('x,y');
   });
 
   it('csv.stringify respects sheetName', async () => {
@@ -55,12 +56,12 @@ describe('csv named API', () => {
       .row([2])
       .build();
     const text = await csv.stringify(wb, {sheetName: 'A'});
-    expect(text).to.equal('1');
+    expect(text).toBe('1');
   });
 
   it('quotes fields that need it', async () => {
     const text = await workbook().sheet('S').row(['hello, world', 'a"b']).csv();
-    expect(text).to.equal('"hello, world","a""b"');
+    expect(text).toBe('"hello, world","a""b"');
   });
 
   it('maps formula results and dates on stringify', async () => {
@@ -71,7 +72,7 @@ describe('csv named API', () => {
         .cell('B1', new Date(Date.UTC(2020, 0, 15, 0, 0, 0))),
       {dateFormat: 'YYYY-MM-DD', dateUTC: true},
     );
-    expect(text).to.equal('2,2020-01-15');
+    expect(text).toBe('2,2020-01-15');
   });
 });
 
@@ -83,12 +84,12 @@ describe('node csv file helpers', () => {
     try {
       await fsWriteFile(inPath, 'a,b\n1,2\n', 'utf8');
       const wb = await readCsvFile(inPath, {sheetName: 'Import'});
-      expect(wb.sheets[0]!.name).to.equal('Import');
-      expect(wb.sheets[0]!.rows[1]!.cells[1]!.value).to.equal(1);
+      expect(wb.sheets[0]!.name).toBe('Import');
+      expect(wb.sheets[0]!.rows[1]!.cells[1]!.value).toBe(1);
 
       await writeCsvFile(outPath, wb);
       const written = await readFile(outPath, 'utf8');
-      expect(written.replace(/\r\n/g, '\n')).to.equal('a,b\n1,2');
+      expect(written.replace(/\r\n/g, '\n')).toBe('a,b\n1,2');
     } finally {
       await rm(dir, {recursive: true, force: true});
     }

@@ -184,9 +184,7 @@ await streamWrite('report.xlsx', async w => {
   const sheet = w.sheet('Events', {
     columns: [{ header: 'Ts' }, { header: 'Msg' }],
   });
-  for await (const row of eventSource()) {
-    sheet.row(row);
-  }
+  await sheet.rows(eventSource());
 });
 
 // Optional: stream rows back without a full plain model

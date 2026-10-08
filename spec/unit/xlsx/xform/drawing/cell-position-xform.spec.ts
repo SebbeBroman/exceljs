@@ -1,7 +1,7 @@
-// @vitest-migrated
+import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
-const CellPositionXform = verquire('xlsx/xform/drawing/cell-position-xform');
+import CellPositionXform from '../../../../../lib/xlsx/xform/drawing/cell-position-xform.js';
 
 const expectations = [
   {

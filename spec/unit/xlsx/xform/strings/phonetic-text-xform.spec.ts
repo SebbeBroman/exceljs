@@ -1,7 +1,7 @@
-// @vitest-migrated
+import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
-const PhoneticTextXform = verquire('xlsx/xform/strings/phonetic-text-xform');
+import PhoneticTextXform from '../../../../../lib/xlsx/xform/strings/phonetic-text-xform.js';
 
 const expectations = [
   {

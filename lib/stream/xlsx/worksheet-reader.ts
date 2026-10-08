@@ -1,4 +1,4 @@
-import {EventEmitter} from '../../utils/event-emitter.js';
+import {EventEmitter} from 'node:events';
 import {eachSaxChunk} from '../../utils/parse-sax.js';
 import utils from '../../utils/utils.js';
 import colCache from '../../utils/col-cache.js';

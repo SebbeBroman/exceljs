@@ -1,7 +1,7 @@
-// @vitest-migrated
+import {describe} from 'vite-plus/test';
 import testXformHelper from '../../test-xform-helper.js';
 
-const IconSetXform = verquire('xlsx/xform/sheet/cf/icon-set-xform');
+import IconSetXform from '../../../../../../lib/xlsx/xform/sheet/cf/icon-set-xform.js';
 
 const expectations = [
   {

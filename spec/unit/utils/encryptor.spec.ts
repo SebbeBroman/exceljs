@@ -1,5 +1,5 @@
-// @vitest-migrated
-const Encryptor = verquire('utils/encryptor');
+import {describe, it, expect} from 'vite-plus/test';
+import Encryptor from '../../../lib/utils/encryptor.js';
 
 describe('Encryptor', () => {
   it('Generates SHA-512 hash for given password, salt value and spin count', () => {
@@ -7,7 +7,7 @@ describe('Encryptor', () => {
     const saltValue = '6tC6yotbNa8JaMaDvbUgxw==';
     const spinCount = 100000;
     const hash = Encryptor.convertPasswordToHash(password, 'SHA512', saltValue, spinCount);
-    expect(hash).to.equal(
+    expect(hash).toBe(
       'RHtx1KpAYT7nBzGCTInkHrbf2wTZxP3BT4Eo8PBHPTM4KfKArJTluFvizDvo6GnBCOO6JJu7qwKvMqnKHs7dcw=='
     );
   });

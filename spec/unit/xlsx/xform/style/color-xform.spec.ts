@@ -1,7 +1,7 @@
-// @vitest-migrated
+import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
-const ColorXform = verquire('xlsx/xform/style/color-xform');
+import ColorXform from '../../../../../lib/xlsx/xform/style/color-xform.js';
 
 const expectations = [
   {

@@ -1,8 +1,10 @@
+import {describe, it, expect} from 'vite-plus/test';
 import {readFile, mkdtemp, rm} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
+import {normalizeWorkbook} from '../../utils/normalize-workbook.js';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {describe, it, expect} from 'vite-plus/test';
+
 import {unzipSync, strFromU8} from 'fflate';
 import {load} from '../../../excel.js';
 import {streamWrite, streamRead} from '../../../node.js';
@@ -11,7 +13,7 @@ const projections: Record<string, {hash: string} | {error: string}> = JSON.parse
 const streamProjections: Record<string, {hash: string; rows: number} | {error: string}> = JSON.parse(await readFile(new URL('./data/legacy-stream-projections.json', import.meta.url), 'utf8'));
 
 function normalize(value: unknown): string {
-  return JSON.stringify(value, (key, item) => key === 'worksheet' ? undefined : item);
+  return normalizeWorkbook(value);
 }
 function parts(bytes: Uint8Array): Record<string, string> {
   return Object.fromEntries(Object.entries(unzipSync(bytes)).map(([key, value]) => [key, strFromU8(value)]));
@@ -25,7 +27,7 @@ describe('saved pre-removal compatibility fixtures', () => {
         await expect(load(bytes)).rejects.toThrow(baseline.error);
       } else {
         const digest = createHash('sha256').update(normalize(await load(bytes))).digest('hex');
-        expect(digest).to.equal(baseline.hash);
+        expect(digest).toBe(baseline.hash);
       }
     });
   }
@@ -38,7 +40,7 @@ describe('saved pre-removal compatibility fixtures', () => {
         return {hash: hash.digest('hex'), rows};
       };
       if ('error' in baseline) await expect(consume()).rejects.toThrow(baseline.error);
-      else expect(await consume()).to.deep.equal(baseline);
+      else expect(await consume()).toEqual(baseline);
     });
   }
   for (const strings of [false, true]) for (const styles of [false, true]) {
@@ -48,11 +50,11 @@ describe('saved pre-removal compatibility fixtures', () => {
         const output = join(dir, 'actual.xlsx');
         const baselineUrl = new URL(`./data/stream-${strings}-${styles}.xlsx`, import.meta.url);
         await streamWrite(output, fixture(strings, styles));
-        expect(parts(await readFile(output))).to.deep.equal(parts(await readFile(baselineUrl)));
+        expect(parts(await readFile(output))).toEqual(parts(await readFile(baselineUrl)));
         const rows: unknown[] = [];
         for await (const row of streamRead(output)) rows.push(row);
         const baseline = JSON.parse(await readFile(new URL(baselineUrl.href + '.json'), 'utf8'));
-        expect(JSON.parse(normalize(rows))).to.deep.equal(baseline);
+        expect(JSON.parse(normalize(rows))).toEqual(baseline);
       } finally {
         await rm(dir, {recursive: true, force: true});
       }
@@ -69,7 +71,7 @@ describe('saved pre-removal compatibility fixtures', () => {
           return JSON.parse(normalize(rows));
         };
         if (baseline.error) await expect(consume()).rejects.toThrow(baseline.error);
-        else expect(await consume()).to.deep.equal(baseline.rows);
+        else expect(await consume()).toEqual(baseline.rows);
       });
     }
   }

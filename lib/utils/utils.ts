@@ -1,51 +1,9 @@
-import fs from 'fs';
 import {xmlDecode} from './xml-decode.js';
 export {xmlDecode} from './xml-decode.js';
-
-// useful stuff
-// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-type AnyCtor = Function & {super_?: AnyCtor; prototype: object};
-
-const inherits = function (
-  cls: AnyCtor,
-  superCtor: AnyCtor,
-  statics?: Record<string, unknown> | null,
-  prototype?: Record<string, unknown> | null,
-): void {
-  cls.super_ = superCtor;
-
-  if (!prototype) {
-    prototype = statics;
-    statics = null;
-  }
-
-  if (statics) {
-    Object.keys(statics).forEach(i => {
-      Object.defineProperty(cls, i, Object.getOwnPropertyDescriptor(statics!, i)!);
-    });
-  }
-
-  const properties: PropertyDescriptorMap = {
-    constructor: {
-      value: cls,
-      enumerable: false,
-      writable: false,
-      configurable: true,
-    },
-  };
-  if (prototype) {
-    Object.keys(prototype).forEach(i => {
-      properties[i] = Object.getOwnPropertyDescriptor(prototype!, i)!;
-    });
-  }
-
-  cls.prototype = Object.create(superCtor.prototype, properties);
-};
 
 // oxlint-disable-next-line no-control-regex
 const xmlDecodeRegex = /[<>&'"\x7F\x00-\x08\x0B-\x0C\x0E-\x1F]/;
 const utils = {
-  nop(): void {},
   promiseImmediate<T>(value?: T): Promise<T | undefined> {
     return new Promise(resolve => {
       const g = globalThis as typeof globalThis & {setImmediate?: typeof setImmediate};
@@ -61,7 +19,6 @@ const utils = {
       }
     });
   },
-  inherits,
   dateToExcel(d: Date, date1904?: boolean): number {
     return 25569 + d.getTime() / (24 * 3600 * 1000) - (date1904 ? 1462 : 0);
   },
@@ -145,16 +102,6 @@ const utils = {
     return result;
   },
 
-  fs: {
-    exists(path: string): Promise<boolean> {
-      return new Promise(resolve => {
-        fs.access(path, fs.constants.F_OK, err => {
-          resolve(!err);
-        });
-      });
-    },
-  },
-
   toIsoDateString(dt: Date): string {
     // Note: original uses toIsoString (typo) and subsstr (typo) — keep runtime behavior
     const s = (dt as Date & {toIsoString(): string}).toIsoString() as string & {
@@ -203,8 +150,7 @@ const utils = {
 export default utils;
 export {utils};
 
-// Named re-exports (avoid re-declaring locals like `inherits`)
-export const nop = utils.nop;
+// Named re-exports
 export const promiseImmediate = utils.promiseImmediate;
 export const dateToExcel = utils.dateToExcel;
 export const excelToDate = utils.excelToDate;
@@ -218,4 +164,3 @@ export const parseBoolean = utils.parseBoolean;
 export const range = utils.range;
 export const toSortedArray = utils.toSortedArray;
 export const objectFromProps = utils.objectFromProps;
-export {inherits};

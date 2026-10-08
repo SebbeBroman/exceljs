@@ -1,7 +1,7 @@
-// @vitest-migrated
+import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
-const AlignmentXform = verquire('xlsx/xform/style/alignment-xform');
+import AlignmentXform from '../../../../../lib/xlsx/xform/style/alignment-xform.js';
 
 const expectations = [
   {

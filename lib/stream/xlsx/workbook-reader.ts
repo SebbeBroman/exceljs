@@ -1,4 +1,4 @@
-import {EventEmitter} from '../../utils/event-emitter.js';
+import {EventEmitter} from 'node:events';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';

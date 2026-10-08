@@ -1,7 +1,7 @@
-// @vitest-migrated
+import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
-const HeaderFooterXform = verquire('xlsx/xform/sheet/header-footer-xform');
+import HeaderFooterXform from '../../../../../lib/xlsx/xform/sheet/header-footer-xform.js';
 
 const expectations = [
   {

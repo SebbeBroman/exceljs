@@ -1,9 +1,7 @@
-// @vitest-migrated
+import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
-const DataValidationsXform = verquire(
-  'xlsx/xform/sheet/data-validations-xform'
-);
+import DataValidationsXform from '../../../../../lib/xlsx/xform/sheet/data-validations-xform.js';
 
 const expectations = [
   {
@@ -138,7 +136,7 @@ const expectations = [
       B2: {type: 'whole', operator: 'between', formulae: [5, 10]},
     },
     get parsedModel() {
-      return this.preparedModel;
+      return {'A1:B2': this.preparedModel.A1};
     },
     xml: `
       <dataValidations count="1">

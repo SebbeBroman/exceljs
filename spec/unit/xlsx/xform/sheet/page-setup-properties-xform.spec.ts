@@ -1,9 +1,7 @@
-// @vitest-migrated
+import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
-const PageSetupPropertiesXform = verquire(
-  'xlsx/xform/sheet/page-setup-properties-xform'
-);
+import PageSetupPropertiesXform from '../../../../../lib/xlsx/xform/sheet/page-setup-properties-xform.js';
 
 const expectations = [
   {

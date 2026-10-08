@@ -1,5 +1,6 @@
 import {describe, it, expect} from 'vite-plus/test';
-import parseSax from '../../../lib/utils/parse-sax.ts';
+
+import parseSax from '../../../lib/utils/parse-sax.js';
 
 async function drain(input: unknown): Promise<unknown[]> {
   const out: unknown[] = [];

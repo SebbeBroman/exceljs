@@ -1,7 +1,7 @@
-// @vitest-migrated
+import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
-const SharedStringXform = verquire('xlsx/xform/strings/shared-string-xform');
+import SharedStringXform from '../../../../../lib/xlsx/xform/strings/shared-string-xform.js';
 
 const expectations = [
   {

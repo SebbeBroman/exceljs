@@ -1,9 +1,7 @@
-// @vitest-migrated
+import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
-const AppTitlesOfPartsXform = verquire(
-  'xlsx/xform/core/app-titles-of-parts-xform'
-);
+import AppTitlesOfPartsXform from '../../../../../lib/xlsx/xform/core/app-titles-of-parts-xform.js';
 
 const expectations = [
   {

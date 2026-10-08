@@ -1,7 +1,7 @@
-// @vitest-migrated
+import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
-const DateXform = verquire('xlsx/xform/simple/date-xform');
+import DateXform from '../../../../../lib/xlsx/xform/simple/date-xform.js';
 
 const expectations = [
   {
@@ -47,7 +47,7 @@ const expectations = [
     create() {
       return new DateXform({tag: 'date', attr: undefined});
     },
-    preparedModel: new Date(undefined),
+    preparedModel: new Date(Number.NaN),
     xml: '<date />',
     tests: ['render'],
   },

@@ -1,6 +1,6 @@
 import fs from 'fs';
 import type {Writable} from 'node:stream';
-import StreamBuf from '../../utils/stream-buf.js';
+import {finished} from 'node:stream/promises';
 import StreamZipWriter from '../../utils/stream-zip-writer.js';
 import RelType from '../../xlsx/rel-type.js';
 import StylesXform from '../../xlsx/xform/style/styles-xform.js';
@@ -46,19 +46,16 @@ class WorkbookWriter {
   lastModifiedBy: string;
   lastPrinted: Date | undefined;
   useSharedStrings: boolean;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  sharedStrings: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  styles: any;
+  sharedStrings: SharedStrings;
+  styles: StylesXform;
   _worksheets: (WorksheetWriterInstance | undefined)[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   views: any[];
   zipOptions: Partial<ZipWriterOptions> | undefined;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  zip: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  stream: any;
+  zip: StreamZipWriter;
+  stream: Writable;
   promise: Promise<unknown[]>;
+  private completion: Promise<void>;
 
   constructor(options?: Partial<WorkbookWriterOptions>) {
     options = options || {};
@@ -87,44 +84,37 @@ class WorkbookWriter {
     } else if (options.filename) {
       this.stream = fs.createWriteStream(options.filename);
     } else {
-      this.stream = new StreamBuf();
+      throw new Error('WorkbookWriter requires a stream or filename');
     }
+    this.completion = finished(this.stream, {cleanup: true, readable: false});
+    this.completion.catch(() => {});
+    // Observe errors before any metadata or worksheet writes start.
+    this.zip.on('error', () => {});
     this.zip.pipe(this.stream);
 
     // these bits can be added right now
     this.promise = Promise.all([this.addThemes(), this.addOfficeRels()]);
+    this.promise.catch(() => {});
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  _openStream(path: string): any {
-    const stream = new StreamBuf({bufSize: 65536, batch: true});
-    this.zip.append(stream, {name: path});
-    stream.on('finish', () => {
-      stream.emit('zipped');
-    });
-    return stream;
+  _openStream(path: string): Writable {
+    return this.zip.openEntry(path);
   }
 
-  _commitWorksheets(): Promise<unknown> {
-    const commitWorksheet = function (worksheet: WorksheetWriterInstance) {
-      if (!worksheet.committed) {
-        return new Promise<void>(resolve => {
-          worksheet.stream.on('zipped', () => {
-            resolve();
-          });
-          worksheet.commit();
-        });
-      }
-      return Promise.resolve();
-    };
-    // if there are any uncommitted worksheets, commit them now and wait
-    const promises = this._worksheets
-      .filter((sheet): sheet is WorksheetWriter => !!sheet)
-      .map(commitWorksheet);
-    if (promises.length) {
-      return Promise.all(promises);
-    }
-    return Promise.resolve();
+  async _commitWorksheets(): Promise<void> {
+    await Promise.all(
+      this._worksheets
+        .filter((sheet): sheet is WorksheetWriter => !!sheet)
+        .map(sheet => {
+          const completion = finished(sheet.stream, {cleanup: true});
+          if (!sheet.committed) sheet.commit();
+          return completion;
+        }),
+    );
+  }
+
+  abort(error: Error): void {
+    this.zip.abort(error);
   }
 
   async commit(): Promise<this> {
@@ -307,16 +297,10 @@ class WorkbookWriter {
     });
   }
 
-  _finalize(): Promise<this> {
-    return new Promise((resolve, reject) => {
-      this.stream.on('error', reject);
-      this.stream.on('finish', () => {
-        resolve(this);
-      });
-      this.zip.on('error', reject);
-
-      this.zip.finalize();
-    });
+  async _finalize(): Promise<this> {
+    this.zip.finalize();
+    await this.completion;
+    return this;
   }
 }
 

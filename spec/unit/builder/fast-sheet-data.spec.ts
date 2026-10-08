@@ -1,13 +1,14 @@
 import {describe, it, expect, afterEach} from 'vite-plus/test';
-import {workbook, writeBuffer, load} from '../../../excel.ts';
-import type {Workbook} from '../../../lib/model/types.ts';
+
+import {workbook, writeBuffer, load} from '../../../excel.js';
+import type {Workbook} from '../../../lib/model/types.js';
 import {
   canUseFastSheetData,
   isFastSheetDataEnabled,
   setFastSheetDataEnabled,
   splitSheetData,
-} from '../../../lib/xlsx/xform/sheet/fast-sheet-data.ts';
-import {entryToString, unzipToFiles} from '../../../lib/utils/zip-reader.ts';
+} from '../../../lib/xlsx/xform/sheet/fast-sheet-data.js';
+import {entryToString, unzipToFiles} from '../../../lib/utils/zip-reader.js';
 
 async function sheetXmlOf(buf: Uint8Array): Promise<string> {
   const files = await unzipToFiles(buf);
@@ -75,7 +76,7 @@ describe('fast-sheet-data', () => {
         .style('B2:B3', {numFmt: '0.00'}),
     );
     const {fast, full} = await loadBoth(buf);
-    expect(fast).to.deep.equal(full);
+    expect(fast).toEqual(full);
   });
 
   it('matches on date-formatted numbers, shared formulas, hyperlinks, notes', async () => {
@@ -89,11 +90,11 @@ describe('fast-sheet-data', () => {
     b.cell('D1', 'merged');
     const buf = await writeBuffer(b);
     const {fast, full} = await loadBoth(buf);
-    expect(fast).to.deep.equal(full);
+    expect(fast).toEqual(full);
     // Sanity: the interesting values actually survived.
     const row1 = fast.sheets[0]!.rows.find(r => r.number === 1)!;
     expect(row1.cells[1]!.value).toBeInstanceOf(Date);
-    expect(row1.cells[2]!.value).to.deep.equal({text: 'click', hyperlink: 'https://example.com'});
+    expect(row1.cells[2]!.value).toEqual({text: 'click', hyperlink: 'https://example.com'});
   });
 
   it('matches on rich text, inline strings, row attrs, cols, merges', async () => {
@@ -103,7 +104,7 @@ describe('fast-sheet-data', () => {
     b.cell('C3', 42);
     const buf = await writeBuffer(b);
     const {fast, full} = await loadBoth(buf);
-    expect(fast).to.deep.equal(full);
+    expect(fast).toEqual(full);
   });
 
   it('matches on multi-sheet workbooks with per-sheet features', async () => {
@@ -121,8 +122,8 @@ describe('fast-sheet-data', () => {
         .sheet('C', s => s.cell('B2', 'far').dataValidation('B2', {type: 'whole', formulae: [1, 5]})),
     );
     const {fast, full} = await loadBoth(buf);
-    expect(fast).to.deep.equal(full);
-    expect(fast.sheets.map(s => s.name)).to.deep.equal(['A', 'Empty', 'C']);
+    expect(fast).toEqual(full);
+    expect(fast.sheets.map(s => s.name)).toEqual(['A', 'Empty', 'C']);
   });
 
   it('falls back safely on denylisted content', async () => {
@@ -141,7 +142,7 @@ describe('fast-sheet-data', () => {
     files['xl/worksheets/sheet1.xml'] = new TextEncoder().encode(patched);
     const patchedBuf = zipSync(files);
     const {fast, full} = await loadBoth(patchedBuf);
-    expect(fast).to.deep.equal(full);
+    expect(fast).toEqual(full);
   });
 
   it('fast parser agrees with classic on the bench-shaped grid', async () => {
@@ -159,6 +160,6 @@ describe('fast-sheet-data', () => {
     const split = splitSheetData(xml)!;
     expect(canUseFastSheetData(split.content)).toBe(true);
     const {fast, full} = await loadBoth(buf);
-    expect(fast).to.deep.equal(full);
+    expect(fast).toEqual(full);
   });
 });

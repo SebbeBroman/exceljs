@@ -1,4 +1,4 @@
-import {EventEmitter} from '../../utils/event-emitter.js';
+import {EventEmitter} from 'node:events';
 import {eachSaxChunk} from '../../utils/parse-sax.js';
 import Enums from '../../model/enums.js';
 import RelType from '../../xlsx/rel-type.js';

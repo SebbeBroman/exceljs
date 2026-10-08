@@ -1,10 +1,11 @@
 import {describe, it, expect} from 'vite-plus/test';
+
 import {createWriteStream} from 'node:fs';
 import {mkdtemp, rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {finished} from 'node:stream/promises';
-import {readFile, streamWrite, streamRead} from '../../../node.ts';
+import {readFile, streamWrite, streamRead} from '../../../node.js';
 
 const ROW_COUNT = 5000;
 
@@ -50,28 +51,28 @@ describe('excel/node streamWrite', () => {
       });
 
       const wb = await readFile(path);
-      expect(wb.sheets).to.have.length(1);
-      expect(wb.sheets[0]!.name).to.equal('Data');
+      expect(wb.sheets).toHaveLength(1);
+      expect(wb.sheets[0]!.name).toBe('Data');
       // column headers are row 1; data rows follow
       const rows = wb.sheets[0]!.rows;
-      expect(rows.length).to.be.greaterThanOrEqual(ROW_COUNT);
+      expect(rows.length).toBeGreaterThanOrEqual(ROW_COUNT);
 
       // sample first data-ish row values
       const first = rows.find(r => r.number === 1);
-      expect(first).to.be.ok;
+      expect(first).toBeTruthy();
       // headers from columns
-      expect(first!.cells[1]?.value).to.equal('id');
+      expect(first!.cells[1]?.value).toBe('id');
 
       const mid = rows.find(r => r.number === 2501);
-      expect(mid).to.be.ok;
-      expect(mid!.cells[1]?.value).to.equal(2500);
-      expect(mid!.cells[2]?.value).to.equal('name-2500');
-      expect(mid!.cells[3]?.value).to.equal(25000);
+      expect(mid).toBeTruthy();
+      expect(mid!.cells[1]?.value).toBe(2500);
+      expect(mid!.cells[2]?.value).toBe('name-2500');
+      expect(mid!.cells[3]?.value).toBe(25000);
 
       const last = rows.find(r => r.number === ROW_COUNT + 1);
-      expect(last).to.be.ok;
-      expect(last!.cells[1]?.value).to.equal(ROW_COUNT);
-      expect(last!.cells[2]?.value).to.equal(`name-${ROW_COUNT}`);
+      expect(last).toBeTruthy();
+      expect(last!.cells[1]?.value).toBe(ROW_COUNT);
+      expect(last!.cells[2]?.value).toBe(`name-${ROW_COUNT}`);
     } finally {
       await rm(dir, {recursive: true, force: true});
     }
@@ -91,12 +92,12 @@ describe('excel/node streamWrite', () => {
       );
 
       const wb = await readFile(path);
-      expect(wb.sheets[0]!.name).to.equal('S');
+      expect(wb.sheets[0]!.name).toBe('S');
       // header + 200 data
-      expect(wb.sheets[0]!.rows.length).to.equal(201);
+      expect(wb.sheets[0]!.rows.length).toBe(201);
       const r2 = wb.sheets[0]!.rows.find(r => r.number === 2);
-      expect(r2!.cells[1]?.value).to.equal(1);
-      expect(r2!.cells[2]?.value).to.equal('name-1');
+      expect(r2!.cells[1]?.value).toBe(1);
+      expect(r2!.cells[2]?.value).toBe('name-1');
     } finally {
       await rm(dir, {recursive: true, force: true});
     }
@@ -114,8 +115,8 @@ describe('excel/node streamWrite', () => {
       await finished(out);
 
       const wb = await readFile(path);
-      expect(wb.sheets[0]!.rows.length).to.equal(51);
-      expect(wb.sheets[0]!.rows.find(r => r.number === 51)!.cells[1]?.value).to.equal(50);
+      expect(wb.sheets[0]!.rows.length).toBe(51);
+      expect(wb.sheets[0]!.rows.find(r => r.number === 51)!.cells[1]?.value).toBe(50);
     } finally {
       await rm(dir, {recursive: true, force: true});
     }
@@ -142,10 +143,10 @@ describe('excel/node streamWrite', () => {
         });
       }
 
-      expect(collected.length).to.be.at.least(3);
-      expect(collected[0]!.sheetName).to.equal('R');
-      expect(collected.some(r => r.a === 1 && r.b === 2)).to.equal(true);
-      expect(collected.some(r => r.a === 3 && r.b === 4)).to.equal(true);
+      expect(collected.length).toBeGreaterThanOrEqual(3);
+      expect(collected[0]!.sheetName).toBe('R');
+      expect(collected.some(r => r.a === 1 && r.b === 2)).toBe(true);
+      expect(collected.some(r => r.a === 3 && r.b === 4)).toBe(true);
     } finally {
       await rm(dir, {recursive: true, force: true});
     }

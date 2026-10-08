@@ -1,7 +1,7 @@
-// @vitest-migrated
+import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
-const PageSetupXform = verquire('xlsx/xform/sheet/page-setup-xform');
+import PageSetupXform from '../../../../../lib/xlsx/xform/sheet/page-setup-xform.js';
 
 // -  "blackAndWhite": false
 // -  "cellComments": "None"

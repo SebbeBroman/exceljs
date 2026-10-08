@@ -1,9 +1,9 @@
-// @vitest-migrated
+import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
-const CellXform = verquire('xlsx/xform/sheet/cell-xform');
-const SharedStringsXform = verquire('xlsx/xform/strings/shared-strings-xform');
-const Enums = verquire('model/enums');
+import CellXform from '../../../../../lib/xlsx/xform/sheet/cell-xform.js';
+import SharedStringsXform from '../../../../../lib/xlsx/xform/strings/shared-strings-xform.js';
+import Enums from '../../../../../lib/model/enums.js';
 
 const fakeStyles = {
   addStyleModel(style, effectiveType) {

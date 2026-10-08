@@ -1,5 +1,6 @@
 import {describe, it, expect} from 'vite-plus/test';
-import {workbook, load} from '../../../excel.ts';
+
+import {workbook, load} from '../../../excel.js';
 import {unzipSync, strFromU8} from 'fflate';
 
 function allSheetXml(buf: Uint8Array): string {
@@ -28,10 +29,10 @@ describe('builder advanced features (Phase 5)', () => {
         .writeBuffer();
 
       const xml = allSheetXml(buf);
-      expect(xml).to.include('sheetView');
-      expect(xml).to.match(/ySplit=["']1["']/);
-      expect(xml).to.match(/xSplit=["']1["']/);
-      expect(xml).to.include('topLeftCell');
+      expect(xml).toContain('sheetView');
+      expect(xml).toMatch(/ySplit=["']1["']/);
+      expect(xml).toMatch(/xSplit=["']1["']/);
+      expect(xml).toContain('topLeftCell');
     });
 
     it('writes pageSetup and headerFooter', async () => {
@@ -43,8 +44,8 @@ describe('builder advanced features (Phase 5)', () => {
         .writeBuffer();
 
       const xml = allSheetXml(buf);
-      expect(xml).to.include('landscape');
-      expect(xml).to.include('Hello Header');
+      expect(xml).toContain('landscape');
+      expect(xml).toContain('Hello Header');
     });
 
     it('accepts views/pageSetup via sheet init', async () => {
@@ -56,8 +57,8 @@ describe('builder advanced features (Phase 5)', () => {
         })
         .build();
 
-      expect(plain.sheets[0]!.views?.[0]).to.include({state: 'frozen', ySplit: 1});
-      expect(plain.sheets[0]!.pageSetup?.paperSize).to.equal(9);
+      expect(plain.sheets[0]!.views?.[0]).toMatchObject({state: 'frozen', ySplit: 1});
+      expect(plain.sheets[0]!.pageSetup?.paperSize).toBe(9);
     });
   });
 
@@ -75,9 +76,9 @@ describe('builder advanced features (Phase 5)', () => {
         .writeBuffer();
 
       const xml = allSheetXml(buf);
-      expect(xml).to.include('dataValidations');
-      expect(xml).to.include('list');
-      expect(xml).to.match(/B1|sqref/);
+      expect(xml).toContain('dataValidations');
+      expect(xml).toContain('list');
+      expect(xml).toMatch(/B1|sqref/);
     });
 
     it('includes validations in build() plain model', () => {
@@ -86,7 +87,7 @@ describe('builder advanced features (Phase 5)', () => {
         .dataValidation('A1', {type: 'whole', operator: 'equal', formulae: [5]})
         .build();
 
-      expect(plain.sheets[0]!.dataValidations?.A1).to.deep.include({
+      expect(plain.sheets[0]!.dataValidations?.A1).toMatchObject({
         type: 'whole',
         operator: 'equal',
       });
@@ -123,9 +124,9 @@ describe('builder advanced features (Phase 5)', () => {
         .writeBuffer();
 
       const xml = allSheetXml(buf);
-      expect(xml).to.include('conditionalFormatting');
-      expect(xml).to.match(/cellIs|cfRule/);
-      expect(xml).to.match(/A1:B2|sqref/);
+      expect(xml).toContain('conditionalFormatting');
+      expect(xml).toMatch(/cellIs|cfRule/);
+      expect(xml).toMatch(/A1:B2|sqref/);
     });
 
     it('forces styles when CF has style', async () => {
@@ -143,8 +144,8 @@ describe('builder advanced features (Phase 5)', () => {
             },
           ],
         });
-      expect(b._used.styles).to.equal(true);
-      expect(b._used.conditionalFormatting).to.equal(true);
+      expect(b._used.styles).toBe(true);
+      expect(b._used.conditionalFormatting).toBe(true);
     });
   });
 
@@ -163,12 +164,12 @@ describe('builder advanced features (Phase 5)', () => {
         names.some(n => /comments/i.test(n)) ||
         allXml(buf).includes('This is a comment') ||
         names.some(n => /vmlDrawing/i.test(n));
-      expect(hasComments).to.equal(true);
+      expect(hasComments).toBe(true);
     });
 
     it('stores notes on plain build()', () => {
       const plain = workbook().sheet('N').cell('B2', 1).note('B2', 'n').build();
-      expect(plain.sheets[0]!.notes?.B2).to.equal('n');
+      expect(plain.sheets[0]!.notes?.B2).toBe('n');
     });
   });
 
@@ -181,16 +182,16 @@ describe('builder advanced features (Phase 5)', () => {
         .writeBuffer();
 
       const xml = allSheetXml(buf);
-      expect(xml).to.include('sheetProtection');
+      expect(xml).toContain('sheetProtection');
       // password hash present
-      expect(xml).to.match(/hashValue|algorithmName|saltValue/);
+      expect(xml).toMatch(/hashValue|algorithmName|saltValue/);
     });
 
     it('protect keeps builder chain sync and appears on build()', () => {
       const b = workbook().sheet('P').row([1]).protect('pw', {spinCount: 1});
-      expect(b._used.protection).to.equal(true);
+      expect(b._used.protection).toBe(true);
       const plain = b.build();
-      expect(plain.sheets[0]!.protect?.password).to.equal('pw');
+      expect(plain.sheets[0]!.protect?.password).toBe('pw');
     });
   });
 
@@ -216,9 +217,9 @@ describe('builder advanced features (Phase 5)', () => {
 
       const files = unzipSync(buf);
       const names = Object.keys(files);
-      expect(names.some(n => /table\d*\.xml/i.test(n))).to.equal(true);
+      expect(names.some(n => /table\d*\.xml/i.test(n))).toBe(true);
       const xml = allXml(buf);
-      expect(xml).to.match(/People|table/i);
+      expect(xml).toMatch(/People|table/i);
     });
   });
 
@@ -231,13 +232,13 @@ describe('builder advanced features (Phase 5)', () => {
       );
       const b = workbook().sheet('Img').cell('A1', 'pic');
       const id = b.image({extension: 'png', buffer: png});
-      expect(typeof id).to.equal('number');
+      expect(typeof id).toBe('number');
       const buf = await b.image(id, 'B2:D6').writeBuffer();
 
       const files = unzipSync(buf);
       const names = Object.keys(files);
-      expect(names.some(n => /media\//i.test(n))).to.equal(true);
-      expect(names.some(n => /drawing/i.test(n))).to.equal(true);
+      expect(names.some(n => /media\//i.test(n))).toBe(true);
+      expect(names.some(n => /drawing/i.test(n))).toBe(true);
     });
   });
 
@@ -250,8 +251,8 @@ describe('builder advanced features (Phase 5)', () => {
         .writeBuffer();
 
       const xml = allXml(buf);
-      expect(xml).to.match(/definedNames|definedName/);
-      expect(xml).to.include('MyRange');
+      expect(xml).toMatch(/definedNames|definedName/);
+      expect(xml).toContain('MyRange');
     });
   });
 
@@ -265,10 +266,10 @@ describe('builder advanced features (Phase 5)', () => {
         .writeBuffer();
 
       const plain = await load(buf);
-      expect(plain.sheets[0]!.views?.length).to.be.greaterThan(0);
+      expect(plain.sheets[0]!.views?.length).toBeGreaterThan(0);
       // orientation may come back from pageSetup
       const orient = plain.sheets[0]!.pageSetup?.orientation;
-      if (orient) expect(orient).to.equal('landscape');
+      if (orient) expect(orient).toBe('landscape');
     });
 
     it('preserves data validations through write → load', async () => {
@@ -285,9 +286,9 @@ describe('builder advanced features (Phase 5)', () => {
 
       const plain = await load(buf);
       const dv = plain.sheets[0]!.dataValidations;
-      expect(dv).to.be.ok;
+      expect(dv).toBeTruthy();
       const entry = dv && (dv.A1 || Object.values(dv)[0]);
-      expect(entry?.type).to.equal('whole');
+      expect(entry?.type).toBe('whole');
     });
 
     it('preserves CF through write → load', async () => {
@@ -309,7 +310,7 @@ describe('builder advanced features (Phase 5)', () => {
         .writeBuffer();
 
       const plain = await load(buf);
-      expect(plain.sheets[0]!.conditionalFormattings?.length).to.be.greaterThan(0);
+      expect(plain.sheets[0]!.conditionalFormattings?.length).toBeGreaterThan(0);
     });
 
     it('preserves notes through write → load', async () => {
@@ -321,17 +322,17 @@ describe('builder advanced features (Phase 5)', () => {
 
       const plain = await load(buf);
       const notes = plain.sheets[0]!.notes;
-      expect(notes).to.be.ok;
+      expect(notes).toBeTruthy();
       const text = notes && (notes.A1 || Object.values(notes)[0]);
       // note may be string or {texts: [...]}
       if (typeof text === 'string') {
-        expect(text).to.include('round-trip note');
+        expect(text).toContain('round-trip note');
       } else if (text && typeof text === 'object' && 'texts' in text) {
         const joined = (text.texts || []).map((t: {text?: string}) => t.text).join('');
-        expect(joined).to.include('round-trip note');
+        expect(joined).toContain('round-trip note');
       } else {
         // some loaders expose differently — still assert notes bag non-empty
-        expect(Object.keys(notes || {}).length).to.be.greaterThan(0);
+        expect(Object.keys(notes || {}).length).toBeGreaterThan(0);
       }
     });
 
@@ -344,7 +345,7 @@ describe('builder advanced features (Phase 5)', () => {
 
       const plain = await load(buf);
       // Password is not recoverable; hashed model should round-trip for re-encode
-      expect(plain.sheets[0]!.sheetProtection || plain.sheets[0]!.protect).to.be.ok;
+      expect(plain.sheets[0]!.sheetProtection || plain.sheets[0]!.protect).toBeTruthy();
     });
   });
 
@@ -362,8 +363,8 @@ describe('builder advanced features (Phase 5)', () => {
         .writeBuffer();
 
       const xml = allSheetXml(buf);
-      expect(xml).to.match(/sheetProtection|dataValidations/);
-      expect(buf.byteLength).to.be.greaterThan(500);
+      expect(xml).toMatch(/sheetProtection|dataValidations/);
+      expect(buf.byteLength).toBeGreaterThan(500);
     });
   });
 });

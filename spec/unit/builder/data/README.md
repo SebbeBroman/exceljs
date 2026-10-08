@@ -5,7 +5,10 @@ These are saved compatibility outputs from the implementation before legacy remo
   and string mode. Tests compare every uncompressed XML/media part.
 - `direct-model/projections.json`: SHA-256 of normalized old document projections,
   keyed by a digest of the XLSX parts. Dates serialize as ISO strings; the private
-  image-anchor `worksheet` backpointer is excluded.
+  image-anchor `worksheet` backpointer is excluded. Validation keys normalize to
+  sorted cell coverage for small fixtures, comparing semantics across the compact
+  range rewrite. These digests were recalculated from the saved pre-rewrite build,
+  not the implementation under test.
 - `legacy-projections.json`: buffered projection digests/rejections for the existing
   integration XLSX files.
 - `legacy-stream-projections.json`: incremental row digests/counts/rejections from
@@ -20,6 +23,7 @@ and replacing the corresponding expectations. Useful feature coverage replaces
 retired tests for the unsupported mutable Workbook/Worksheet/Row/Cell API.
 
 `huge.xlsx` is omitted from automated digest checks to keep test memory bounded.
-`test-issue-1842.xlsx` is omitted because the baseline parser expands a validation
-covering every Excel cell and stalls before projection. All 33 other XLSX fixtures
+`test-issue-1842.xlsx` has no baseline projection digest because the old parser
+expanded every Excel cell and stalled. A separate compact-range regression now
+checks that it loads successfully. All 33 other XLSX fixtures
 are checked in both buffered and streaming modes.

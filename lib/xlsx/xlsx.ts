@@ -2,8 +2,6 @@ import fs from 'fs';
 import {fromReadable, once} from '../utils/async-iterator.js';
 import {entryToBuffer, entryToString, unzipToFiles} from '../utils/zip-reader.js';
 import BufferZipWriter, {resolveZipLevel} from '../utils/buffer-zip.js';
-import ZipStream from '../utils/zip-stream.js';
-import utils from '../utils/utils.js';
 import XmlStream from '../utils/xml-stream.js';
 import {
   asUint8Array,
@@ -29,11 +27,10 @@ import {
   loadPivotXforms,
 } from './lazy-xforms.js';
 import RelType from './rel-type.js';
-import type {Readable, Writable} from 'node:stream';
 
 /** Workbook host that owns the model XLSX reads into / writes from */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type XlsxWorkbookHost = {model: any; [key: string]: any};
+export type XlsxWorkbookHost = {model: any};
 
 export interface XlsxReadOptions {
   ignoreNodes?: string[];
@@ -109,21 +106,6 @@ class XLSX {
   // Workbook
   // =========================================================================
   // Read
-
-  async readFile(filename: string, options?: XlsxReadOptions): Promise<XlsxWorkbookHost> {
-    if (!(await utils.fs.exists(filename))) {
-      throw new Error(`File not found: ${filename}`);
-    }
-    const stream = fs.createReadStream(filename);
-    try {
-      const workbook = await this.read(stream, options);
-      stream.close();
-      return workbook;
-    } catch (error) {
-      stream.close();
-      throw error;
-    }
-  }
 
   parseRels(stream: XmlSource): Promise<unknown> {
     const xform = new RelationshipsXform();
@@ -418,30 +400,6 @@ class XLSX {
     } else {
       model.themes[name] = stringAcc;
     }
-  }
-
-  /**
-   * @deprecated since version 4.0. You should use `#read` instead. Please follow upgrade instruction: https://github.com/exceljs/exceljs/blob/master/UPGRADE-4.0.md
-   */
-  createInputStream(): never {
-    throw new Error(
-      '`XLSX#createInputStream` is deprecated. You should use `XLSX#read` instead. This method will be removed in version 5.0. Please follow upgrade instruction: https://github.com/exceljs/exceljs/blob/master/UPGRADE-4.0.md',
-    );
-  }
-
-  async read(
-    stream: Readable | AsyncIterable<unknown>,
-    options?: XlsxReadOptions,
-  ): Promise<XlsxWorkbookHost> {
-    const chunks: unknown[] = [];
-    for await (const chunk of fromReadable(stream)) {
-      chunks.push(chunk);
-    }
-    // Normalize to Uint8Array (accepts Buffer / Uint8Array from streams)
-    const parts = chunks.map(c =>
-      isBytes(c) ? c : bytesFrom(c as string | ArrayBuffer | ArrayLike<number> | ArrayBufferView),
-    );
-    return this.load(concat(parts), options);
   }
 
   async load(
@@ -915,16 +873,6 @@ class XLSX {
     });
   }
 
-  _finalize(zip: any): Promise<this> {
-    return new Promise((resolve, reject) => {
-      zip.on('finish', () => {
-        resolve(this);
-      });
-      zip.on('error', reject);
-      zip.finalize();
-    });
-  }
-
   async prepareModel(model: XlsxModel, options: XlsxWriteOptions = {}): Promise<void> {
     // ensure following properties have sane values
     model.creator = model.creator || 'ExcelJS';
@@ -984,22 +932,8 @@ class XLSX {
     // TODO: workbook drawing list
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async write(stream: Writable | any, options?: XlsxWriteOptions): Promise<this> {
-    options = options || {};
-    const model = this.workbook.getXlsxModel?.() ?? this.workbook.model;
-    const zip = new ZipStream.ZipWriter(options.zip);
-    zip.pipe(stream);
-
-    await this.prepareModel(model, options);
-    await this.renderParts(zip, model);
-    return this._finalize(zip);
-  }
-
   /**
-   * Render every package part into `zip.append`. Shared by the streaming
-   * `write()` and the buffered `writeBuffer()` (collect + zipSync) paths —
-   * keep the sequence identical in both.
+   * Render every package part into `zip.append`. The buffered `writeBuffer()` path collects these parts and compresses once.
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async renderParts(
@@ -1021,30 +955,9 @@ class XLSX {
     await this.addWorkbook(zip, model);
   }
 
-  writeFile(filename: string, options?: XlsxWriteOptions): Promise<void> {
-    const stream = fs.createWriteStream(filename);
-
-    return new Promise((resolve, reject) => {
-      stream.on('finish', () => {
-        resolve();
-      });
-      stream.on('error', error => {
-        reject(error);
-      });
-
-      this.write(stream, options)
-        .then(() => {
-          stream.end();
-        })
-        .catch(err => {
-          reject(err);
-        });
-    });
-  }
-
   async writeBuffer(options?: XlsxWriteOptions): Promise<unknown> {
     options = options || {};
-    const model = this.workbook.getXlsxModel?.() ?? this.workbook.model;
+    const model = this.workbook.model;
     await this.prepareModel(model, options);
     // Buffered fast path: every part is already materialized (XML strings,
     // media buffers), so collect + single synchronous zipSync instead of the

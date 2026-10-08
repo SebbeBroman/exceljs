@@ -80,7 +80,6 @@ export interface WorksheetXformOptions extends XformOptions {
   drawingsCount?: number;
   styles?: {
     addDxfStyle(style: unknown): number;
-    [key: string]: unknown;
   };
   commentsMap?: Record<string, unknown>;
   hyperlinkMap?: Record<string, string>;

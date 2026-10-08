@@ -1,4 +1,4 @@
-// @vitest-migrated
+import {describe} from 'vite-plus/test';
 import __req_0 from './data/drawing.1.0.js';
 import __req_1 from './data/drawing.1.1.js';
 import __req_2 from './data/drawing.1.3.js';
@@ -11,7 +11,7 @@ import {fileURLToPath} from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const DrawingXform = verquire('xlsx/xform/drawing/drawing-xform');
+import DrawingXform from '../../../../../lib/xlsx/xform/drawing/drawing-xform.js';
 
 const options = {
   rels: {
@@ -26,7 +26,7 @@ const expectations = [
   {
     title: 'Drawing 1',
     create() {
-      return new DrawingXform({tag: 'xdr:from'});
+      return new DrawingXform();
     },
     initialModel: __req_0,
     preparedModel: __req_1,

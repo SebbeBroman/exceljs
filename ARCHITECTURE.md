@@ -106,7 +106,7 @@ Named helpers in `lib/csv/public.ts` (`csv.parse` / `csv.stringify`). Builder `.
 ## Streaming (Node only)
 
 - **`streamWrite`:** incoming arrays/keyed objects compile directly into one encoder row model and flush immediately; no mutable rows, cells, or column objects.
-- **`streamRead`:** SAX parsing yields one-based sparse value arrays without a document graph. Styles can be cached to decode dates. Shared-string/style caches and ZIP output buffering still have their own memory costs.
+- **`streamRead`:** SAX parsing yields one-based sparse value arrays without a document graph. Styles can be cached to decode dates. Shared-string/style caches still have their own memory costs. Native writable streams batch 64 KiB of XML and propagate destination backpressure through iterable row sources.
 - `WorkbookWriter` / `WorkbookReader` are internal package/stream coordinators.
 
 ## Legacy removal
@@ -123,7 +123,13 @@ remain. Golden XML covers values, styles, sparse edits, merges, notes, validatio
 conditional formatting, tables, images, printing and sheet order. The fixture sweep
 also checks 33 existing XLSX projections against the pre-rewrite output.
 
-See [the buffered comparison](scripts/bench/doc-bridge-results.md) and
+Validation and defined-name storage use compact rectangles. Buffered XLSX exposes
+only its model loader and buffer writer internally; Node owns filesystem wrappers.
+`StreamBuf`, the old ZIP facade, the custom event emitter and the cell matrix are
+removed. Tests import modules directly and use native Vitest APIs.
+
+See [the four independent cleanup comparisons](scripts/bench/internal-cleanup-results.md),
+[the buffered comparison](scripts/bench/doc-bridge-results.md) and
 [the legacy removal comparison](scripts/bench/legacy-removal-results.md).
 
 ## Bundle size (indicative)
@@ -133,10 +139,10 @@ CSV enabled, no Node polyfills):
 
 | Build                       | Size (0.1.0)         |
 | --------------------------- | -------------------- |
-| Single-file minified        | **290.0 KiB**        |
-| Single-file gzip            | **84.8 KiB**         |
-| Code-split write-only entry | **162.2 KiB**        |
-| Code-split write-only total | 287.9 KiB (31 files) |
+| Single-file minified        | **276.3 KiB**        |
+| Single-file gzip            | **80.6 KiB**         |
+| Code-split write-only entry | **149.8 KiB**        |
+| Code-split write-only total | 274.3 KiB (31 files) |
 
 Re-measure after dependency or encoder changes:
 

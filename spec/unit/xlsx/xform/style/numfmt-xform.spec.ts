@@ -1,7 +1,7 @@
-// @vitest-migrated
+import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
-const NumFmtXform = verquire('xlsx/xform/style/numfmt-xform');
+import NumFmtXform from '../../../../../lib/xlsx/xform/style/numfmt-xform.js';
 
 const expectations = [
   {

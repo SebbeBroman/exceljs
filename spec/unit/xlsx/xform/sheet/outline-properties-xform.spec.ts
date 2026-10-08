@@ -1,9 +1,7 @@
-// @vitest-migrated
+import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
-const OutlinePropertiesXform = verquire(
-  'xlsx/xform/sheet/outline-properties-xform'
-);
+import OutlinePropertiesXform from '../../../../../lib/xlsx/xform/sheet/outline-properties-xform.js';
 
 const expectations = [
   {

@@ -4,6 +4,8 @@
  */
 
 import type {Writable} from 'node:stream';
+import {once} from 'node:events';
+import type WorksheetWriter from './worksheet-writer.js';
 import type {
   ColumnInput,
   HeaderFooter,
@@ -59,9 +61,9 @@ export interface StreamWriteDeclarative extends StreamWriteOptions {
 export interface StreamSheetHandle {
   /** Set column defs (headers/keys/widths). Prefer before rows. */
   columns(cols: ColumnInput[]): StreamSheetHandle;
-  /** Append one row and commit it immediately. */
+  /** Append one row synchronously. Use rows() for backpressure with large sources. */
   row(values: RowInput): StreamSheetHandle;
-  /** Append many rows from a sync/async iterable (each row is committed). */
+  /** Append rows from an iterable, waiting for destination backpressure. */
   rows(values: AsyncIterable<RowInput> | Iterable<RowInput>): Promise<void>;
 }
 
@@ -87,14 +89,11 @@ export type StreamWriteCallback = (w: StreamWorkbookHandle) => void | Promise<vo
  * ```ts
  * await streamWrite('out.xlsx', async w => {
  *   const sheet = w.sheet('Data', { columns: [...] });
- *   for await (const row of source) sheet.row(row);
+ *   await sheet.rows(source);
  * });
  * ```
  */
 export type StreamWriteSpec = StreamWriteDeclarative | StreamWriteCallback;
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyWs = any;
 
 function hasAsyncIterator(
   rows: AsyncIterable<RowInput> | Iterable<RowInput>,
@@ -105,22 +104,24 @@ function hasAsyncIterator(
 }
 
 async function consumeRows(
-  ws: AnyWs,
+  ws: WorksheetWriter,
   rows: AsyncIterable<RowInput> | Iterable<RowInput>,
 ): Promise<void> {
   if (hasAsyncIterator(rows)) {
     for await (const values of rows) {
       ws.writeRow(values);
+      if (ws.stream.writableNeedDrain) await once(ws.stream, 'drain');
     }
     return;
   }
   for (const values of rows) {
     ws.writeRow(values);
+    if (ws.stream.writableNeedDrain) await once(ws.stream, 'drain');
   }
 }
 
 /** Apply keys/widths without Column.header overwrite; append header row if needed. */
-function applyColumns(ws: AnyWs, columns: ColumnInput[]): void {
+function applyColumns(ws: WorksheetWriter, columns: ColumnInput[]): void {
   const headers = columns.map(c => {
     if (c.header == null) return undefined;
     return Array.isArray(c.header) ? c.header[0] : c.header;
@@ -137,7 +138,7 @@ function applyColumns(ws: AnyWs, columns: ColumnInput[]): void {
   }
 }
 
-function applySheetOptions(ws: AnyWs, options?: StreamSheetOptions): void {
+function applySheetOptions(ws: WorksheetWriter, options?: StreamSheetOptions): void {
   if (!options) return;
   if (options.columns) {
     applyColumns(ws, options.columns);
@@ -150,7 +151,7 @@ function addWorksheetFromOptions(
   wb: WorkbookWriter,
   name: string,
   options?: StreamSheetOptions,
-): AnyWs {
+): WorksheetWriter {
   const opts = options ?? {};
   const ws = wb.addWorksheet(name, {
     state: opts.state,
@@ -165,7 +166,7 @@ function addWorksheetFromOptions(
 }
 
 class StreamSheetHandleImpl implements StreamSheetHandle {
-  constructor(private readonly ws: AnyWs) {}
+  constructor(private readonly ws: WorksheetWriter) {}
 
   columns(cols: ColumnInput[]): StreamSheetHandle {
     applyColumns(this.ws, cols);
@@ -220,8 +221,13 @@ export async function streamWrite(
 ): Promise<void> {
   if (typeof spec === 'function') {
     const wb = new WorkbookWriter(writerOptionsFrom(dest, options));
-    await spec(new StreamWorkbookHandleImpl(wb));
-    await wb.commit();
+    try {
+      await spec(new StreamWorkbookHandleImpl(wb));
+      await wb.commit();
+    } catch (error) {
+      wb.abort(error as Error);
+      throw error;
+    }
     return;
   }
 
@@ -231,10 +237,16 @@ export async function streamWrite(
   }
 
   const wb = new WorkbookWriter(writerOptionsFrom(dest, writeOpts));
-  for (const sheet of sheets) {
-    const {name, rows, ...sheetOpts} = sheet;
-    const ws = addWorksheetFromOptions(wb, name, sheetOpts);
-    await consumeRows(ws, rows);
+  try {
+    for (const sheet of sheets) {
+      const {name, rows, ...sheetOpts} = sheet;
+      const ws = addWorksheetFromOptions(wb, name, sheetOpts);
+      await consumeRows(ws, rows);
+      ws.commit();
+    }
+    await wb.commit();
+  } catch (error) {
+    wb.abort(error as Error);
+    throw error;
   }
-  await wb.commit();
 }

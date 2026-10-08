@@ -184,9 +184,6 @@ class WorksheetWriter {
   get stream(): any {
     if (!this._stream) {
       this._stream = this._workbook._openStream(`/xl/worksheets/sheet${this.id}.xml`);
-
-      // pause stream to prevent 'data' events
-      this._stream.pause();
     }
     return this._stream;
   }
@@ -232,7 +229,7 @@ class WorksheetWriter {
   _write(text: string): void {
     xmlBuffer.reset();
     xmlBuffer.addText(text);
-    this.stream.write(xmlBuffer);
+    this.stream.write(xmlBuffer.toBuffer());
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -287,7 +284,7 @@ class WorksheetWriter {
 
     this._writeSheetFormatProperties(xmlBuffer, this.properties);
 
-    this.stream.write(xmlBuffer);
+    this.stream.write(xmlBuffer.toBuffer());
   }
 
   _writeColumns(): void {

@@ -1,15 +1,16 @@
-// @vitest-migrated
+import {describe, it, expect} from 'vite-plus/test';
+import {normalizeXml} from '../../../../utils/normalize-xml.js';
 import fs from 'node:fs';
 import testXformHelper from '../test-xform-helper.js';
-import __json_0 from './data/styles.1.1.json';
+import __json_0 from './data/styles.1.1.json' with {type: 'json'};
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const StylesXform = verquire('xlsx/xform/style/styles-xform');
-const XmlStream = verquire('utils/xml-stream');
+import StylesXform from '../../../../../lib/xlsx/xform/style/styles-xform.js';
+import XmlStream from '../../../../../lib/utils/xml-stream.js';
 
 const expectations = [
   {
@@ -39,7 +40,7 @@ describe('StylesXform', () => {
       const xmlStream = new XmlStream();
       stylesXform.render(xmlStream);
 
-      expect(xmlStream.xml).xml.to.equal(expectedXml);
+      expect(normalizeXml(xmlStream.xml)).toBe(normalizeXml(expectedXml));
     });
   });
 });

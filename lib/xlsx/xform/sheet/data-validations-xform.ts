@@ -4,6 +4,8 @@ import colCache from '../../../utils/col-cache.js';
 import BaseXform from '../base-xform.js';
 import type {XmlStreamLike, XmlNode} from '../base-xform.js';
 import Range from '../../../model/range.js';
+import {subtractRectangle, mergeRectangles} from '../../../model/rectangles.js';
+import type {Rectangle} from '../../../model/rectangles.js';
 
 export interface DataValidationEntry {
   type: string;
@@ -52,93 +54,60 @@ function assignBool(
 }
 
 function optimiseDataValidations(model: DataValidationsModel): DataValidationEntry[] {
-  // Squeeze alike data validations together into rectangular ranges
-  // to reduce file size and speed up Excel load time
-  const dvList = Object.keys(model)
-    .map(address => ({
-      address,
-      dataValidation: model[address],
-      marked: false,
-    }))
-    .sort((a, b) => (a.address < b.address ? -1 : a.address > b.address ? 1 : 0));
-  const dvMap = Object.fromEntries(dvList.map(dv => [dv.address, dv]));
-  const matchCol = (
-    addr: {row: number; col: number; address: string},
-    height: number,
-    col: number,
-  ): boolean => {
-    for (let i = 0; i < height; i++) {
-      const otherAddress = colCache.encodeAddress(addr.row + i, col);
-      if (!model[otherAddress] || !isEqual(model[addr.address], model[otherAddress])) {
-        return false;
-      }
+  // Later entries overwrite overlapping earlier rules, matching the old per-cell map.
+  const source = Object.entries(model).map(([address, rule]) => {
+    if (address.includes(':') || address.includes('!'))
+      return {rect: new Range(address).model, rule};
+    const {row, col} = colCache.decodeAddress(address);
+    return {rect: {top: row!, bottom: row!, left: col!, right: col!}, rule};
+  });
+  let entries: Array<{rect: Rectangle; rule: DataValidationEntry}> = [];
+  if (source.every(({rect}) => rect.top === rect.bottom && rect.left === rect.right)) {
+    entries = Object.keys(model).every(address => /^[A-Z]+[1-9]\d*$/.test(address))
+      ? source
+      : [...new Map(source.map(entry => [`${entry.rect.top}:${entry.rect.left}`, entry])).values()];
+  } else
+    for (const {rect, rule} of source) {
+      entries = entries.flatMap(entry =>
+        subtractRectangle(entry.rect, rect).map(piece => ({rect: piece, rule: entry.rule})),
+      );
+      entries.push({rect, rule});
     }
-    return true;
-  };
-  return dvList
-    .map(dv => {
-      if (!dv.marked) {
-        const addr = colCache.decodeEx(dv.address) as {
-          dimensions?: string;
-          row: number;
-          col: number;
-          address?: string;
-        };
-        if (addr.dimensions) {
-          dvMap[addr.dimensions].marked = true;
-          return {
-            ...dv.dataValidation,
-            sqref: dv.address,
-          };
-        }
-
-        // iterate downwards - finding matching cells
-        let height = 1;
-        let otherAddress = colCache.encodeAddress(addr.row + height, addr.col);
-        while (model[otherAddress] && isEqual(dv.dataValidation, model[otherAddress])) {
-          height++;
-          otherAddress = colCache.encodeAddress(addr.row + height, addr.col);
-        }
-
-        // iterate rightwards...
-
-        let width = 1;
-        while (
-          matchCol({row: addr.row, col: addr.col, address: dv.address}, height, addr.col + width)
-        ) {
-          width++;
-        }
-
-        // mark all included addresses
-        for (let i = 0; i < height; i++) {
-          for (let j = 0; j < width; j++) {
-            otherAddress = colCache.encodeAddress(addr.row + i, addr.col + j);
-            dvMap[otherAddress].marked = true;
-          }
-        }
-
-        if (height > 1 || width > 1) {
-          const bottom = addr.row + (height - 1);
-          const right = addr.col + (width - 1);
-          return {
-            ...dv.dataValidation,
-            sqref: `${dv.address}:${colCache.encodeAddress(bottom, right)}`,
-          };
-        }
-        return {
-          ...dv.dataValidation,
-          sqref: dv.address,
-        };
-      }
-      return null;
-    })
-    .filter(Boolean) as DataValidationEntry[];
+  const groups: Array<{rects: Rectangle[]; rule: DataValidationEntry}> = [];
+  const buckets = new Map<string, typeof groups>();
+  const identities = new WeakMap<DataValidationEntry, (typeof groups)[number]>();
+  for (const {rect, rule} of entries) {
+    const known = identities.get(rule);
+    if (known) {
+      known.rects.push(rect);
+      continue;
+    }
+    const key = JSON.stringify(
+      Object.keys(rule)
+        .sort()
+        .map(name => [name, rule[name]]),
+    );
+    const bucket = buckets.get(key) ?? [];
+    let group = bucket.find(g => isEqual(g.rule, rule));
+    if (!group) {
+      group = {rects: [], rule};
+      groups.push(group);
+      bucket.push(group);
+      buckets.set(key, bucket);
+    }
+    identities.set(rule, group);
+    group.rects.push(rect);
+  }
+  return groups.flatMap(({rects, rule}) =>
+    mergeRectangles(rects).map(rect => ({...rule, sqref: new Range(rect).shortRange})),
+  );
 }
 
 class DataValidationsXform extends BaseXform<DataValidationsModel> {
   _address?: string;
   _dataValidation?: DataValidationEntry;
   _formula?: string[];
+  private rangeKeys = new Set<string>();
 
   override tag = 'dataValidations';
 
@@ -204,6 +173,7 @@ class DataValidationsXform extends BaseXform<DataValidationsModel> {
     switch (node.name) {
       case 'dataValidations':
         this.model = {};
+        this.rangeKeys.clear();
         return true;
 
       case 'dataValidation': {
@@ -265,15 +235,29 @@ class DataValidationsXform extends BaseXform<DataValidationsModel> {
         }
         // The four known cases: 1. E4:L9 N4:U9  2.E4 L9  3. N4:U9  4. E4
         const list = this._address!.split(/\s+/g) || [];
-        list.forEach(addr => {
-          if (addr.includes(':')) {
-            const range = new Range(addr);
-            range.forEachAddress((address: string) => {
-              this.model![address] = this._dataValidation!;
-            });
-          } else {
-            this.model![addr] = this._dataValidation!;
+        list.filter(Boolean).forEach(addr => {
+          const rect = new Range(addr).model;
+          // Remove covered portions of prior rules without enumerating their cells.
+          const addresses =
+            rect.top === rect.bottom && rect.left === rect.right
+              ? [...this.rangeKeys]
+              : Object.keys(this.model!);
+          for (const address of addresses) {
+            const rule = this.model![address];
+            const previous = new Range(address).model;
+            const pieces = subtractRectangle(previous, rect);
+            if (pieces.length === 1 && pieces[0] === previous) continue;
+            delete this.model![address];
+            this.rangeKeys.delete(address);
+            for (const piece of pieces) {
+              const key = new Range(piece).shortRange;
+              this.model![key] = rule;
+              if (key.includes(':')) this.rangeKeys.add(key);
+            }
           }
+          const key = new Range(rect).shortRange;
+          this.model![key] = this._dataValidation!;
+          if (key.includes(':')) this.rangeKeys.add(key);
         });
         return true;
       }

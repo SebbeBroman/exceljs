@@ -1,14 +1,14 @@
-// @vitest-migrated
+import {describe} from 'vite-plus/test';
 import fs from 'node:fs';
 import testXformHelper from '../test-xform-helper.js';
-import __json_0 from './data/sharedStrings.json';
+import __json_0 from './data/sharedStrings.json' with {type: 'json'};
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const SharedStringsXform = verquire('xlsx/xform/strings/shared-strings-xform');
+import SharedStringsXform from '../../../../../lib/xlsx/xform/strings/shared-strings-xform.js';
 
 const expectations = [
   {

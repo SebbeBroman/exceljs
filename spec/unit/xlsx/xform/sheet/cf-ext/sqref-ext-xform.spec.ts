@@ -1,7 +1,7 @@
-// @vitest-migrated
+import {describe} from 'vite-plus/test';
 import testXformHelper from '../../test-xform-helper.js';
 
-const SqrefExtXform = verquire('xlsx/xform/sheet/cf-ext/sqref-ext-xform');
+import SqrefExtXform from '../../../../../../lib/xlsx/xform/sheet/cf-ext/sqref-ext-xform.js';
 
 const expectations = [
   {

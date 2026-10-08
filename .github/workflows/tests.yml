@@ -87,6 +87,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
+      - run: pnpm typecheck:spec
       - run: pnpm typecheck:public
         env:
           CI: true

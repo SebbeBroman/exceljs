@@ -1,35 +1,35 @@
-// @vitest-migrated
+import {describe, it, expect} from 'vite-plus/test';
 import fs from 'node:fs';
 import testXformHelper from '../test-xform-helper.js';
-import __json_0 from './data/sheet.1.0.json';
-import __json_1 from './data/sheet.1.1.json';
-import __json_2 from './data/sheet.1.3.json';
-import __json_3 from './data/sheet.1.4.json';
-import __json_4 from './data/sheet.2.0.json';
-import __json_5 from './data/sheet.2.1.json';
-import __json_6 from './data/sheet.3.1.json';
-import __json_7 from './data/sheet.5.0.json';
-import __json_8 from './data/sheet.5.1.json';
-import __json_9 from './data/sheet.5.3.json';
-import __json_10 from './data/sheet.5.4.json';
-import __json_11 from './data/sheet.6.1.json';
-import __json_12 from './data/sheet.6.3.json';
-import __json_13 from './data/sheet.7.0.json';
-import __json_14 from './data/sheet.7.1.json';
-import __json_15 from './data/sheet.4.0.json';
-import __json_16 from './data/sheet.4.0.json';
+import __json_0 from './data/sheet.1.0.json' with {type: 'json'};
+import __json_1 from './data/sheet.1.1.json' with {type: 'json'};
+import __json_2 from './data/sheet.1.3.json' with {type: 'json'};
+import __json_3 from './data/sheet.1.4.json' with {type: 'json'};
+import __json_4 from './data/sheet.2.0.json' with {type: 'json'};
+import __json_5 from './data/sheet.2.1.json' with {type: 'json'};
+import __json_6 from './data/sheet.3.1.json' with {type: 'json'};
+import __json_7 from './data/sheet.5.0.json' with {type: 'json'};
+import __json_8 from './data/sheet.5.1.json' with {type: 'json'};
+import __json_9 from './data/sheet.5.3.json' with {type: 'json'};
+import __json_10 from './data/sheet.5.4.json' with {type: 'json'};
+import __json_11 from './data/sheet.6.1.json' with {type: 'json'};
+import __json_12 from './data/sheet.6.3.json' with {type: 'json'};
+import __json_13 from './data/sheet.7.0.json' with {type: 'json'};
+import __json_14 from './data/sheet.7.1.json' with {type: 'json'};
+import __json_15 from './data/sheet.4.0.json' with {type: 'json'};
+import __json_16 from './data/sheet.4.0.json' with {type: 'json'};
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const Enums = verquire('model/enums');
-const XmlStream = verquire('utils/xml-stream');
-const WorksheetXform = verquire('xlsx/xform/sheet/worksheet-xform');
+import Enums from '../../../../../lib/model/enums.js';
+import XmlStream from '../../../../../lib/utils/xml-stream.js';
+import WorksheetXform from '../../../../../lib/xlsx/xform/sheet/worksheet-xform.js';
 
-const SharedStringsXform = verquire('xlsx/xform/strings/shared-strings-xform');
-const StylesXform = verquire('xlsx/xform/style/styles-xform');
+import SharedStringsXform from '../../../../../lib/xlsx/xform/strings/shared-strings-xform.js';
+import StylesXform from '../../../../../lib/xlsx/xform/style/styles-xform.js';
 
 const fakeStyles = {
   addStyleModel(style, cellType) {
@@ -187,9 +187,9 @@ describe('WorksheetXform', () => {
     const {xml} = xmlStream;
     const iHyperlinks = xml.indexOf('hyperlinks');
     const iDataValidations = xml.indexOf('dataValidations');
-    expect(iHyperlinks).not.to.equal(-1);
-    expect(iDataValidations).not.to.equal(-1);
-    expect(iHyperlinks).to.be.greaterThan(iDataValidations);
+    expect(iHyperlinks).not.toBe(-1);
+    expect(iDataValidations).not.toBe(-1);
+    expect(iHyperlinks).toBeGreaterThan(iDataValidations);
   });
 
   it('conditionalFormattings must be before dataValidations', async () => {
@@ -207,8 +207,8 @@ describe('WorksheetXform', () => {
     const {xml} = xmlStream;
     const iConditionalFormatting = xml.indexOf('conditionalFormatting');
     const iDataValidations = xml.indexOf('dataValidations');
-    expect(iConditionalFormatting).not.to.equal(-1);
-    expect(iDataValidations).not.to.equal(-1);
-    expect(iConditionalFormatting).to.be.lessThan(iDataValidations);
+    expect(iConditionalFormatting).not.toBe(-1);
+    expect(iDataValidations).not.toBe(-1);
+    expect(iConditionalFormatting).toBeLessThan(iDataValidations);
   });
 });

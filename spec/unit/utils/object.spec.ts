@@ -1,7 +1,7 @@
-// @vitest-migrated
+import {describe, it, expect} from 'vite-plus/test';
 import util from 'node:util';
 
-const {isEqual} = verquire('utils/object');
+import {isEqual} from '../../../lib/utils/object.js';
 
 describe('object helpers', () => {
   describe('isEqual', () => {
@@ -45,7 +45,7 @@ describe('object helpers', () => {
           const assertion = `${showVal(a)} ${i === j ? '==' : '!='} ${showVal(
             b
           )}`;
-          expect(isEqual(a, b)).to.equal(i === j, `expected ${assertion}`);
+          expect(isEqual(a, b), `expected ${assertion}`).toBe(i === j);
         }
       }
     });
@@ -59,7 +59,7 @@ describe('object helpers', () => {
           const assertion = `${showVal(a)} ${i === j ? '==' : '!='} ${showVal(
             b
           )}`;
-          expect(isEqual(a, b)).to.equal(i === j, `expected ${assertion}`);
+          expect(isEqual(a, b), `expected ${assertion}`).toBe(i === j);
         }
       }
     });
@@ -73,7 +73,7 @@ describe('object helpers', () => {
           const assertion = `${showVal(a)} ${i === j ? '==' : '!='} ${showVal(
             b
           )}`;
-          expect(isEqual(a, b)).to.equal(i === j, `expected ${assertion}`);
+          expect(isEqual(a, b), `expected ${assertion}`).toBe(i === j);
         }
       }
     });

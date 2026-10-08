@@ -1,5 +1,5 @@
-// @vitest-migrated
-const SharedStrings = verquire('utils/shared-strings');
+import {describe, it, expect} from 'vite-plus/test';
+import SharedStrings from '../../../lib/utils/shared-strings.js';
 
 describe('SharedStrings', () => {
   it('Stores and shares string values', () => {
@@ -9,11 +9,11 @@ describe('SharedStrings', () => {
     const iHelloV2 = ss.add('Hello');
     const iGoodbye = ss.add('Goodbye');
 
-    expect(iHello).to.equal(iHelloV2);
-    expect(iGoodbye).to.not.equal(iHelloV2);
+    expect(iHello).toBe(iHelloV2);
+    expect(iGoodbye).not.toBe(iHelloV2);
 
-    expect(ss.count).to.equal(2);
-    expect(ss.totalRefs).to.equal(3);
+    expect(ss.count).toBe(2);
+    expect(ss.totalRefs).toBe(3);
   });
 
   it('Does not escape values', () => {
@@ -23,7 +23,7 @@ describe('SharedStrings', () => {
     const iXml = ss.add('<tag>value</tag>');
     const iAmpersand = ss.add('&');
 
-    expect(ss.getString(iXml)).to.equal('<tag>value</tag>');
-    expect(ss.getString(iAmpersand)).to.equal('&');
+    expect(ss.getString(iXml)).toBe('<tag>value</tag>');
+    expect(ss.getString(iAmpersand)).toBe('&');
   });
 });

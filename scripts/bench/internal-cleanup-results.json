@@ -1,0 +1,876 @@
+{
+  "ranges": [
+    {
+      "stage": "stage0",
+      "mode": "validations",
+      "count": "10000",
+      "pass": 0,
+      "ms": 2.770165999999996,
+      "peakRssMiB": 60.5625,
+      "entries": 10000
+    },
+    {
+      "stage": "stage1",
+      "mode": "validations",
+      "count": "10000",
+      "pass": 0,
+      "ms": 0.08408400000000427,
+      "peakRssMiB": 54.90625,
+      "entries": 1
+    },
+    {
+      "stage": "stage1",
+      "mode": "validations",
+      "count": "10000",
+      "pass": 1,
+      "ms": 0.0747080000000011,
+      "peakRssMiB": 54.8125,
+      "entries": 1
+    },
+    {
+      "stage": "stage0",
+      "mode": "validations",
+      "count": "10000",
+      "pass": 1,
+      "ms": 2.348374999999997,
+      "peakRssMiB": 60.625,
+      "entries": 10000
+    },
+    {
+      "stage": "stage0",
+      "mode": "validations",
+      "count": "10000",
+      "pass": 2,
+      "ms": 2.4851249999999965,
+      "peakRssMiB": 61.140625,
+      "entries": 10000
+    },
+    {
+      "stage": "stage1",
+      "mode": "validations",
+      "count": "10000",
+      "pass": 2,
+      "ms": 0.0831670000000031,
+      "peakRssMiB": 54.90625,
+      "entries": 1
+    },
+    {
+      "stage": "stage0",
+      "mode": "names",
+      "count": "10000",
+      "pass": 0,
+      "ms": 2.4042910000000006,
+      "peakRssMiB": 67.90625,
+      "entries": 1
+    },
+    {
+      "stage": "stage1",
+      "mode": "names",
+      "count": "10000",
+      "pass": 0,
+      "ms": 0.10241599999999806,
+      "peakRssMiB": 54.734375,
+      "entries": 1
+    },
+    {
+      "stage": "stage1",
+      "mode": "names",
+      "count": "10000",
+      "pass": 1,
+      "ms": 0.10470799999999514,
+      "peakRssMiB": 54.828125,
+      "entries": 1
+    },
+    {
+      "stage": "stage0",
+      "mode": "names",
+      "count": "10000",
+      "pass": 1,
+      "ms": 2.527792000000005,
+      "peakRssMiB": 68.34375,
+      "entries": 1
+    },
+    {
+      "stage": "stage0",
+      "mode": "names",
+      "count": "10000",
+      "pass": 2,
+      "ms": 2.396374999999999,
+      "peakRssMiB": 68.546875,
+      "entries": 1
+    },
+    {
+      "stage": "stage1",
+      "mode": "names",
+      "count": "10000",
+      "pass": 2,
+      "ms": 0.08220800000000139,
+      "peakRssMiB": 55.015625,
+      "entries": 1
+    },
+    {
+      "stage": "stage0",
+      "mode": "validations-cells",
+      "count": "10000",
+      "pass": 0,
+      "ms": 14.109207999999995,
+      "peakRssMiB": 85.46875,
+      "entries": 1
+    },
+    {
+      "stage": "stage1",
+      "mode": "validations-cells",
+      "count": "10000",
+      "pass": 0,
+      "ms": 12.470291000000003,
+      "peakRssMiB": 81.328125,
+      "entries": 1
+    },
+    {
+      "stage": "stage1",
+      "mode": "validations-cells",
+      "count": "10000",
+      "pass": 1,
+      "ms": 12.178291999999999,
+      "peakRssMiB": 81.53125,
+      "entries": 1
+    },
+    {
+      "stage": "stage0",
+      "mode": "validations-cells",
+      "count": "10000",
+      "pass": 1,
+      "ms": 14.738917,
+      "peakRssMiB": 85.234375,
+      "entries": 1
+    },
+    {
+      "stage": "stage0",
+      "mode": "validations-cells",
+      "count": "10000",
+      "pass": 2,
+      "ms": 15.364334,
+      "peakRssMiB": 85.359375,
+      "entries": 1
+    },
+    {
+      "stage": "stage1",
+      "mode": "validations-cells",
+      "count": "10000",
+      "pass": 2,
+      "ms": 12.68691600000001,
+      "peakRssMiB": 81.515625,
+      "entries": 1
+    },
+    {
+      "stage": "stage0",
+      "mode": "names-cells",
+      "count": "10000",
+      "pass": 0,
+      "ms": 5.600459000000001,
+      "peakRssMiB": 76.578125,
+      "entries": 1
+    },
+    {
+      "stage": "stage1",
+      "mode": "names-cells",
+      "count": "10000",
+      "pass": 0,
+      "ms": 7.107291000000004,
+      "peakRssMiB": 70,
+      "entries": 1
+    },
+    {
+      "stage": "stage1",
+      "mode": "names-cells",
+      "count": "10000",
+      "pass": 1,
+      "ms": 7.154124999999993,
+      "peakRssMiB": 70.4375,
+      "entries": 1
+    },
+    {
+      "stage": "stage0",
+      "mode": "names-cells",
+      "count": "10000",
+      "pass": 1,
+      "ms": 6.201833000000008,
+      "peakRssMiB": 76.5625,
+      "entries": 1
+    },
+    {
+      "stage": "stage0",
+      "mode": "names-cells",
+      "count": "10000",
+      "pass": 2,
+      "ms": 5.380874999999989,
+      "peakRssMiB": 76.421875,
+      "entries": 1
+    },
+    {
+      "stage": "stage1",
+      "mode": "names-cells",
+      "count": "10000",
+      "pass": 2,
+      "ms": 7.229583000000005,
+      "peakRssMiB": 70.65625,
+      "entries": 1
+    },
+    {
+      "stage": "stage0",
+      "mode": "validations",
+      "count": "100000",
+      "pass": 0,
+      "ms": 27.443000000000012,
+      "peakRssMiB": 90.84375,
+      "entries": 100000
+    },
+    {
+      "stage": "stage1",
+      "mode": "validations",
+      "count": "100000",
+      "pass": 0,
+      "ms": 0.07995899999999523,
+      "peakRssMiB": 54.96875,
+      "entries": 1
+    },
+    {
+      "stage": "stage1",
+      "mode": "validations",
+      "count": "100000",
+      "pass": 1,
+      "ms": 0.07408399999999915,
+      "peakRssMiB": 54.953125,
+      "entries": 1
+    },
+    {
+      "stage": "stage0",
+      "mode": "validations",
+      "count": "100000",
+      "pass": 1,
+      "ms": 25.541749999999993,
+      "peakRssMiB": 90.515625,
+      "entries": 100000
+    },
+    {
+      "stage": "stage0",
+      "mode": "validations",
+      "count": "100000",
+      "pass": 2,
+      "ms": 28.890041999999994,
+      "peakRssMiB": 90.71875,
+      "entries": 100000
+    },
+    {
+      "stage": "stage1",
+      "mode": "validations",
+      "count": "100000",
+      "pass": 2,
+      "ms": 0.08762500000000273,
+      "peakRssMiB": 54.96875,
+      "entries": 1
+    },
+    {
+      "stage": "stage0",
+      "mode": "names",
+      "count": "100000",
+      "pass": 0,
+      "ms": 17.883542000000006,
+      "peakRssMiB": 140.84375,
+      "entries": 1
+    },
+    {
+      "stage": "stage1",
+      "mode": "names",
+      "count": "100000",
+      "pass": 0,
+      "ms": 0.08395900000000012,
+      "peakRssMiB": 54.75,
+      "entries": 1
+    },
+    {
+      "stage": "stage1",
+      "mode": "names",
+      "count": "100000",
+      "pass": 1,
+      "ms": 0.08800000000000097,
+      "peakRssMiB": 54.734375,
+      "entries": 1
+    },
+    {
+      "stage": "stage0",
+      "mode": "names",
+      "count": "100000",
+      "pass": 1,
+      "ms": 18.120874999999998,
+      "peakRssMiB": 140.875,
+      "entries": 1
+    },
+    {
+      "stage": "stage0",
+      "mode": "names",
+      "count": "100000",
+      "pass": 2,
+      "ms": 18.216624999999993,
+      "peakRssMiB": 140.15625,
+      "entries": 1
+    },
+    {
+      "stage": "stage1",
+      "mode": "names",
+      "count": "100000",
+      "pass": 2,
+      "ms": 0.0984589999999983,
+      "peakRssMiB": 54.84375,
+      "entries": 1
+    },
+    {
+      "stage": "stage0",
+      "mode": "validations-cells",
+      "count": "100000",
+      "pass": 0,
+      "ms": 125.325917,
+      "peakRssMiB": 254.765625,
+      "entries": 1
+    },
+    {
+      "stage": "stage1",
+      "mode": "validations-cells",
+      "count": "100000",
+      "pass": 0,
+      "ms": 108.09174999999999,
+      "peakRssMiB": 220.84375,
+      "entries": 1
+    },
+    {
+      "stage": "stage1",
+      "mode": "validations-cells",
+      "count": "100000",
+      "pass": 1,
+      "ms": 105.84845900000005,
+      "peakRssMiB": 222.078125,
+      "entries": 1
+    },
+    {
+      "stage": "stage0",
+      "mode": "validations-cells",
+      "count": "100000",
+      "pass": 1,
+      "ms": 119.43337500000001,
+      "peakRssMiB": 252.765625,
+      "entries": 1
+    },
+    {
+      "stage": "stage0",
+      "mode": "validations-cells",
+      "count": "100000",
+      "pass": 2,
+      "ms": 123.18016700000001,
+      "peakRssMiB": 252.6875,
+      "entries": 1
+    },
+    {
+      "stage": "stage1",
+      "mode": "validations-cells",
+      "count": "100000",
+      "pass": 2,
+      "ms": 105.99208300000004,
+      "peakRssMiB": 221.734375,
+      "entries": 1
+    },
+    {
+      "stage": "stage0",
+      "mode": "names-cells",
+      "count": "100000",
+      "pass": 0,
+      "ms": 60.59625,
+      "peakRssMiB": 209.671875,
+      "entries": 1
+    },
+    {
+      "stage": "stage1",
+      "mode": "names-cells",
+      "count": "100000",
+      "pass": 0,
+      "ms": 69.11670899999999,
+      "peakRssMiB": 116.46875,
+      "entries": 1
+    },
+    {
+      "stage": "stage1",
+      "mode": "names-cells",
+      "count": "100000",
+      "pass": 1,
+      "ms": 69.12720800000001,
+      "peakRssMiB": 116.109375,
+      "entries": 1
+    },
+    {
+      "stage": "stage0",
+      "mode": "names-cells",
+      "count": "100000",
+      "pass": 1,
+      "ms": 57.39187499999997,
+      "peakRssMiB": 209.78125,
+      "entries": 1
+    },
+    {
+      "stage": "stage0",
+      "mode": "names-cells",
+      "count": "100000",
+      "pass": 2,
+      "ms": 58.018417,
+      "peakRssMiB": 209.984375,
+      "entries": 1
+    },
+    {
+      "stage": "stage1",
+      "mode": "names-cells",
+      "count": "100000",
+      "pass": 2,
+      "ms": 66.34362499999997,
+      "peakRssMiB": 117.3125,
+      "entries": 1
+    },
+    {
+      "stage": "stage0",
+      "mode": "validations",
+      "count": "grid",
+      "pass": 0,
+      "status": "exceeded 1s budget"
+    },
+    {
+      "stage": "stage1",
+      "mode": "validations",
+      "count": "grid",
+      "pass": 0,
+      "ms": 0.07695799999999764,
+      "peakRssMiB": 61.640625,
+      "entries": 1
+    },
+    {
+      "stage": "stage1",
+      "mode": "validations",
+      "count": "grid",
+      "pass": 1,
+      "ms": 0.07670800000000355,
+      "peakRssMiB": 61.3125,
+      "entries": 1
+    },
+    {
+      "stage": "stage0",
+      "mode": "validations",
+      "count": "grid",
+      "pass": 1,
+      "status": "exceeded 1s budget"
+    },
+    {
+      "stage": "stage0",
+      "mode": "validations",
+      "count": "grid",
+      "pass": 2,
+      "status": "exceeded 1s budget"
+    },
+    {
+      "stage": "stage1",
+      "mode": "validations",
+      "count": "grid",
+      "pass": 2,
+      "ms": 0.1170410000000004,
+      "peakRssMiB": 61.46875,
+      "entries": 1
+    },
+    {
+      "stage": "stage0",
+      "mode": "names",
+      "count": "grid",
+      "pass": 0,
+      "status": "failed under 128MiB heap budget"
+    },
+    {
+      "stage": "stage1",
+      "mode": "names",
+      "count": "grid",
+      "pass": 0,
+      "ms": 0.11008300000000304,
+      "peakRssMiB": 61.25,
+      "entries": 1
+    },
+    {
+      "stage": "stage1",
+      "mode": "names",
+      "count": "grid",
+      "pass": 1,
+      "ms": 0.11824999999999619,
+      "peakRssMiB": 61.28125,
+      "entries": 1
+    },
+    {
+      "stage": "stage0",
+      "mode": "names",
+      "count": "grid",
+      "pass": 1,
+      "status": "failed under 128MiB heap budget"
+    },
+    {
+      "stage": "stage0",
+      "mode": "names",
+      "count": "grid",
+      "pass": 2,
+      "status": "failed under 128MiB heap budget"
+    },
+    {
+      "stage": "stage1",
+      "mode": "names",
+      "count": "grid",
+      "pass": 2,
+      "ms": 0.10575000000000045,
+      "peakRssMiB": 61.234375,
+      "entries": 1
+    }
+  ],
+  "streams": [
+    {
+      "stage": "stage2",
+      "mode": "file",
+      "n": 50000,
+      "pass": 0,
+      "ms": 277.093875,
+      "peakRssMiB": 110.96875,
+      "peakQueue": 0,
+      "bytes": 0
+    },
+    {
+      "stage": "stage3",
+      "mode": "file",
+      "n": 50000,
+      "pass": 0,
+      "ms": 274.057416,
+      "peakRssMiB": 107.609375,
+      "peakQueue": 0,
+      "bytes": 0
+    },
+    {
+      "stage": "stage3",
+      "mode": "file",
+      "n": 50000,
+      "pass": 1,
+      "ms": 267.470375,
+      "peakRssMiB": 106.796875,
+      "peakQueue": 0,
+      "bytes": 0
+    },
+    {
+      "stage": "stage2",
+      "mode": "file",
+      "n": 50000,
+      "pass": 1,
+      "ms": 277.514583,
+      "peakRssMiB": 111.4375,
+      "peakQueue": 0,
+      "bytes": 0
+    },
+    {
+      "stage": "stage2",
+      "mode": "file",
+      "n": 50000,
+      "pass": 2,
+      "ms": 279.2215,
+      "peakRssMiB": 110.25,
+      "peakQueue": 0,
+      "bytes": 0
+    },
+    {
+      "stage": "stage3",
+      "mode": "file",
+      "n": 50000,
+      "pass": 2,
+      "ms": 270.70608300000004,
+      "peakRssMiB": 106.578125,
+      "peakQueue": 0,
+      "bytes": 0
+    },
+    {
+      "stage": "stage2",
+      "mode": "file",
+      "n": 100000,
+      "pass": 0,
+      "ms": 527.7938750000001,
+      "peakRssMiB": 128.875,
+      "peakQueue": 0,
+      "bytes": 0
+    },
+    {
+      "stage": "stage3",
+      "mode": "file",
+      "n": 100000,
+      "pass": 0,
+      "ms": 510.48162499999995,
+      "peakRssMiB": 128.640625,
+      "peakQueue": 0,
+      "bytes": 0
+    },
+    {
+      "stage": "stage3",
+      "mode": "file",
+      "n": 100000,
+      "pass": 1,
+      "ms": 501.300125,
+      "peakRssMiB": 109.84375,
+      "peakQueue": 0,
+      "bytes": 0
+    },
+    {
+      "stage": "stage2",
+      "mode": "file",
+      "n": 100000,
+      "pass": 1,
+      "ms": 535.5018749999999,
+      "peakRssMiB": 129.234375,
+      "peakQueue": 0,
+      "bytes": 0
+    },
+    {
+      "stage": "stage2",
+      "mode": "file",
+      "n": 100000,
+      "pass": 2,
+      "ms": 525.833709,
+      "peakRssMiB": 129.625,
+      "peakQueue": 0,
+      "bytes": 0
+    },
+    {
+      "stage": "stage3",
+      "mode": "file",
+      "n": 100000,
+      "pass": 2,
+      "ms": 501.77533299999993,
+      "peakRssMiB": 110.609375,
+      "peakQueue": 0,
+      "bytes": 0
+    },
+    {
+      "stage": "stage2",
+      "mode": "slow",
+      "n": 50000,
+      "pass": 0,
+      "ms": 911.50225,
+      "peakRssMiB": 111.125,
+      "peakQueue": 1919490,
+      "bytes": 1919539
+    },
+    {
+      "stage": "stage3",
+      "mode": "slow",
+      "n": 50000,
+      "pass": 0,
+      "ms": 806.9455419999999,
+      "peakRssMiB": 94.453125,
+      "peakQueue": 24457,
+      "bytes": 1919539
+    },
+    {
+      "stage": "stage3",
+      "mode": "slow",
+      "n": 50000,
+      "pass": 1,
+      "ms": 796.764833,
+      "peakRssMiB": 95.078125,
+      "peakQueue": 24457,
+      "bytes": 1919539
+    },
+    {
+      "stage": "stage2",
+      "mode": "slow",
+      "n": 50000,
+      "pass": 1,
+      "ms": 905.075417,
+      "peakRssMiB": 111.5,
+      "peakQueue": 1919490,
+      "bytes": 1919539
+    },
+    {
+      "stage": "stage2",
+      "mode": "slow",
+      "n": 50000,
+      "pass": 2,
+      "ms": 897.839041,
+      "peakRssMiB": 111.015625,
+      "peakQueue": 1919490,
+      "bytes": 1919539
+    },
+    {
+      "stage": "stage3",
+      "mode": "slow",
+      "n": 50000,
+      "pass": 2,
+      "ms": 798.650916,
+      "peakRssMiB": 92.46875,
+      "peakQueue": 24457,
+      "bytes": 1919539
+    },
+    {
+      "stage": "stage2",
+      "mode": "slow",
+      "n": 100000,
+      "pass": 0,
+      "ms": 1774.642625,
+      "peakRssMiB": 128.875,
+      "peakQueue": 3833201,
+      "bytes": 3833250
+    },
+    {
+      "stage": "stage3",
+      "mode": "slow",
+      "n": 100000,
+      "pass": 0,
+      "ms": 1551.120792,
+      "peakRssMiB": 100.34375,
+      "peakQueue": 24457,
+      "bytes": 3833250
+    },
+    {
+      "stage": "stage3",
+      "mode": "slow",
+      "n": 100000,
+      "pass": 1,
+      "ms": 1570.321834,
+      "peakRssMiB": 99.375,
+      "peakQueue": 24457,
+      "bytes": 3833250
+    },
+    {
+      "stage": "stage2",
+      "mode": "slow",
+      "n": 100000,
+      "pass": 1,
+      "ms": 1773.2825,
+      "peakRssMiB": 129.265625,
+      "peakQueue": 3833201,
+      "bytes": 3833250
+    },
+    {
+      "stage": "stage2",
+      "mode": "slow",
+      "n": 100000,
+      "pass": 2,
+      "ms": 1754.0595839999999,
+      "peakRssMiB": 129.28125,
+      "peakQueue": 3833201,
+      "bytes": 3833250
+    },
+    {
+      "stage": "stage3",
+      "mode": "slow",
+      "n": 100000,
+      "pass": 2,
+      "ms": 1560.3819589999998,
+      "peakRssMiB": 97.28125,
+      "peakQueue": 24457,
+      "bytes": 3833250
+    }
+  ],
+  "tests": [
+    {
+      "stage": "stage3",
+      "pass": 0,
+      "wallMs": 20274.945458000002,
+      "tests": 963,
+      "files": 98,
+      "suiteMs": 19800,
+      "setupMs": 8580,
+      "importMs": 614
+    },
+    {
+      "stage": "stage4",
+      "pass": 0,
+      "wallMs": 14027.662249999998,
+      "tests": 963,
+      "files": 98,
+      "suiteMs": 13620,
+      "setupMs": 291,
+      "importMs": 2570
+    },
+    {
+      "stage": "stage4",
+      "pass": 1,
+      "wallMs": 13996.457292,
+      "tests": 963,
+      "files": 98,
+      "suiteMs": 13590,
+      "setupMs": 289,
+      "importMs": 2550
+    },
+    {
+      "stage": "stage3",
+      "pass": 1,
+      "wallMs": 20335.473915999995,
+      "tests": 963,
+      "files": 98,
+      "suiteMs": 19900,
+      "setupMs": 8620,
+      "importMs": 637
+    },
+    {
+      "stage": "stage3",
+      "pass": 2,
+      "wallMs": 20490.38483299999,
+      "tests": 963,
+      "files": 98,
+      "suiteMs": 20080,
+      "setupMs": 8750,
+      "importMs": 613
+    },
+    {
+      "stage": "stage4",
+      "pass": 2,
+      "wallMs": 13917.046209000007,
+      "tests": 963,
+      "files": 98,
+      "suiteMs": 13510,
+      "setupMs": 291,
+      "importMs": 2560
+    }
+  ],
+  "bundles": {
+    "stage0": {
+      "bytes": 296843,
+      "gzipBytes": 86845,
+      "modules": 180
+    },
+    "stage1": {
+      "bytes": 295254,
+      "gzipBytes": 86600,
+      "modules": 180
+    },
+    "stage2": {
+      "bytes": 283226,
+      "gzipBytes": 82629,
+      "modules": 176
+    },
+    "stage3": {
+      "bytes": 282858,
+      "gzipBytes": 82518,
+      "modules": 176
+    }
+  },
+  "source": {
+    "before": {
+      "files": 182,
+      "lines": 26805
+    },
+    "after": {
+      "files": 179,
+      "lines": 25366
+    }
+  },
+  "environment": {
+    "date": "2026-10-08",
+    "node": "v24.21.0",
+    "platform": "darwin-arm64",
+    "baseline": "051549f6",
+    "testBeforeTypeErrors": 654,
+    "testAfterTypeErrors": 0
+  }
+}

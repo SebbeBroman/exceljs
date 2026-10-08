@@ -72,18 +72,6 @@ export default defineConfig({
         files: ['spec/**/*.{ts,js,mjs,cjs}'],
         rules: {
           'no-console': 'off',
-          // Chai-style property assertions (`expect(x).to.be.ok`) read as
-          // unused expressions to the linter but are valid assertions.
-          'no-unused-expressions': 'off',
-        },
-        globals: {
-          verquire: 'readonly',
-          context: 'readonly',
-          before: 'readonly',
-          after: 'readonly',
-        },
-        env: {
-          vitest: true,
         },
       },
       {
@@ -135,7 +123,7 @@ export default defineConfig({
   },
 
   test: {
-    globals: true,
+    globals: false,
     environment: 'node',
     setupFiles: [path.join(root, 'spec/config/vitest.setup.ts')],
     include: [

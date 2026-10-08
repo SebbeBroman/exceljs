@@ -1,6 +1,6 @@
-// @vitest-migrated
-import __req_0 from './data/table.1.1.json';
-import __req_1 from './data/table.1.3.json';
+import {describe} from 'vite-plus/test';
+import __req_0 from './data/table.1.1.json' with {type: 'json'};
+import __req_1 from './data/table.1.3.json' with {type: 'json'};
 import fs from 'node:fs';
 import testXformHelper from '../test-xform-helper.js';
 import path from 'node:path';
@@ -9,7 +9,7 @@ import {fileURLToPath} from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const TableXform = verquire('xlsx/xform/table/table-xform');
+import TableXform from '../../../../../lib/xlsx/xform/table/table-xform.js';
 
 const expectations = [
   {

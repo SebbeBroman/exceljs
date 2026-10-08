@@ -1,9 +1,7 @@
-// @vitest-migrated
+import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
-const WorkbookCalcPropertiesXform = verquire(
-  'xlsx/xform/book/workbook-calc-properties-xform'
-);
+import WorkbookCalcPropertiesXform from '../../../../../lib/xlsx/xform/book/workbook-calc-properties-xform.js';
 
 const expectations = [
   {

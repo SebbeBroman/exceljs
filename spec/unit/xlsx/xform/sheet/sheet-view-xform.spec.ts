@@ -1,8 +1,8 @@
-// @vitest-migrated
+import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
-const SheetViewXform = verquire('xlsx/xform/sheet/sheet-view-xform');
-const ListXform = verquire('xlsx/xform/list-xform');
+import SheetViewXform from '../../../../../lib/xlsx/xform/sheet/sheet-view-xform.js';
+import ListXform from '../../../../../lib/xlsx/xform/list-xform.js';
 
 const expectations = [
   {

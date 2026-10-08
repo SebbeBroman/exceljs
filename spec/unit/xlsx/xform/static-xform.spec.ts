@@ -1,7 +1,7 @@
-// @vitest-migrated
+import {describe} from 'vite-plus/test';
 import testXformHelper from './test-xform-helper.js';
 
-const StaticXform = verquire('xlsx/xform/static-xform');
+import StaticXform from '../../../../lib/xlsx/xform/static-xform.js';
 
 const expectations = [
   {

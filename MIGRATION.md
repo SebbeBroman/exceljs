@@ -238,7 +238,7 @@ await streamWrite('out.xlsx', async w => {
       {header: 'Name', key: 'name'},
     ],
   });
-  for await (const row of source) sheet.row(row);
+  await sheet.rows(source);
 });
 
 // Optional row stream read (no full plain Workbook)
@@ -281,3 +281,23 @@ Phases 1–7 of the builder rewrite are complete for the **public** product:
 - Do not import `@sebbebroman/exceljs/node` from browser bundles.
 - `"sideEffects": false` on the package.
 - There is no `./csv` package export — CSV is folded into the main entry.
+
+## Compact ranges and native streams
+
+Loaded `dataValidations` retain range keys such as `A1:B20`; they no longer allocate
+one entry for every covered cell. Single-cell keys remain single-cell keys. When
+inspecting a loaded rule, check its range coverage instead of assuming an `A1`
+property exists for a rule stored under `A1:B20`. Defined names likewise normalize
+ranges without building a cell matrix. Whole-grid validations now load and round-trip.
+
+Node streaming uses native writable streams with 64 KiB XML batches. Declarative
+row sources and `await sheet.rows(source)` honor destination backpressure. The
+synchronous `sheet.row(values)` convenience cannot wait for drain; large loops
+using it can still queue rows. Shared strings and style caches have separate memory
+costs. Declarative sheets finish sequentially; callback sheets written out of order
+can also require ZIP buffering until earlier sheets finish.
+
+Internal XLSX file/stream wrappers, the old ZIP facade, `StreamBuf`, and the custom
+event emitter have been removed. The public Node file and streaming functions
+remain available. Tests use direct imports and native Vitest assertions, and
+`pnpm typecheck:spec` checks the complete maintained test suite.

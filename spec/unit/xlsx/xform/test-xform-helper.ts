@@ -1,211 +1,115 @@
-// @vitest-migrated
-import CompyXform from './compy-xform.js';
+import {describe, it, expect} from 'vite-plus/test';
 import {PassThrough} from 'node:stream';
+import CompyXform from './compy-xform.js';
 import {cloneDeep} from '../../../utils/clone-deep.js';
+import {normalizeXml} from '../../../utils/normalize-xml.js';
+import parseSax from '../../../../lib/utils/parse-sax.js';
+import XmlStream from '../../../../lib/utils/xml-stream.js';
+import BooleanXform from '../../../../lib/xlsx/xform/simple/boolean-xform.js';
+import type BaseXform from '../../../../lib/xlsx/xform/base-xform.js';
 
-const parseSax = verquire('utils/parse-sax');
-const XmlStream = verquire('utils/xml-stream');
-const BooleanXform = verquire('xlsx/xform/simple/boolean-xform');
+interface Expectation {
+  title: string;
+  create(): BaseXform;
+  tests: string[];
+  options?: Record<string, unknown>;
+  [key: string]: unknown;
+}
 
-function getExpectation(expectation, name) {
-  if (!Object.hasOwn(expectation, name)) {
+function getExpectation(expectation: Expectation, name: string) {
+  if (!Object.hasOwn(expectation, name))
     throw new Error(`Expectation missing required field: ${name}`);
-  }
   return cloneDeep(expectation[name]);
 }
 
-// ===============================================================================================================
-// provides boilerplate examples for the four transform steps: prepare, render,  parse and reconcile
-//  prepare: model => preparedModel
-//  render:  preparedModel => xml
-//  parse:  xml => parsedModel
-//  reconcile: parsedModel => reconciledModel
-
-const its = {
-  prepare(expectation) {
-    it('Prepare Model', () =>
-      new Promise(resolve => {
-        const model = getExpectation(expectation, 'initialModel');
-        const result = getExpectation(expectation, 'preparedModel');
-
-        const xform = expectation.create();
-        xform.prepare(model, expectation.options);
-        expect(cloneDeep(model, false)).to.deep.equal(result);
-        resolve();
-      }));
-  },
-
-  render(expectation) {
-    it('Render to XML', () =>
-      new Promise(resolve => {
-        const model = getExpectation(expectation, 'preparedModel');
-        const result = getExpectation(expectation, 'xml');
-
-        const xform = expectation.create();
-        const xmlStream = new XmlStream();
-        xform.render(xmlStream, model, 0);
-        // console.log(xmlStream.xml);
-        // console.log(result);
-
-        expect(xmlStream.xml).xml.to.equal(result);
-        resolve();
-      }));
-  },
-
-  'prepare-render': function(expectation) {
-    // when implementation details get in the way of testing the prepared result
-    it('Prepare and Render to XML', () =>
-      new Promise(resolve => {
-        const model = getExpectation(expectation, 'initialModel');
-        const result = getExpectation(expectation, 'xml');
-
-        const xform = expectation.create();
-        const xmlStream = new XmlStream();
-
-        xform.prepare(model, expectation.options);
-        xform.render(xmlStream, model);
-
-        expect(xmlStream.xml).xml.to.equal(result);
-        resolve();
-      }));
-  },
-
-  renderIn(expectation) {
-    it('Render in Composite to XML ', () =>
-      new Promise(resolve => {
-        const model = {
-          pre: true,
-          child: getExpectation(expectation, 'preparedModel'),
-          post: true,
-        };
-        const result = `<compy><pre/>${getExpectation(
-          expectation,
-          'xml'
-        )}<post/></compy>`;
-
-        const xform = new CompyXform({
-          tag: 'compy',
-          children: [
-            {
-              name: 'pre',
-              xform: new BooleanXform({tag: 'pre', attr: 'val'}),
-            },
-            {name: 'child', xform: expectation.create()},
-            {
-              name: 'post',
-              xform: new BooleanXform({tag: 'post', attr: 'val'}),
-            },
-          ],
-        });
-
-        const xmlStream = new XmlStream();
-        xform.render(xmlStream, model);
-        // console.log(xmlStream.xml);
-
-        expect(xmlStream.xml).xml.to.equal(result);
-        resolve();
-      }));
-  },
-
-  parseIn(expectation) {
-    it('Parse within composite', () =>
-      new Promise((resolve, reject) => {
-        const xml = `<compy><pre/>${getExpectation(
-          expectation,
-          'xml'
-        )}<post/></compy>`;
-        const childXform = expectation.create();
-        const result = {pre: true};
-        result[childXform.tag] = getExpectation(expectation, 'parsedModel');
-        result.post = true;
-        const xform = new CompyXform({
-          tag: 'compy',
-          children: [
-            {
-              name: 'pre',
-              xform: new BooleanXform({tag: 'pre', attr: 'val'}),
-            },
-            {name: childXform.tag, xform: childXform},
-            {
-              name: 'post',
-              xform: new BooleanXform({tag: 'post', attr: 'val'}),
-            },
-          ],
-        });
-        const stream = new PassThrough();
-        stream.write(xml);
-        stream.end();
-        xform
-          .parse(parseSax(stream))
-          .then(model => {
-            // console.log('parsed Model', JSON.stringify(model));
-            // console.log('expected Model', JSON.stringify(result));
-
-            // eliminate the undefined
-            const clone = cloneDeep(model, false);
-
-            // console.log('result', JSON.stringify(clone));
-            // console.log('expect', JSON.stringify(result));
-            expect(clone).to.deep.equal(result);
-            resolve();
-          })
-          .catch(reject);
-      }));
-  },
-
-  parse(expectation) {
-    it('Parse to Model', () =>
-      new Promise((resolve, reject) => {
-        const xml = getExpectation(expectation, 'xml');
-        const result = getExpectation(expectation, 'parsedModel');
-
-        const xform = expectation.create();
-
-        const stream = new PassThrough();
-        stream.write(xml);
-        stream.end();
-        xform
-          .parse(parseSax(stream))
-          .then(model => {
-            // eliminate the undefined
-            const clone = cloneDeep(model, false);
-
-            // console.log('result', JSON.stringify(clone));
-            // console.log('expect', JSON.stringify(result));
-            expect(clone).to.deep.equal(result);
-            resolve();
-          })
-          .catch(reject);
-      }));
-  },
-
-  reconcile(expectation) {
-    it('Reconcile Model', () =>
-      new Promise(resolve => {
-        const model = getExpectation(expectation, 'parsedModel');
-        const result = getExpectation(expectation, 'reconciledModel');
-
-        const xform = expectation.create();
-        xform.reconcile(model, expectation.options);
-
-        // eliminate the undefined
-        const clone = cloneDeep(model, false);
-
-        expect(clone).to.deep.equal(result);
-        resolve();
-      }));
-  },
-};
-
-function testXform(expectations) {
-  expectations.forEach(expectation => {
-    const tests = getExpectation(expectation, 'tests');
-    describe(expectation.title, () => {
-      tests.forEach(test => {
-        its[test](expectation);
-      });
-    });
+function composite(expectation: Expectation): CompyXform {
+  const child = expectation.create();
+  return new CompyXform({
+    tag: 'compy',
+    children: [
+      {name: 'pre', xform: new BooleanXform({tag: 'pre', attr: 'val'})},
+      {name: child.tag, xform: child},
+      {name: 'post', xform: new BooleanXform({tag: 'post', attr: 'val'})},
+    ],
   });
 }
 
-export default testXform;
+async function parse(xform: BaseXform, xml: string) {
+  const stream = new PassThrough();
+  stream.end(xml);
+  return xform.parse(parseSax(stream));
+}
+
+const its = {
+  prepare(e: Expectation) {
+    it('Prepare Model', () => {
+      const model = getExpectation(e, 'initialModel');
+      e.create().prepare(model, e.options);
+      expect(cloneDeep(model, false)).toEqual(getExpectation(e, 'preparedModel'));
+    });
+  },
+  render(e: Expectation) {
+    it('Render to XML', () => {
+      const xml = new XmlStream();
+      e.create().render(xml, getExpectation(e, 'preparedModel'), 0);
+      expect(normalizeXml(xml.xml)).toBe(normalizeXml(getExpectation(e, 'xml') as string));
+    });
+  },
+  'prepare-render'(e: Expectation) {
+    it('Prepare and Render to XML', () => {
+      const model = getExpectation(e, 'initialModel');
+      const xform = e.create();
+      xform.prepare(model, e.options);
+      expect(normalizeXml(xform.toXml(model))).toBe(
+        normalizeXml(getExpectation(e, 'xml') as string),
+      );
+    });
+  },
+  renderIn(e: Expectation) {
+    it('Render in Composite to XML', () => {
+      const model = {pre: true, child: getExpectation(e, 'preparedModel'), post: true};
+      const child = e.create();
+      const xform = composite({...e, create: () => child});
+      // Render fixtures use the model key "child" independently of the XML tag.
+      xform.map[child.tag!].name = 'child';
+      expect(normalizeXml(xform.toXml(model))).toBe(
+        normalizeXml(`<compy><pre/>${getExpectation(e, 'xml')}<post/></compy>`),
+      );
+    });
+  },
+  parseIn(e: Expectation) {
+    it('Parse within composite', async () => {
+      const xform = composite(e);
+      const child = xform.map[Object.keys(xform.map)[1]!];
+      const model = await parse(xform, `<compy><pre/>${getExpectation(e, 'xml')}<post/></compy>`);
+      expect(cloneDeep(model, false)).toEqual({
+        pre: true,
+        [child.tag!]: getExpectation(e, 'parsedModel'),
+        post: true,
+      });
+    });
+  },
+  parse(e: Expectation) {
+    it('Parse to Model', async () => {
+      const model = await parse(e.create(), getExpectation(e, 'xml') as string);
+      expect(cloneDeep(model, false)).toEqual(getExpectation(e, 'parsedModel'));
+    });
+  },
+  reconcile(e: Expectation) {
+    it('Reconcile Model', () => {
+      const model = getExpectation(e, 'parsedModel');
+      e.create().reconcile(model, e.options);
+      expect(cloneDeep(model, false)).toEqual(getExpectation(e, 'reconciledModel'));
+    });
+  },
+};
+
+export default function testXform(expectations: Expectation[]): void {
+  for (const expectation of expectations)
+    describe(expectation.title, () => {
+      for (const test of expectation.tests) {
+        if (!Object.hasOwn(its, test)) throw new Error(`Unknown transform test: ${test}`);
+        its[test as keyof typeof its](expectation);
+      }
+    });
+}

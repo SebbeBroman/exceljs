@@ -1,9 +1,7 @@
-// @vitest-migrated
+import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
-const SheetProtectionXform = verquire(
-  'xlsx/xform/sheet/sheet-protection-xform'
-);
+import SheetProtectionXform from '../../../../../lib/xlsx/xform/sheet/sheet-protection-xform.js';
 
 const expectations = [
   {

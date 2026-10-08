@@ -1,4 +1,4 @@
-// @vitest-migrated
+import {describe} from 'vite-plus/test';
 import fs from 'node:fs';
 import testXformHelper from '../test-xform-helper.js';
 import path from 'node:path';
@@ -7,7 +7,7 @@ import {fileURLToPath} from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const ContentTypesXform = verquire('xlsx/xform/core/content-types-xform');
+import ContentTypesXform from '../../../../../lib/xlsx/xform/core/content-types-xform.js';
 
 const expectations = [
   {

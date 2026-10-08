@@ -1,32 +1,33 @@
 import {describe, it, expect} from 'vite-plus/test';
+
 import {
   viewWorkbook,
   isWorkbookView,
   readRows,
   workbook,
   writeBuffer,
-} from '../../../excel.ts';
+} from '../../../excel.js';
 
 describe('viewWorkbook', () => {
   it('opens CSV and exposes sheetNames + rows slices', async () => {
     const view = await viewWorkbook('a,b,c\n1,2,3\n4,5,6\n7,8,9', {format: 'csv'});
-    expect(isWorkbookView(view)).to.equal(true);
-    expect(view.format).to.equal('csv');
-    expect(view.sheetNames).to.deep.equal(['Sheet1']);
+    expect(isWorkbookView(view)).toBe(true);
+    expect(view.format).toBe('csv');
+    expect(view.sheetNames).toEqual(['Sheet1']);
 
     const sheet = view.sheet(0);
-    expect(sheet.name).to.equal('Sheet1');
-    expect(sheet.rows()).to.deep.equal([
+    expect(sheet.name).toBe('Sheet1');
+    expect(sheet.rows()).toEqual([
       ['a', 'b', 'c'],
       ['1', '2', '3'],
       ['4', '5', '6'],
       ['7', '8', '9'],
     ]);
-    expect(sheet.rows({start: 2, end: 3, cols: {start: 1, end: 2}})).to.deep.equal([
+    expect(sheet.rows({start: 2, end: 3, cols: {start: 1, end: 2}})).toEqual([
       ['1', '2'],
       ['4', '5'],
     ]);
-    expect(sheet.rows({start: 2, end: 3, cols: ['A', 'C']})).to.deep.equal([
+    expect(sheet.rows({start: 2, end: 3, cols: ['A', 'C']})).toEqual([
       ['1', '3'],
       ['4', '6'],
     ]);
@@ -35,7 +36,7 @@ describe('viewWorkbook', () => {
   it('records() uses header row of the slice', async () => {
     const view = await viewWorkbook('name,score\nAda,98\nBob,70', {format: 'csv'});
     const recs = view.sheet(0).records({header: true});
-    expect(recs).to.deep.equal([
+    expect(recs).toEqual([
       {name: 'Ada', score: '98'},
       {name: 'Bob', score: '70'},
     ]);
@@ -52,20 +53,20 @@ describe('viewWorkbook', () => {
         ]),
     );
     const view = await viewWorkbook(buf, {filename: 'r.xlsx'});
-    expect(view.sheetNames).to.deep.equal(['Roster']);
-    expect(view.sheet('Roster').rows({start: 2, end: 2})).to.deep.equal([['Ada', 'Blue']]);
+    expect(view.sheetNames).toEqual(['Roster']);
+    expect(view.sheet('Roster').rows({start: 2, end: 2})).toEqual([['Ada', 'Blue']]);
   });
 
   it('workbook(view) builds a writable builder', async () => {
     const view = await viewWorkbook('x,y\n1,2', {format: 'csv'});
     const out = await workbook(view).sheet('Sheet1').cell('A1', 'z').writeBuffer();
     const again = await viewWorkbook(out, {format: 'xlsx'});
-    expect(again.sheet(0).rows({start: 1, end: 1})[0]?.[0]).to.equal('z');
+    expect(again.sheet(0).rows({start: 1, end: 1})[0]?.[0]).toBe('z');
   });
 
   it('readRows is sugar over the view', async () => {
     const rows = await readRows('a,b\n1,2', {format: 'csv'});
-    expect(rows).to.deep.equal([
+    expect(rows).toEqual([
       ['a', 'b'],
       ['1', '2'],
     ]);
@@ -78,7 +79,7 @@ describe('viewWorkbook', () => {
     } catch (e) {
       err = e as Error;
     }
-    expect(err?.message).to.match(/Unsupported format/);
+    expect(err?.message).toMatch(/Unsupported format/);
   });
 
   it('reads only the requested sheet in a multi-sheet workbook', async () => {
@@ -88,11 +89,11 @@ describe('viewWorkbook', () => {
         .sheet('B', s => s.rows([['only-b'], ['b2'], ['b3']])),
     );
     const view = await viewWorkbook(buf, {format: 'xlsx'});
-    expect(view.sheetNames).to.deep.equal(['A', 'B']);
+    expect(view.sheetNames).toEqual(['A', 'B']);
     // Only touch sheet B — lazy path must not require materializing A
     const rows = view.sheet('B').rows();
-    expect(rows).to.deep.equal([['only-b'], ['b2'], ['b3']]);
-    expect(view.sheet(1).rows({start: 2, end: 2})).to.deep.equal([['b2']]);
+    expect(rows).toEqual([['only-b'], ['b2'], ['b3']]);
+    expect(view.sheet(1).rows({start: 2, end: 2})).toEqual([['b2']]);
   });
 
   it('end-limited slice returns the first N rows', async () => {
@@ -100,9 +101,9 @@ describe('viewWorkbook', () => {
     const buf = await writeBuffer(workbook().sheet('Big').rows(data));
     const view = await viewWorkbook(buf, {format: 'xlsx'});
     const rows = view.sheet(0).rows({start: 1, end: 5});
-    expect(rows).to.have.length(5);
-    expect(rows[0]).to.deep.equal(['r1', '1']);
-    expect(rows[4]).to.deep.equal(['r5', '5']);
+    expect(rows).toHaveLength(5);
+    expect(rows[0]).toEqual(['r1', '1']);
+    expect(rows[4]).toEqual(['r5', '5']);
   });
 
   it('xlsx records() and workbook(view) round-trip simple values', async () => {
@@ -117,14 +118,14 @@ describe('viewWorkbook', () => {
     );
     const view = await viewWorkbook(buf, {format: 'xlsx'});
     const recs = view.sheet(0).records({header: true});
-    expect(recs).to.deep.equal([
+    expect(recs).toEqual([
       {Name: 'Ada', Score: '98'},
       {Name: 'Bob', Score: '70'},
     ]);
     const out = await workbook(view).writeBuffer();
     const again = await viewWorkbook(out, {format: 'xlsx'});
-    expect(again.sheetNames).to.deep.equal(['Roster']);
-    expect(again.sheet(0).rows()).to.deep.equal([
+    expect(again.sheetNames).toEqual(['Roster']);
+    expect(again.sheet(0).rows()).toEqual([
       ['Name', 'Score'],
       ['Ada', '98'],
       ['Bob', '70'],

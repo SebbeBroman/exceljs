@@ -1,4 +1,3 @@
-// @vitest-migrated
 export default {
   anchors: [
     {

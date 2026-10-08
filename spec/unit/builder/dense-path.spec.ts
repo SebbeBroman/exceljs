@@ -1,11 +1,12 @@
 import {describe, it, expect} from 'vite-plus/test';
-import {workbook, load} from '../../../excel.ts';
+
+import {workbook, load} from '../../../excel.js';
 import {
   compileToPlainWorkbook,
   isDenseRectangularOps,
   optimizeOps,
-} from '../../../lib/compile/ops-to-model.ts';
-import type {BuilderOp} from '../../../lib/builder/ops.ts';
+} from '../../../lib/compile/ops-to-model.js';
+import type {BuilderOp} from '../../../lib/builder/ops.js';
 
 describe('optimizeOps', () => {
   it('drops empty rows and cells ops', () => {
@@ -16,8 +17,8 @@ describe('optimizeOps', () => {
       {op: 'row', sheet: 'S', values: [1]},
     ];
     const out = optimizeOps(ops);
-    expect(out.filter(o => o.op === 'rows' || o.op === 'row')).to.have.length(1);
-    expect(out.some(o => o.op === 'cells')).to.equal(false);
+    expect(out.filter(o => o.op === 'rows' || o.op === 'row')).toHaveLength(1);
+    expect(out.some(o => o.op === 'cells')).toBe(false);
   });
 
   it('fuses consecutive row/rows on the same sheet', () => {
@@ -29,9 +30,9 @@ describe('optimizeOps', () => {
     ];
     const out = optimizeOps(ops);
     const rowsOps = out.filter(o => o.op === 'rows');
-    expect(rowsOps).to.have.length(1);
+    expect(rowsOps).toHaveLength(1);
     if (rowsOps[0]!.op === 'rows') {
-      expect(rowsOps[0].values).to.have.length(4);
+      expect(rowsOps[0].values).toHaveLength(4);
     }
   });
 
@@ -43,7 +44,7 @@ describe('optimizeOps', () => {
       {op: 'row', sheet: 'B', values: [2]},
     ];
     const out = optimizeOps(ops);
-    expect(out.filter(o => o.op === 'rows')).to.have.length(2);
+    expect(out.filter(o => o.op === 'rows')).toHaveLength(2);
   });
 
   it('last-write-wins for the same cell address', () => {
@@ -56,9 +57,9 @@ describe('optimizeOps', () => {
     const out = optimizeOps(ops);
     // Style-free cells coalesce to dense rows after LWW.
     const rowsOp = out.find(o => o.op === 'rows');
-    expect(rowsOp && rowsOp.op === 'rows').to.equal(true);
+    expect(rowsOp && rowsOp.op === 'rows').toBe(true);
     if (rowsOp && rowsOp.op === 'rows') {
-      expect(rowsOp.values[0]).to.deep.equal(['new', 1]);
+      expect(rowsOp.values[0]).toEqual(['new', 1]);
     }
   });
 
@@ -70,9 +71,9 @@ describe('optimizeOps', () => {
     ];
     const out = optimizeOps(ops);
     const rowsOp = out.find(o => o.op === 'rows');
-    expect(rowsOp && rowsOp.op === 'rows').to.equal(true);
+    expect(rowsOp && rowsOp.op === 'rows').toBe(true);
     if (rowsOp && rowsOp.op === 'rows') {
-      expect(rowsOp.values[0]).to.deep.equal(['z', 'y']);
+      expect(rowsOp.values[0]).toEqual(['z', 'y']);
     }
   });
 
@@ -84,10 +85,10 @@ describe('optimizeOps', () => {
       {op: 'cell', sheet: 'S', address: 'A2', value: 3},
     ];
     const out = optimizeOps(ops);
-    expect(out.some(o => o.op === 'cell')).to.equal(false);
-    expect(isDenseRectangularOps(out)).to.equal(true);
+    expect(out.some(o => o.op === 'cell')).toBe(false);
+    expect(isDenseRectangularOps(out)).toBe(true);
     const rowsOp = out.find(o => o.op === 'rows');
-    expect(rowsOp && rowsOp.op === 'rows' && rowsOp.values).to.deep.equal([
+    expect(rowsOp && rowsOp.op === 'rows' && rowsOp.values).toEqual([
       [1, 2],
       [3, undefined],
     ]);
@@ -100,8 +101,8 @@ describe('optimizeOps', () => {
       {op: 'cell', sheet: 'S', address: 'B1', value: 2},
     ];
     const out = optimizeOps(ops);
-    expect(out.some(o => o.op === 'cell')).to.equal(true);
-    expect(isDenseRectangularOps(out)).to.equal(false);
+    expect(out.some(o => o.op === 'cell')).toBe(true);
+    expect(isDenseRectangularOps(out)).toBe(false);
   });
 
   it('does not mutate original ops', () => {
@@ -109,7 +110,7 @@ describe('optimizeOps', () => {
     const row: BuilderOp = {op: 'row', sheet: 'S', values: [2]};
     const ops: BuilderOp[] = [{op: 'sheet', name: 'S'}, rows, row];
     optimizeOps(ops);
-    expect(rows.op === 'rows' && rows.values).to.have.length(1);
+    expect(rows.op === 'rows' && rows.values).toHaveLength(1);
   });
 });
 
@@ -119,25 +120,25 @@ describe('dense rectangular path', () => {
       ['a', 1],
       ['b', 2],
     ]);
-    expect(isDenseRectangularOps(b._ops)).to.equal(true);
+    expect(isDenseRectangularOps(b._ops)).toBe(true);
   });
 
   it('is not dense when styles/merges/row+cell patches present', () => {
     const styled = workbook().sheet('S').rows([[1]]).style('A1', {font: {bold: true}});
-    expect(isDenseRectangularOps(styled._ops)).to.equal(false);
+    expect(isDenseRectangularOps(styled._ops)).toBe(false);
 
     const merged = workbook().sheet('S').rows([[1, 2]]).merge('A1:B1');
-    expect(isDenseRectangularOps(merged._ops)).to.equal(false);
+    expect(isDenseRectangularOps(merged._ops)).toBe(false);
 
     // Existing rows + random cell stays on general path (no cell→rows coalesce).
     const patched = workbook().sheet('S').rows([[1]]).cell('A2', 9);
-    expect(isDenseRectangularOps(patched._ops)).to.equal(false);
+    expect(isDenseRectangularOps(patched._ops)).toBe(false);
   });
 
   it('cell-by-cell builder becomes dense after optimize', () => {
     let b = workbook().sheet('S');
     b = b.cell('A1', 'a').cell('B1', 1).cell('A2', 'b').cell('B2', 2);
-    expect(isDenseRectangularOps(optimizeOps(b._ops))).to.equal(true);
+    expect(isDenseRectangularOps(optimizeOps(b._ops))).toBe(true);
   });
 
   it('dense write → load matches general (cell-by-cell) path values', async () => {
@@ -167,14 +168,14 @@ describe('dense rectangular path', () => {
     const densePlain = await load(denseBuf);
     const generalPlain = await load(generalBuf);
 
-    expect(densePlain.sheets[0]!.name).to.equal(generalPlain.sheets[0]!.name);
-    expect(densePlain.sheets[0]!.rows).to.have.length(generalPlain.sheets[0]!.rows.length);
+    expect(densePlain.sheets[0]!.name).toBe(generalPlain.sheets[0]!.name);
+    expect(densePlain.sheets[0]!.rows).toHaveLength(generalPlain.sheets[0]!.rows.length);
 
     for (const row of densePlain.sheets[0]!.rows) {
       const gRow = generalPlain.sheets[0]!.rows.find(r => r.number === row.number)!;
-      expect(gRow).to.not.equal(undefined);
+      expect(gRow).not.toBe(undefined);
       for (const [col, cell] of Object.entries(row.cells)) {
-        expect(gRow.cells[Number(col)]!.value).to.deep.equal(cell.value);
+        expect(gRow.cells[Number(col)]!.value).toEqual(cell.value);
       }
     }
   });
@@ -191,12 +192,12 @@ describe('dense rectangular path', () => {
 
     const a = compileToPlainWorkbook(fused._ops);
     const b = compileToPlainWorkbook(bulk._ops);
-    expect(a.sheets[0]!.rows).to.deep.equal(b.sheets[0]!.rows);
+    expect(a.sheets[0]!.rows).toEqual(b.sheets[0]!.rows);
   });
 
   it('usedFlags.styles false for dense rows-only builder', () => {
     const b = workbook().sheet('S').rows([[1, 2]]);
-    expect(b._used.styles).to.equal(false);
-    expect(b._used.merges).to.equal(false);
+    expect(b._used.styles).toBe(false);
+    expect(b._used.merges).toBe(false);
   });
 });

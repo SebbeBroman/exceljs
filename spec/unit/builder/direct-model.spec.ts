@@ -1,6 +1,8 @@
+import {describe, it, expect} from 'vite-plus/test';
 import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
-import {describe, it, expect} from 'vite-plus/test';
+import {normalizeWorkbook} from '../../utils/normalize-workbook.js';
+
 import {unzipSync, zipSync, strFromU8, strToU8} from 'fflate';
 import {workbook, writeBuffer, load} from '../../../excel.js';
 import type {WorkbookBuilder} from '../../../lib/builder/workbook-builder.js';
@@ -12,17 +14,17 @@ function parts(buffer: Uint8Array): Record<string, string | number[]> {
 }
 const goldenDir = new URL('./data/direct-model/', import.meta.url);
 const hashes: Record<string, string> = JSON.parse(await readFile(new URL('projections.json', goldenDir), 'utf8'));
-function digest(v: unknown): string {return createHash('sha256').update(JSON.stringify(v, (key, value) => key === 'worksheet' ? undefined : value)).digest('hex');}
+function digest(v: unknown): string {return createHash('sha256').update(normalizeWorkbook(v)).digest('hex');}
 async function baselineWrite(builder: WorkbookBuilder, sharedStrings = true): Promise<Uint8Array> {
   return readFile(new URL(`${digest({ops: builder._ops, sharedStrings})}.xlsx`, goldenDir));
 }
 async function assertBaselineProjection(bytes: Uint8Array, options?: {ignoreNodes: string[]}): Promise<void> {
-  expect(digest(await load(bytes, options))).to.equal(hashes[digest(parts(bytes))]);
+  expect(digest(await load(bytes, options))).toBe(hashes[digest(parts(bytes))]);
 }
 async function parity(builder: WorkbookBuilder, sharedStrings = true): Promise<void> {
   const old = await baselineWrite(builder, sharedStrings);
   const direct = await writeBuffer(builder, {useSharedStrings: sharedStrings});
-  expect(parts(direct)).to.deep.equal(parts(old));
+  expect(parts(direct)).toEqual(parts(old));
   await assertBaselineProjection(old);
   await assertBaselineProjection(direct);
 }
@@ -68,11 +70,11 @@ describe('direct OOXML model compatibility', () => {
     builder.image(id, {tl: {col: 0.5, row: 1.5}, br: {col: 2.5, row: 4.5}, hyperlinks: {hyperlink: 'https://example.com', tooltip: 'image'}});
     const old = await baselineWrite(builder);
     const direct = await writeBuffer(builder);
-    expect(parts(direct)).to.deep.equal(parts(old));
+    expect(parts(direct)).toEqual(parts(old));
     const loaded = await load(old);
-    expect(loaded.sheets[0].images).to.have.length(1);
+    expect(loaded.sheets[0].images).toHaveLength(1);
     const reencoded = await writeBuffer(loaded);
-    expect(digest((await load(reencoded)).sheets[0].images)).to.equal(digest(loaded.sheets[0].images));
+    expect(digest((await load(reencoded)).sheets[0].images)).toBe(digest(loaded.sheets[0].images));
   });
   it('writes plain row metadata without mutating the snapshot or adding column headers', async () => {
     const snapshot: Workbook = {meta, sheets: [{id: 7, name: 'Plain', columns: [{header: 'Do not insert', width: 20}], rows: [
@@ -81,12 +83,12 @@ describe('direct OOXML model compatibility', () => {
     ]}]};
     const copy = structuredClone(snapshot);
     const bytes = await writeBuffer(snapshot);
-    expect(snapshot).to.deep.equal(copy);
+    expect(snapshot).toEqual(copy);
     const loaded = await load(bytes);
-    expect(loaded.sheets[0].rows.map(r => r.number)).to.deep.equal([2]);
-    expect(loaded.sheets[0].rows[0]).to.include({height: 30, hidden: true});
-    expect(loaded.sheets[0].rows[0].cells[1].style?.font?.bold).to.equal(true);
-    expect(parts(bytes)['xl/worksheets/sheet1.xml']).to.include('r="4" ht="25"');
+    expect(loaded.sheets[0].rows.map(r => r.number)).toEqual([2]);
+    expect(loaded.sheets[0].rows[0]).toMatchObject({height: 30, hidden: true});
+    expect(loaded.sheets[0].rows[0].cells[1].style?.font?.bold).toBe(true);
+    expect(parts(bytes)['xl/worksheets/sheet1.xml']).toContain('r="4" ht="25"');
   });
   it('matches legacy notes and styles on blank cells', async () => {
     await parity(workbook(meta).sheet('Blank').note('A1', 'only note').style('B2', {font: {bold: true}}).row([]).row([null]).row(['kept']).note('D5', 'blank cell note'));

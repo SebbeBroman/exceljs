@@ -1,10 +1,11 @@
 import {describe, it, expect} from 'vite-plus/test';
-import {workbook, writeBuffer} from '../../../excel.ts';
+
+import {workbook, writeBuffer} from '../../../excel.js';
 import {
   openLightPackage,
   parseLightSheet,
   readLightSheet,
-} from '../../../lib/read/xlsx-light.ts';
+} from '../../../lib/read/xlsx-light.js';
 
 describe('xlsx-light', () => {
   async function multiSheetXlsx() {
@@ -27,44 +28,44 @@ describe('xlsx-light', () => {
   it('openLightPackage lists sheets without parsing sheet XML', async () => {
     const xlsx = await multiSheetXlsx();
     const pkg = await openLightPackage(xlsx);
-    expect(pkg.sheetNames).to.deep.equal(['Roster', 'Scores']);
-    expect(pkg.sheets).to.have.length(2);
-    expect(pkg.sheets[0]).to.include({
+    expect(pkg.sheetNames).toEqual(['Roster', 'Scores']);
+    expect(pkg.sheets).toHaveLength(2);
+    expect(pkg.sheets[0]).toMatchObject({
       index: 0,
       name: 'Roster',
       path: 'xl/worksheets/sheet1.xml',
     });
-    expect(pkg.sheets[1]).to.include({
+    expect(pkg.sheets[1]).toMatchObject({
       index: 1,
       name: 'Scores',
       path: 'xl/worksheets/sheet2.xml',
     });
-    expect(pkg.sharedStrings.length).to.be.greaterThan(0);
-    expect(pkg.files['xl/workbook.xml']).to.be.instanceOf(Uint8Array);
-    expect(pkg.files['xl/worksheets/sheet1.xml']).to.be.instanceOf(Uint8Array);
+    expect(pkg.sharedStrings.length).toBeGreaterThan(0);
+    expect(pkg.files['xl/workbook.xml']).toBeInstanceOf(Uint8Array);
+    expect(pkg.files['xl/worksheets/sheet1.xml']).toBeInstanceOf(Uint8Array);
   });
 
   it('parseLightSheet sheet 0 returns full string grid', async () => {
     const xlsx = await multiSheetXlsx();
     const pkg = await openLightPackage(xlsx);
     const grid = parseLightSheet(pkg, 0);
-    expect(grid.name).to.equal('Roster');
-    expect(grid.index).to.equal(0);
-    expect(grid.rows).to.deep.equal([
+    expect(grid.name).toBe('Roster');
+    expect(grid.index).toBe(0);
+    expect(grid.rows).toEqual([
       ['Name', 'Club'],
       ['Ada', 'Blue'],
       ['Bob', 'Red'],
     ]);
-    expect(grid.maxCol).to.equal(2);
-    expect(grid.lastRow).to.equal(3);
+    expect(grid.maxCol).toBe(2);
+    expect(grid.lastRow).toBe(3);
   });
 
   it('parseLightSheet selects sheet by name', async () => {
     const xlsx = await multiSheetXlsx();
     const pkg = await openLightPackage(xlsx);
     const grid = parseLightSheet(pkg, 'Scores');
-    expect(grid.name).to.equal('Scores');
-    expect(grid.rows).to.deep.equal([
+    expect(grid.name).toBe('Scores');
+    expect(grid.rows).toEqual([
       ['x', '1'],
       ['y', '2'],
     ]);
@@ -74,8 +75,8 @@ describe('xlsx-light', () => {
     const xlsx = await multiSheetXlsx();
     const pkg = await openLightPackage(xlsx);
     const grid = parseLightSheet(pkg, 0, {end: 1});
-    expect(grid.rows).to.deep.equal([['Name', 'Club']]);
-    expect(grid.lastRow).to.equal(1);
+    expect(grid.rows).toEqual([['Name', 'Club']]);
+    expect(grid.lastRow).toBe(1);
   });
 
   it('start/end + cols slice', async () => {
@@ -86,14 +87,14 @@ describe('xlsx-light', () => {
       end: 3,
       cols: {start: 1, end: 1},
     });
-    expect(grid.rows).to.deep.equal([['Ada'], ['Bob']]);
+    expect(grid.rows).toEqual([['Ada'], ['Bob']]);
   });
 
   it('cols as discrete number[]', async () => {
     const xlsx = await multiSheetXlsx();
     const pkg = await openLightPackage(xlsx);
     const grid = parseLightSheet(pkg, 0, {cols: [2], start: 1, end: 2});
-    expect(grid.rows).to.deep.equal([['Club'], ['Blue']]);
+    expect(grid.rows).toEqual([['Club'], ['Blue']]);
   });
 
   it('stringifies numbers and booleans like cellToDisplayString', async () => {
@@ -106,7 +107,7 @@ describe('xlsx-light', () => {
         .cell('D1', false),
     );
     const grid = await readLightSheet(xlsx, 0);
-    expect(grid.rows[0]).to.deep.equal(['x', '42', 'TRUE', 'FALSE']);
+    expect(grid.rows[0]).toEqual(['x', '42', 'TRUE', 'FALSE']);
   });
 
   it('skips blank rows by default', async () => {
@@ -118,8 +119,8 @@ describe('xlsx-light', () => {
         .cell('A4', 'y'), // row 3 empty
     );
     const grid = await readLightSheet(xlsx, 0);
-    expect(grid.rows.map(r => r[0])).to.deep.equal(['x', '42', 'y']);
-    expect(grid.lastRow).to.equal(4);
+    expect(grid.rows.map(r => r[0])).toEqual(['x', '42', 'y']);
+    expect(grid.lastRow).toBe(4);
   });
 
   it('blankrows: true keeps empty rows present in XML when present', async () => {
@@ -139,12 +140,12 @@ describe('xlsx-light', () => {
     const pkg = await openLightPackage(xlsx);
     const skipped = parseLightSheet(pkg, 0, {blankrows: false});
     // row with empty string may still show as '' after stringify — skip if all defval
-    expect(skipped.rows.map(r => r[0])).to.deep.equal(['a', 'c']);
+    expect(skipped.rows.map(r => r[0])).toEqual(['a', 'c']);
 
     const kept = parseLightSheet(pkg, 0, {blankrows: true});
-    expect(kept.rows.length).to.be.greaterThanOrEqual(2);
-    expect(kept.rows[0]?.[0]).to.equal('a');
-    expect(kept.rows[kept.rows.length - 1]?.[0]).to.equal('c');
+    expect(kept.rows.length).toBeGreaterThanOrEqual(2);
+    expect(kept.rows[0]?.[0]).toBe('a');
+    expect(kept.rows[kept.rows.length - 1]?.[0]).toBe('c');
   });
 
   it('values: cell returns typed CellValue grid', async () => {
@@ -156,15 +157,15 @@ describe('xlsx-light', () => {
         .cell('C1', true),
     );
     const grid = await readLightSheet(xlsx, 0, {values: 'cell'});
-    expect(grid.rows[0]?.[0]).to.equal('hi');
-    expect(grid.rows[0]?.[1]).to.equal(7);
-    expect(grid.rows[0]?.[2]).to.equal(true);
+    expect(grid.rows[0]?.[0]).toBe('hi');
+    expect(grid.rows[0]?.[1]).toBe(7);
+    expect(grid.rows[0]?.[2]).toBe(true);
   });
 
   it('throws clear error for missing sheet', async () => {
     const xlsx = await multiSheetXlsx();
     const pkg = await openLightPackage(xlsx);
-    expect(() => parseLightSheet(pkg, 'Nope')).to.throw(/Sheet not found/);
-    expect(() => parseLightSheet(pkg, 99)).to.throw(/Sheet not found/);
+    expect(() => parseLightSheet(pkg, 'Nope')).toThrow(/Sheet not found/);
+    expect(() => parseLightSheet(pkg, 99)).toThrow(/Sheet not found/);
   });
 });

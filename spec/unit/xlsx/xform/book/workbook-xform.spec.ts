@@ -1,16 +1,16 @@
-// @vitest-migrated
+import {describe} from 'vite-plus/test';
 import fs from 'node:fs';
 import testXformHelper from '../test-xform-helper.js';
-import __json_0 from './data/book.1.1.json';
-import __json_1 from './data/book.1.3.json';
-import __json_2 from './data/book.2.3.json';
+import __json_0 from './data/book.1.1.json' with {type: 'json'};
+import __json_1 from './data/book.1.3.json' with {type: 'json'};
+import __json_2 from './data/book.2.3.json' with {type: 'json'};
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const WorkbookXform = verquire('xlsx/xform/book/workbook-xform');
+import WorkbookXform from '../../../../../lib/xlsx/xform/book/workbook-xform.js';
 
 const expectations = [
   {
