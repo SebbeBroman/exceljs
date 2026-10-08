@@ -1,0 +1,98 @@
+{
+  "rows": [
+    {
+      "sheetName": "Values",
+      "sheetId": 1,
+      "rowNumber": 1,
+      "values": [
+        null,
+        "Date",
+        "Label",
+        "Number"
+      ]
+    },
+    {
+      "sheetName": "Values",
+      "sheetId": 1,
+      "rowNumber": 2,
+      "values": [
+        null,
+        44230,
+        "Ada",
+        12
+      ]
+    },
+    {
+      "sheetName": "Values",
+      "sheetId": 1,
+      "rowNumber": 3,
+      "values": [
+        null,
+        44656,
+        " plain",
+        false,
+        {
+          "error": "#N/A"
+        }
+      ]
+    },
+    {
+      "sheetName": "Values",
+      "sheetId": 1,
+      "rowNumber": 4,
+      "values": [
+        null,
+        null,
+        "Link",
+        {
+          "formula": "C2*2",
+          "result": 24
+        }
+      ]
+    },
+    {
+      "sheetName": "Values",
+      "sheetId": 1,
+      "rowNumber": 7,
+      "values": [
+        null,
+        null,
+        null,
+        "sparse",
+        null,
+        null,
+        null,
+        77
+      ]
+    },
+    {
+      "sheetName": "Values",
+      "sheetId": 1,
+      "rowNumber": 8,
+      "values": [
+        null,
+        "<& unicode é"
+      ]
+    },
+    {
+      "sheetName": "Last",
+      "sheetId": 3,
+      "rowNumber": 1,
+      "values": [
+        null,
+        1,
+        2
+      ]
+    },
+    {
+      "sheetName": "Last",
+      "sheetId": 3,
+      "rowNumber": 2,
+      "values": [
+        null,
+        3,
+        4
+      ]
+    }
+  ]
+}

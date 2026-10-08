@@ -1,0 +1,101 @@
+{
+  "1519293514-KRISHNAPATNAM_LINE_UP.xlsx": {
+    "hash": "660fedadd2cc7a3909e8e1a26cf9f4799b2ac39ed3a3fc4158073c1e81d59359"
+  },
+  "1904.xlsx": {
+    "hash": "74da13260139432a9319ccfbb45b91d71dee0f07ea48f2cbff51fada902b3c15"
+  },
+  "bogus-defined-name.xlsx": {
+    "hash": "1d1dde89500e8d09788e9a3c807f3b5e3304b101d522c9d9e7b0ac947aa9a0c8"
+  },
+  "chart-sheet.xlsx": {
+    "hash": "d9ec834055a3303f2f04fa170a30427edfd426573e0998a321dc6764a5065799"
+  },
+  "dateIssue.xlsx": {
+    "hash": "c6703f09022646b744a85b7d0bb921ebd5c418332d217736ebc95bd435f0cc18"
+  },
+  "duplicateRowTest.xlsx": {
+    "hash": "9dd2e926643348d336b5988dfad03b2262964111a0e372b770c647cea6f14fe2"
+  },
+  "fibonacci.xlsx": {
+    "hash": "02f03c07c9c83fa5ce4ff0185ad00fc664ec7dd2465e57f6f4787c3b1a400f6c"
+  },
+  "formulas.xlsx": {
+    "hash": "71954a275e34d0e9c19b74fb96c5f26dd789ce15e647bbfa4607568b4ba98fad"
+  },
+  "gold.xlsx": {
+    "hash": "26e0e3127610f8b9fb1cfd87fd422c6c9de10341aef1878b03d56f5e82fcb2b7"
+  },
+  "images.xlsx": {
+    "hash": "3a3d04ed3e346cb2f73070914dd0ed5c8e0d6c7ad883eec03d3838c85c84f9a7"
+  },
+  "invalid-xml.xlsx": {
+    "error": "non-whitespace outside of root node"
+  },
+  "many-columns.xlsx": {
+    "hash": "d2d1ed15f0a74700d881e26a8d3c51a21721a61d0693ecd9c5e591a52dda1b93"
+  },
+  "missing-bits.xlsx": {
+    "hash": "4d0c78081ca2f5680ef36004cb66951b44e701b8aae51ec38c33a0f1836c2b3f"
+  },
+  "shared_string_with_escape.xlsx": {
+    "hash": "e5056f85548daa1f43dd541a866045ff8fa81438c0d949c83d3883a1ad9ce8d8"
+  },
+  "test-issue-1364.xlsx": {
+    "hash": "776c8c1a3ed6bc23d7cef0f8f7869587142363fb0df37292c82e4d18987b3f98"
+  },
+  "test-issue-1575.xlsx": {
+    "hash": "113a24d0701c8a03bc8585ea2c9cfa64f068d1170ba92a7895fdff232fa01527"
+  },
+  "test-issue-163.xlsx": {
+    "hash": "0c5b6c7ec3dd11fcdafbee09c6bccb64e5e37c1c1df16bde8372ee7e077d84d4"
+  },
+  "test-issue-1669.xlsx": {
+    "hash": "96612969d68c414c2ee2345eb570c94d5fe43dd7bda2595ca2ddcf6ab1d41efc"
+  },
+  "test-issue-176.xlsx": {
+    "hash": "e97807f480b29b5ad9e9a6e73b8a509713f8f0e9f5c2612efb46b5eed69fd8d3"
+  },
+  "test-issue-257.xlsx": {
+    "hash": "5f1696628b2698a086e13db5ef32743d32e5ee9c81cd1468f9fc257a7e766a7e"
+  },
+  "test-issue-623.xlsx": {
+    "hash": "4e82ff64de7fd2accd1f74916c178844daedb78302525cb284aacc28334b3225"
+  },
+  "test-issue-771.xlsx": {
+    "hash": "00179fb9864932d6b95fc60c2a969c96a447bf8202deb7bbf2a1aac7903cf961"
+  },
+  "test-issue-877.xlsx": {
+    "hash": "71523740c2139b4305460275411c5af9f8461cebad1a3b61b01a2b8b4443c04b"
+  },
+  "test-issue-880.xlsx": {
+    "hash": "86eb0ddf1b7cca1b6cd2aebe2f097a0fe913ef0e3080655216e8c790e0eb06e8"
+  },
+  "test-issue-988.xlsx": {
+    "hash": "3783ab560ea3988d5b91fc0c69a1611cc5c4a9985c007f49481f57485cca70c7"
+  },
+  "test-pr-1204.xlsx": {
+    "hash": "c06523264b6dbaf41650c4d87d5ccc444f1aadebc50de75bc54e3986a054e61d"
+  },
+  "test-pr-1220.xlsx": {
+    "hash": "3254c789a15a0f265165b25e8e2c7e9e44edb8579d89a3db11b22c1ecc2ad259"
+  },
+  "test-pr-567.xlsx": {
+    "hash": "56480d0457caeb43d09e8f203953b61cc6fcb24b5158a30d103cd619d808f9e9"
+  },
+  "test-pr-728.xlsx": {
+    "hash": "a168957fcd272741d904550aaa3c0bcd70d907484587f543f315133f188e9cfd"
+  },
+  "test-row-styles.xlsx": {
+    "hash": "ff9bd8c69e930fd9929bc684dd0e86c79e1240bf16562d9d33ae051d95e0d966"
+  },
+  "hidden-test/google-sheets.xlsx": {
+    "hash": "f14e55c9d6d6a21ce1221ba940034a2f249209e40ad6300564a4beb9677a866b"
+  },
+  "hidden-test/libre-calc-as-excel-2007-365.xlsx": {
+    "hash": "dce34c338dbdee439dca21d52bb1e7c8f89822037c8d080c96c5a668fd1aae00"
+  },
+  "hidden-test/libre-calc-as-office-open-xml-spreadsheet.xlsx": {
+    "hash": "f57c24306762632e757f0043a1268b9bc1753daff3f10bc6b7b8c39ce26802f5"
+  }
+}

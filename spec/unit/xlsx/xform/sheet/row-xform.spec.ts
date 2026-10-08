@@ -3,7 +3,7 @@ import testXformHelper from '../test-xform-helper.js';
 
 const RowXform = verquire('xlsx/xform/sheet/row-xform');
 const SharedStringsXform = verquire('xlsx/xform/strings/shared-strings-xform');
-const Enums = verquire('doc/enums');
+const Enums = verquire('model/enums');
 
 const fakeStyles = {
   addStyleModel(style) {

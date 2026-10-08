@@ -191,7 +191,7 @@ await streamWrite('report.xlsx', async w => {
 
 // Optional: stream rows back without a full plain model
 for await (const { sheetName, rowNumber, values } of streamRead('big.xlsx')) {
-  // values[1] is column A (legacy sparse layout)
+  // values[1] is column A (one-based sparse layout)
   console.log(sheetName, rowNumber, values[1]);
 }
 ```
@@ -231,7 +231,7 @@ await writeCsvFile('out.csv', data);
 | `@sebbebroman/exceljs` | Builder, `writeBuffer`, `load`, `csv`, enums (browser-safe) |
 | `@sebbebroman/exceljs/node` | + `writeFile` / `readFile` / `streamWrite` / `streamRead` / `readCsvFile` / `writeCsvFile` |
 
-The supported runtime entry points are the main entry and `/node`; `./package.json` is also exported. There is no `./csv`, `./stream/xlsx`, or default `ExcelJS` class. Types resolve to [`excel.d.ts`](./excel.d.ts) and [`node.d.ts`](./node.d.ts). Internal Doc Workbook / legacy stream classes are not public.
+The supported runtime entry points are the main entry and `/node`; `./package.json` is also exported. There is no `./csv`, `./stream/xlsx`, or default `ExcelJS` class. Types resolve to [`excel.d.ts`](./excel.d.ts) and [`node.d.ts`](./node.d.ts). The mutable document API has been removed; stream coordinators are internal.
 
 Pipeline overview: [ARCHITECTURE.md](./ARCHITECTURE.md) (op-log → materialize → XLSX).
 
@@ -279,7 +279,7 @@ pnpm bench:browser         # Chrome headless: size + write/read vs exceljs brows
 pnpm bench:browser -- --rows 1000 --runs 5
 ```
 
-Contenders (Node): **@sebbebroman/exceljs builder**, **exceljs@4** (npm), optionally **@sebbebroman/exceljs legacy DocWorkbook**.
+Contenders (Node): **@sebbebroman/exceljs builder**, **exceljs@4** (npm).
 
 Contenders (browser): **@sebbebroman/exceljs** esbuild browser bundle vs **exceljs** official `dist/exceljs.min.js` (their browser field). Node often favors exceljs; browser compares the polyfill-heavy UMD build against the ESM/fflate path. Needs Chrome (`CHROME_PATH` override supported).
 
@@ -299,7 +299,7 @@ Contenders (browser): **@sebbebroman/exceljs** esbuild browser bundle vs **excel
 | Sheet protection | ✅ write; load re-encodes hash (password not recoverable) |
 | Tables / images / defined names | ✅ write; load best-effort |
 | Pivot builder API | later (no `.pivot()` yet — read/write of pivot tables is best-effort via load) |
-| Drop internal DocWorkbook bridge | later (implementation detail today) |
+| Drop internal DocWorkbook bridge | ✅ buffered and streaming paths; mutable document API removed |
 
 > **Column headers:** `ColumnInput.header` as an array uses only the first
 > line — multi-row headers are not supported and extra lines are dropped
@@ -311,8 +311,8 @@ Measured by `pnpm test:browser-bundle` (esbuild minify, write-only builder path,
 
 | Build | Size |
 |-------|------|
-| Single-file minified | ~335 KB (gzip ~96 KB) |
-| Code-split entry | ~201 KB (excludes async chunks needed at runtime; total ~333 KB) |
+| Single-file minified | ~297 KiB (gzip ~87 KiB) |
+| Code-split entry | ~164 KiB (excludes async chunks needed at runtime; total ~295 KiB) |
 
 Not representative of `load`/styles/tables/comments/CSV builds. Quote with fixture + flags + commit hash.
 

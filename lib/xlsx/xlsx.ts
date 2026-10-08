@@ -28,7 +28,6 @@ import {
   loadVmlNotesXform,
   loadPivotXforms,
 } from './lazy-xforms.js';
-import {ensureDocFeatures} from '../doc/doc-features.js';
 import RelType from './rel-type.js';
 import type {Readable, Writable} from 'node:stream';
 
@@ -61,24 +60,6 @@ function sheetNeedsCf(worksheet: XlsxModel): boolean {
   return Boolean(
     worksheet && worksheet.conditionalFormattings && worksheet.conditionalFormattings.length,
   );
-}
-
-function modelNeedsDocFeatures(model: XlsxModel): boolean {
-  if (!model) return false;
-  if (model.media && model.media.length) return true;
-  if (model.pivotTables && model.pivotTables.length) return true;
-  if (model.worksheets) {
-    for (const ws of model.worksheets) {
-      if (ws.media && ws.media.length) return true;
-      if (ws.tables && ws.tables.length) return true;
-      if (ws.pivotTables && ws.pivotTables.length) return true;
-      // media on sheet model after reconcile is ws.media; before write it's from doc model
-      if (ws._media && ws._media.length) return true;
-    }
-  }
-  // tables collated onto model during prepare
-  if (model.tables && model.tables.length) return true;
-  return false;
 }
 
 // The fused cell reader is never needed when exporting a workbook.
@@ -167,16 +148,6 @@ class XLSX {
     const needsCf = (model.worksheets || []).some(sheetNeedsCf);
     if (needsCf) {
       await worksheetXform.installCfXforms();
-    }
-
-    // Image/Table classes needed when hydrating worksheet doc models (workbook.model setter)
-    if (
-      modelNeedsDocFeatures(model) ||
-      ((model.worksheets || []) as XlsxModel[]).some(
-        (ws: XlsxModel) => (ws.tables && ws.tables.length) || (ws.media && ws.media.length),
-      )
-    ) {
-      await ensureDocFeatures();
     }
 
     workbookXform.reconcile(model);

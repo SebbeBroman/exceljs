@@ -5,7 +5,6 @@ import {
   isDenseRectangularOps,
   optimizeOps,
 } from '../../../lib/compile/ops-to-model.ts';
-import {_isDenseMaterialize} from '../../../lib/compile/ops-to-doc-workbook.ts';
 import type {BuilderOp} from '../../../lib/builder/ops.ts';
 
 describe('optimizeOps', () => {
@@ -121,25 +120,24 @@ describe('dense rectangular path', () => {
       ['b', 2],
     ]);
     expect(isDenseRectangularOps(b._ops)).to.equal(true);
-    expect(_isDenseMaterialize(b._ops)).to.equal(true);
   });
 
   it('is not dense when styles/merges/row+cell patches present', () => {
     const styled = workbook().sheet('S').rows([[1]]).style('A1', {font: {bold: true}});
-    expect(_isDenseMaterialize(styled._ops)).to.equal(false);
+    expect(isDenseRectangularOps(styled._ops)).to.equal(false);
 
     const merged = workbook().sheet('S').rows([[1, 2]]).merge('A1:B1');
-    expect(_isDenseMaterialize(merged._ops)).to.equal(false);
+    expect(isDenseRectangularOps(merged._ops)).to.equal(false);
 
     // Existing rows + random cell stays on general path (no cell→rows coalesce).
     const patched = workbook().sheet('S').rows([[1]]).cell('A2', 9);
-    expect(_isDenseMaterialize(patched._ops)).to.equal(false);
+    expect(isDenseRectangularOps(patched._ops)).to.equal(false);
   });
 
   it('cell-by-cell builder becomes dense after optimize', () => {
     let b = workbook().sheet('S');
     b = b.cell('A1', 'a').cell('B1', 1).cell('A2', 'b').cell('B2', 2);
-    expect(_isDenseMaterialize(b._ops)).to.equal(true);
+    expect(isDenseRectangularOps(optimizeOps(b._ops))).to.equal(true);
   });
 
   it('dense write → load matches general (cell-by-cell) path values', async () => {
@@ -191,7 +189,6 @@ describe('dense rectangular path', () => {
         [3, 'c'],
       ]);
 
-    expect(_isDenseMaterialize(fused._ops)).to.equal(true);
     const a = compileToPlainWorkbook(fused._ops);
     const b = compileToPlainWorkbook(bulk._ops);
     expect(a.sheets[0]!.rows).to.deep.equal(b.sheets[0]!.rows);

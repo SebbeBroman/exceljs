@@ -7,12 +7,6 @@ import {fileURLToPath} from 'node:url';
 import {expect as viExpect, beforeAll, afterAll, beforeEach, afterEach} from 'vite-plus/test';
 import {createChaiExpect} from './chai-expect.ts';
 import verquire from '../utils/verquire.ts';
-// Enable optional CSV on Doc Workbook for historical tests (internal csv-entry)
-import '../../lib/csv-entry.ts';
-// Preload lazy doc features so sync APIs (addTable/addImage/…) work under Vitest.
-// createRequire cannot load .ts sources; dynamic import via Vite can.
-import {ensureDocFeatures} from '../../lib/doc/doc-features.ts';
-
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
 // Ensure integration tests can write under spec/out
@@ -32,6 +26,3 @@ globalThis.after = afterAll;
 // beforeEach/afterEach already global via vitest globals; ensure present
 globalThis.beforeEach = beforeEach;
 globalThis.afterEach = afterEach;
-
-// Top-level await: Vitest setup files may be async ESM
-await ensureDocFeatures();

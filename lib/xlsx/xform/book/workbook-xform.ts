@@ -212,6 +212,9 @@ class WorkbookXform extends BaseXform<WorkbookModel> {
       },
     );
 
+    // Worksheet parsing is concurrent; restore the order declared in workbook.xml.
+    m.worksheets = worksheets;
+
     // reconcile print areas
     const definedNames: unknown[] = [];
     const definedNameList =

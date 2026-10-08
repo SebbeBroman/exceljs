@@ -6,11 +6,6 @@
  */
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import ExcelJS from '../../lib/exceljs.nodejs.ts';
-import {enableCsv} from '../../lib/csv-entry.ts';
-
-// Ensure CSV API is available on the same Workbook class tests use
-enableCsv(ExcelJS.Workbook);
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const libRoot = path.resolve(__dirname, '../../lib');
@@ -20,12 +15,8 @@ const modules = import.meta.glob('../../lib/**/*.{ts,js}', {eager: true});
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const cache: Record<string, any> = Object.create(null);
-cache.exceljs = ExcelJS;
 
 function normalizeKey(modPath: string): string {
-  if (modPath === 'exceljs') {
-    return '../../lib/exceljs.nodejs.ts';
-  }
   const withoutExt = modPath.replace(/\.js$/, '');
   const tsKey = `../../lib/${withoutExt}.ts`;
   const jsKey = `../../lib/${withoutExt}.js`;
@@ -41,7 +32,6 @@ function normalizeKey(modPath: string): string {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function verquire(modPath: string): any {
   if (cache[modPath]) return cache[modPath];
-  if (modPath === 'exceljs') return ExcelJS;
 
   const key = normalizeKey(modPath);
   const mod = modules[key] as {default?: unknown} | undefined;

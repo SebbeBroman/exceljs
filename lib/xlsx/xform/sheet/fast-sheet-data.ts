@@ -4,7 +4,7 @@
  * The classic pipeline parses sheet XML into per-cell xform models
  * (parseSax event objects + CellXformModel allocs), reconciles every cell
  * (style lookup, shared-string resolve, hyperlink/comment probes), then
- * hydrates DocWorkbook rows (another per-cell model copy). For dense sheets
+ * projects plain snapshot rows (another per-cell model copy). For dense sheets
  * that is the bulk of `load()` time.
  *
  * This module fuses all three stages, emitting *reconciled* row models —
@@ -22,7 +22,7 @@
  */
 
 import {Parser} from 'saxen';
-import Enums from '../../../doc/enums.js';
+import Enums from '../../../model/enums.js';
 import colCache from '../../../utils/col-cache.js';
 import utils from '../../../utils/utils.js';
 import type {CellXformModel} from './cell-xform.js';

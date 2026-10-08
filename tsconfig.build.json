@@ -12,14 +12,5 @@
     "rewriteRelativeImportExtensions": true
   },
   "include": ["lib/**/*.ts", "lib/**/*.d.ts", "excel.ts", "node.ts"],
-  "exclude": [
-    "node_modules",
-    "build",
-    "dist",
-    "spec",
-    "test",
-    "scripts",
-    "lib/csv-entry.ts",
-    "lib/exceljs.nodejs.ts"
-  ]
+  "exclude": ["node_modules", "build", "dist", "spec", "test", "scripts"]
 }

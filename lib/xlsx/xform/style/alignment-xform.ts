@@ -1,4 +1,4 @@
-import Enums from '../../../doc/enums.js';
+import Enums from '../../../model/enums.js';
 import utils from '../../../utils/utils.js';
 import BaseXform from '../base-xform.js';
 import type {XmlStreamLike, XmlNode} from '../base-xform.js';

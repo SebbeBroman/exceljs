@@ -270,9 +270,9 @@ Phases 1–7 of the builder rewrite are complete for the **public** product:
 
 **Write-only / limited round-trip:** protect password (hash only on load), complex image anchors, pivot tables.
 
-**Not yet:** pivot builder API, full ExcelJS feature surface, direct op-log encode without DocWorkbook.
+**Not yet:** pivot builder API, full ExcelJS feature surface.
 
-**Internal (not public):** mutable Doc Workbook / Worksheet classes, `lib/exceljs.nodejs.ts`, `lib/csv-entry.ts`, stream `WorkbookWriter` / `WorkbookReader`. These back tests and the encode/decode bridge. See [ARCHITECTURE.md](./ARCHITECTURE.md).
+**Removed internally:** mutable Workbook/Worksheet/Row/Cell/Column classes, `lib/doc`, namespace/CSV attachment entries, old compiler bridges, and legacy `index.d.ts`. Buffered and Node streaming paths use encoder models and sparse value arrays directly. Reusable feature helpers live in `lib/model`; internal stream coordinators are not exported. See [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ## Tree-shaking
 

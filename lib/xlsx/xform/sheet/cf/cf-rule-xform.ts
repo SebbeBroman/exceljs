@@ -1,7 +1,7 @@
 import BaseXform from '../../base-xform.js';
 import CompositeXform from '../../composite-xform.js';
 import type {XmlStreamLike, XmlNode} from '../../base-xform.js';
-import Range from '../../../../doc/range.js';
+import Range from '../../../../model/range.js';
 import DatabarXform from './databar-xform.js';
 import ExtLstRefXform from './ext-lst-ref-xform.js';
 import FormulaXform from './formula-xform.js';

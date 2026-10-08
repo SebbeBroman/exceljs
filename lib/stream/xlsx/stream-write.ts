@@ -110,14 +110,12 @@ async function consumeRows(
 ): Promise<void> {
   if (hasAsyncIterator(rows)) {
     for await (const values of rows) {
-      const row = ws.addRow(values);
-      row.commit();
+      ws.writeRow(values);
     }
     return;
   }
   for (const values of rows) {
-    const row = ws.addRow(values);
-    row.commit();
+    ws.writeRow(values);
   }
 }
 
@@ -135,8 +133,7 @@ function applyColumns(ws: AnyWs, columns: ColumnInput[]): void {
     outlineLevel: c.outlineLevel,
   }));
   if (headers.some(h => h != null && h !== '')) {
-    const row = ws.addRow(headers.map(h => h ?? null));
-    row.commit();
+    ws.writeRow(headers.map(h => h ?? null));
   }
 }
 
@@ -176,8 +173,7 @@ class StreamSheetHandleImpl implements StreamSheetHandle {
   }
 
   row(values: RowInput): StreamSheetHandle {
-    const row = this.ws.addRow(values);
-    row.commit();
+    this.ws.writeRow(values);
     return this;
   }
 

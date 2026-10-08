@@ -1,6 +1,6 @@
-import Range from '../../../doc/range.js';
+import Range from '../../../model/range.js';
 import colCache from '../../../utils/col-cache.js';
-import Enums from '../../../doc/enums.js';
+import Enums from '../../../model/enums.js';
 
 export interface MergeInput {
   address: string;

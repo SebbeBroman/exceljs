@@ -70,7 +70,7 @@ export type {
 } from './lib/model/types.js';
 
 // Enums still useful for formula / value discrimination when reading later
-import enums from './lib/doc/enums.js';
+import enums from './lib/model/enums.js';
 
 export const {ValueType, FormulaType, RelationshipType, DocumentType, ReadingOrder, ErrorValue} =
   enums;

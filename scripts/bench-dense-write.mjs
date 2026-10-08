@@ -4,8 +4,8 @@
  *
  * Compares:
  *   A) builder dense path: workbook().sheet().rows(N×K).writeBuffer()
- *   B) DocWorkbook addRow loop + xlsx.writeBuffer (legacy-style)
- *   C) builder materialize only (no zip) via internal compile path if available
+ *   B) exceljs@4 addRow loop + xlsx.writeBuffer (legacy-style)
+ *   C) builder materialize only (no zip) via plain snapshot compilation
  *
  * Usage:
  *   pnpm build && node scripts/bench-dense-write.mjs [rows]
@@ -20,10 +20,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
 
 const excelUrl = pathToFileURL(path.join(root, 'dist/excel.js')).href;
-const docWbUrl = pathToFileURL(path.join(root, 'dist/lib/doc/workbook.js')).href;
 
 const {workbook} = await import(excelUrl);
-const DocWorkbook = (await import(docWbUrl)).default;
+import ExcelJS from 'exceljs';
 
 const nRows = parseInt(process.argv[2] || '5000', 10);
 const nCols = 8;
@@ -82,8 +81,8 @@ const builder = await time('builder.rows dense writeBuffer', async () => {
   if (buf.byteLength < 1000) throw new Error('tiny buffer');
 });
 
-const docLoop = await time('DocWorkbook addRow loop writeBuffer', async () => {
-  const wb = new DocWorkbook();
+const docLoop = await time('exceljs@4 addRow loop writeBuffer', async () => {
+  const wb = new ExcelJS.Workbook();
   const ws = wb.addWorksheet('data');
   for (let i = 0; i < grid.length; i++) {
     ws.addRow(grid[i]);

@@ -3,7 +3,7 @@ import utils from '../../../utils/utils.js';
 import colCache from '../../../utils/col-cache.js';
 import BaseXform from '../base-xform.js';
 import type {XmlStreamLike, XmlNode} from '../base-xform.js';
-import Range from '../../../doc/range.js';
+import Range from '../../../model/range.js';
 
 export interface DataValidationEntry {
   type: string;

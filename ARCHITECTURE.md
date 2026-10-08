@@ -9,8 +9,7 @@ Short map of how `@sebbebroman/exceljs` turns builder calls into `.xlsx` bytes.
 | `@sebbebroman/exceljs`      | Browser-safe: `workbook`, `writeBuffer`, `load`, `csv`, enums                     |
 | `@sebbebroman/exceljs/node` | Same + `writeFile` / `readFile` / `streamWrite` / `streamRead` / CSV file helpers |
 
-`./package.json` is also exported; the package declares `sideEffects: false`. Legacy modules under `lib/`
-(`exceljs.nodejs.ts`, `csv-entry.ts`, Doc classes, stream writers) are **internal**.
+`./package.json` is also exported; the package declares `sideEffects: false`. Internal stream coordinators and OOXML transforms are not package exports. The mutable document API and namespace entries have been removed.
 
 ## Write path (builder → buffer)
 
@@ -21,7 +20,7 @@ workbook().sheet(…).row(…).cell(…)
    op-log (BuilderOp[])     lib/builder/*
         │
         ▼
- materialize DocWorkbook     lib/compile/ops-to-doc-workbook.ts
+ compile encoder model      lib/compile/ops-to-xlsx-model.ts
         │
         ▼
    XLSX.encode / zip          lib/xlsx/*  (+ fflate)
@@ -31,9 +30,9 @@ workbook().sheet(…).row(…).cell(…)
 ```
 
 - **Op-log:** fluent builder records ops; does not mutate a cell graph while chaining.
-- **Materialize:** ops applied onto the legacy mutable `DocWorkbook` so the existing OOXML encoder can run. Dense rectangular op-logs use a bulk `addRows` path.
+- **Compile:** optimized ops populate the OOXML encoder model directly, using sparse row maps and cell slots. No Workbook/Worksheet/Row/Cell document instances are constructed. Plain snapshots import row/cell models directly without a per-cell op-log. Tables place values directly into model cells; image anchors use dimension-only helpers.
 - **Encode:** `writeBuffer` → XLSX writer → zip (default deflate **level 1** for speed; override with `{ zip: { level: 6 } }` for smaller files). Optional features (drawings, tables, comments, pivots) load via dynamic `import()` where possible.
-- **Cell-by-cell ops:** style-free `.cell()` / `.cells()` logs coalesce into bulk `.rows()` during optimize so they hit the dense materialize path.
+- **Cell-by-cell ops:** style-free `.cell()` / `.cells()` logs coalesce into bulk `.rows()` during optimize so they use bulk row compilation.
 
 Plain snapshots:
 
@@ -53,10 +52,10 @@ load(bytes) / readFile(path)
    XLSX.decode                 lib/xlsx/load.ts + xforms
         │
         ▼
-   DocWorkbook (internal)
+   reconciled encoder model
         │
         ▼
-   plain { meta, sheets }     lib/compile/doc-to-plain.ts
+   plain { meta, sheets }     lib/compile/xlsx-model-to-plain.ts
 ```
 
 Edit loop: `workbook(await load(buf)).sheet(…).cell(…).writeBuffer()`.
@@ -67,8 +66,9 @@ without waiting on other sheets. Sheets eligible for the fused fast path
 (`lib/xlsx/xform/sheet/fast-sheet-data.ts`) parse + reconcile `sheetData`
 in one saxen pass (style/date/shared-string/formula/hyperlink/comment
 resolution inline, per-sheet style caches); sheet head/tail still parses
-with WorksheetXform and hydrate reuses reconciled models in place
-(`Row._setCompactFromModel`, no per-cell copy). Anything the fused parser
+with WorksheetXform. Public `load` projects reconciled cell models directly
+into the plain snapshot, avoiding document hydration. Workbook sheet order is restored
+explicitly after concurrent parsing. Anything the fused parser
 does not implement (run fonts, phonetics, extensions, `ignoreNodes`, …)
 falls back to the classic path — correctness first. Disable for diagnostics
 via `setFastSheetDataEnabled(false)` (test-only hook).
@@ -105,25 +105,38 @@ Named helpers in `lib/csv/public.ts` (`csv.parse` / `csv.stringify`). Builder `.
 
 ## Streaming (Node only)
 
-- **`streamWrite`:** rows committed as written (bounded memory) via internal stream worksheet writer.
-- **`streamRead`:** async row iteration without a full plain model.
-- Legacy `WorkbookWriter` / `WorkbookReader` classes are not package exports.
+- **`streamWrite`:** incoming arrays/keyed objects compile directly into one encoder row model and flush immediately; no mutable rows, cells, or column objects.
+- **`streamRead`:** SAX parsing yields one-based sparse value arrays without a document graph. Styles can be cached to decode dates. Shared-string/style caches and ZIP output buffering still have their own memory costs.
+- `WorkbookWriter` / `WorkbookReader` are internal package/stream coordinators.
 
-## Why DocWorkbook remains
+## Legacy removal
 
-Phase 7 does **not** delete `lib/doc/*`. The op-log → DocWorkbook → XLSX bridge is an implementation detail; public callers never see the class. A later milestone may encode from ops/plain models directly and drop the mutable graph.
+There is no `lib/doc` directory, mutable Workbook/Worksheet/Row/Cell/Column API,
+legacy CSV attachment, namespace entry, synchronous feature loader, or legacy
+`index.d.ts`. Reusable range, name, note, image and enum helpers live in `lib/model`;
+structural feature types live in `lib/model/schema.ts` and encoder types in
+`lib/model/xlsx-model.ts`.
+
+Historical tests tied to the unsupported mutable API are retired. Encoder tests,
+public builder/CSV tests, range/name/anchor tests, and saved compatibility fixtures
+remain. Golden XML covers values, styles, sparse edits, merges, notes, validation,
+conditional formatting, tables, images, printing and sheet order. The fixture sweep
+also checks 33 existing XLSX projections against the pre-rewrite output.
+
+See [the buffered comparison](scripts/bench/doc-bridge-results.md) and
+[the legacy removal comparison](scripts/bench/legacy-removal-results.md).
 
 ## Bundle size (indicative)
 
 From `pnpm test:browser-bundle` (esbuild minify, **write-only** builder path;
 CSV enabled, no Node polyfills):
 
-| Build                       | Size (0.1.0)        |
-| --------------------------- | ------------------- |
-| Single-file minified        | **334.7 KB**        |
-| Single-file gzip            | **96.4 KB**         |
-| Code-split write-only entry | **201.2 KB**        |
-| Code-split write-only total | 332.6 KB (32 files) |
+| Build                       | Size (0.1.0)         |
+| --------------------------- | -------------------- |
+| Single-file minified        | **290.0 KiB**        |
+| Single-file gzip            | **84.8 KiB**         |
+| Code-split write-only entry | **162.2 KiB**        |
+| Code-split write-only total | 287.9 KiB (31 files) |
 
 Re-measure after dependency or encoder changes:
 
@@ -134,16 +147,15 @@ pnpm test:esm
 
 ## Key modules
 
-| Path                              | Purpose                             |
-| --------------------------------- | ----------------------------------- |
-| `excel.ts` / `node.ts`            | Package entries                     |
-| `lib/builder/`                    | Op-log builder                      |
-| `lib/model/types.ts`              | Plain workbook types                |
-| `lib/compile/`                    | Ops ↔ DocWorkbook ↔ plain           |
-| `lib/xlsx/`                       | Encode/decode OOXML                 |
-| `lib/csv/public.ts`               | Public CSV API                      |
-| `lib/stream/xlsx/stream-write.ts` | Node `streamWrite`                  |
-| `lib/stream/xlsx/stream-read.ts`  | Node `streamRead`                   |
-| `lib/doc/`                        | Internal mutable document model     |
-| `excel.d.ts`                      | Public TypeScript types             |
-| `index.d.ts`                      | Legacy typings (internal reference) |
+| Path                              | Purpose                              |
+| --------------------------------- | ------------------------------------ |
+| `excel.ts` / `node.ts`            | Package entries                      |
+| `lib/builder/`                    | Op-log builder                       |
+| `lib/model/types.ts`              | Plain workbook types                 |
+| `lib/compile/`                    | Ops/plain ↔ encoder models           |
+| `lib/xlsx/`                       | Encode/decode OOXML                  |
+| `lib/csv/public.ts`               | Public CSV API                       |
+| `lib/stream/xlsx/stream-write.ts` | Node `streamWrite`                   |
+| `lib/stream/xlsx/stream-read.ts`  | Node `streamRead`                    |
+| `lib/model/`                      | Structural types and feature helpers |
+| `excel.d.ts`                      | Public TypeScript types              |

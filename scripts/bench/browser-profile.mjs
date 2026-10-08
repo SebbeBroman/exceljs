@@ -22,9 +22,9 @@ const {SourceMapConsumer} = require(
 );
 const entry = `
 import {workbook,writeBuffer,load,viewWorkbook,csv} from ${JSON.stringify(join(root, 'dist/excel.js'))};
-import {materializeDocWorkbook} from ${JSON.stringify(join(root, 'dist/lib/compile/ops-to-doc-workbook.js'))};
-import DocWorkbook from ${JSON.stringify(join(root, 'dist/lib/doc/workbook.js'))};
-import {docWorkbookToPlain} from ${JSON.stringify(join(root, 'dist/lib/compile/doc-to-plain.js'))};
+import {compileToXlsxModel} from ${JSON.stringify(join(root, 'dist/lib/compile/ops-to-xlsx-model.js'))};
+import XLSX from ${JSON.stringify(join(root, 'dist/lib/xlsx/xlsx.js'))};
+import {xlsxModelToPlain} from ${JSON.stringify(join(root, 'dist/lib/compile/xlsx-model-to-plain.js'))};
 import BufferZipWriter,{resolveZipLevel} from ${JSON.stringify(join(root, 'dist/lib/utils/buffer-zip.js'))};
 const opts={useSharedStrings:true,useStyles:false};
 const grid = n => Array.from({length:n},(_,r)=>Array.from({length:8},(_,c)=>c===0?'r'+r:r*8+c));
@@ -39,22 +39,21 @@ export async function phases(){
  const times={};
  const sync=(key,fn)=>{const t=performance.now();const v=fn();times[key]=(times[key]||0)+performance.now()-t;return v;};
  const asyncTime=async(key,fn)=>{const t=performance.now();const v=await fn();times[key]=(times[key]||0)+performance.now()-t;return v;};
- const doc=sync('write: materialize document',()=>materializeDocWorkbook(b._ops));
- const model=sync('write: serialize document model',()=>doc.getXlsxModel?.() ?? doc.model);
- await asyncTime('write: prepare styles/strings/models',()=>doc.xlsx.prepareModel(model,opts));
+ const model=await asyncTime('write: compile encoder model',()=>compileToXlsxModel(b._ops));
+ const xlsx=new XLSX({model});
+ await asyncTime('write: prepare styles/strings/models',()=>xlsx.prepareModel(model,opts));
  const zip=new BufferZipWriter();
- await asyncTime('write: render XML + encode UTF8',()=>doc.xlsx.renderParts(zip,model));
+ await asyncTime('write: render XML + encode UTF8',()=>xlsx.renderParts(zip,model));
  sync('write: deflate + ZIP',()=>zip.toBytes(resolveZipLevel()));
  globalThis.__readPhaseTimes=times;
- const readDoc=new DocWorkbook();
+ const host={model:undefined};
+ const reader=new XLSX(host);
  for(const [method,key] of [['_processWorksheetEntry','read: worksheet XML + fused cells'],['reconcile','read: reconcile package']]){
-   const original=readDoc.xlsx[method].bind(readDoc.xlsx);
-   readDoc.xlsx[method]=(...args)=>asyncTime(key,()=>original(...args));
+   const original=reader[method].bind(reader);
+   reader[method]=(...args)=>asyncTime(key,()=>original(...args));
  }
- const descriptor=Object.getOwnPropertyDescriptor(DocWorkbook.prototype,'model');
- Object.defineProperty(readDoc,'model',{get(){return descriptor.get.call(this);},set(v){sync('read: apply document model',()=>descriptor.set.call(this,v));}});
- await asyncTime('read: total document load',()=>readDoc.xlsx.load(bytes));
- sync('read: document to plain snapshot',()=>docWorkbookToPlain(readDoc));
+ await asyncTime('read: total model load',()=>reader.load(bytes));
+ sync('read: encoder model to plain snapshot',()=>xlsxModelToPlain(host.model));
  const view=await asyncTime('view: open ZIP + workbook/SST',()=>viewWorkbook(bytes));
  sync('view: parse/extract requested rows',()=>view.sheet(0).rows({values:'cell'}));
  return times;
@@ -208,7 +207,7 @@ try {
         ? 'dependencies'
         : source.includes('/xform/')
           ? 'XML transforms'
-          : source.includes('/doc/')
+          : source.includes('/model/')
             ? 'document model'
             : source.includes('/xlsx/xml/')
               ? 'XML templates'

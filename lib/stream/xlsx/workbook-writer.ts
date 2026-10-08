@@ -5,7 +5,6 @@ import StreamZipWriter from '../../utils/stream-zip-writer.js';
 import RelType from '../../xlsx/rel-type.js';
 import StylesXform from '../../xlsx/xform/style/styles-xform.js';
 import SharedStrings from '../../utils/shared-strings.js';
-import DefinedNames from '../../doc/defined-names.js';
 import CoreXform from '../../xlsx/xform/core/core-xform.js';
 import RelationshipsXform from '../../xlsx/xform/core/relationships-xform.js';
 import ContentTypesXform from '../../xlsx/xform/core/content-types-xform.js';
@@ -37,22 +36,8 @@ export interface WorkbookWriterOptions {
   [key: string]: any;
 }
 
-export interface WorkbookWriterImage {
-  extension: string;
-  filename?: string;
-  buffer?: Uint8Array | Buffer;
-  base64?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
-}
-
-export interface WorkbookWriterMedia extends WorkbookWriterImage {
-  type: string;
-  name: string;
-}
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type WorksheetWriterInstance = any;
+type WorksheetWriterInstance = WorksheetWriter;
 
 class WorkbookWriter {
   created: Date;
@@ -65,15 +50,10 @@ class WorkbookWriter {
   sharedStrings: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   styles: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  _definedNames: any;
   _worksheets: (WorksheetWriterInstance | undefined)[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   views: any[];
   zipOptions: Partial<ZipWriterOptions> | undefined;
-  media: WorkbookWriterMedia[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  commentRefs: any[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   zip: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -96,16 +76,10 @@ class WorkbookWriter {
     // style manager
     this.styles = options.useStyles ? new StylesXform(true) : new StylesXform.Mock();
 
-    // defined names
-    this._definedNames = new DefinedNames();
-
     this._worksheets = [];
     this.views = [];
 
     this.zipOptions = options.zip;
-
-    this.media = [];
-    this.commentRefs = [];
 
     this.zip = new StreamZipWriter(this.zipOptions);
     if (options.stream) {
@@ -119,11 +93,6 @@ class WorkbookWriter {
 
     // these bits can be added right now
     this.promise = Promise.all([this.addThemes(), this.addOfficeRels()]);
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  get definedNames(): any {
-    return this._definedNames;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -149,7 +118,9 @@ class WorkbookWriter {
       return Promise.resolve();
     };
     // if there are any uncommitted worksheets, commit them now and wait
-    const promises = this._worksheets.map(commitWorksheet);
+    const promises = this._worksheets
+      .filter((sheet): sheet is WorksheetWriter => !!sheet)
+      .map(commitWorksheet);
     if (promises.length) {
       return Promise.all(promises);
     }
@@ -159,7 +130,6 @@ class WorkbookWriter {
   async commit(): Promise<this> {
     // commit all worksheets, then add suplimentary files
     await this.promise;
-    await this.addMedia();
     await this._commitWorksheets();
     await Promise.all([
       this.addContentTypes(),
@@ -184,20 +154,6 @@ class WorkbookWriter {
     return this._worksheets.length || 1;
   }
 
-  addImage(image: WorkbookWriterImage): number {
-    const id = this.media.length;
-    const medium = Object.assign({}, image, {
-      type: 'image',
-      name: `image${id}.${image.extension}`,
-    }) as WorkbookWriterMedia;
-    this.media.push(medium);
-    return id;
-  }
-
-  getImage(id: number): WorkbookWriterMedia {
-    return this.media[id];
-  }
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   addWorksheet(name?: string, options?: any): WorksheetWriterInstance {
     // it's possible to add a worksheet with different than default
@@ -206,17 +162,6 @@ class WorkbookWriter {
     options = options || {};
     const useSharedStrings =
       options.useSharedStrings !== undefined ? options.useSharedStrings : this.useSharedStrings;
-
-    if (options.tabColor) {
-      // oxlint-disable-next-line no-console
-      console.trace('tabColor option has moved to { properties: tabColor: {...} }');
-      options.properties = Object.assign(
-        {
-          tabColor: options.tabColor,
-        },
-        options.properties,
-      );
-    }
 
     const id = this.nextId;
     name = name || `sheet${id}`;
@@ -236,19 +181,6 @@ class WorkbookWriter {
 
     this._worksheets[id] = worksheet;
     return worksheet;
-  }
-
-  getWorksheet(id?: number | string): WorksheetWriterInstance | undefined {
-    if (id === undefined) {
-      return this._worksheets.find(() => true);
-    }
-    if (typeof id === 'number') {
-      return this._worksheets[id];
-    }
-    if (typeof id === 'string') {
-      return this._worksheets.find(worksheet => worksheet && worksheet.name === id);
-    }
-    return undefined;
   }
 
   addStyles(): Promise<void> {
@@ -283,36 +215,14 @@ class WorkbookWriter {
       const model = {
         worksheets: this._worksheets.filter(Boolean),
         sharedStrings: this.sharedStrings,
-        commentRefs: this.commentRefs,
-        media: this.media,
+        commentRefs: [],
+        media: [],
       };
       const xform = new ContentTypesXform();
       const xml = xform.toXml(model);
       this.zip.append(xml, {name: '[Content_Types].xml'});
       resolve();
     });
-  }
-
-  addMedia(): Promise<unknown[]> {
-    return Promise.all(
-      this.media.map(medium => {
-        if (medium.type === 'image') {
-          const filename = `xl/media/${medium.name}`;
-          if (medium.filename) {
-            return this.zip.file(medium.filename, {name: filename});
-          }
-          if (medium.buffer) {
-            return this.zip.append(medium.buffer, {name: filename});
-          }
-          if (medium.base64) {
-            const dataimg64 = medium.base64;
-            const content = dataimg64.substring(dataimg64.indexOf(',') + 1);
-            return this.zip.append(content, {name: filename, base64: true});
-          }
-        }
-        throw new Error('Unsupported media');
-      }),
-    );
   }
 
   addApp(): Promise<void> {
@@ -383,7 +293,7 @@ class WorkbookWriter {
     const {zip} = this;
     const model = {
       worksheets: this._worksheets.filter(Boolean),
-      definedNames: this._definedNames.model,
+      definedNames: [],
       views: this.views,
       properties: {},
       calcProperties: {},

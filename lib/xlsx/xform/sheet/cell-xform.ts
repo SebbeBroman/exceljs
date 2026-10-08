@@ -1,8 +1,8 @@
 import utils from '../../../utils/utils.js';
 import BaseXform from '../base-xform.js';
 import type {XmlStreamLike, XmlNode, XformOptions} from '../base-xform.js';
-import Range from '../../../doc/range.js';
-import Enums from '../../../doc/enums.js';
+import Range from '../../../model/range.js';
+import Enums from '../../../model/enums.js';
 import RichTextXform from '../strings/rich-text-xform.js';
 
 export interface CellXformModel {

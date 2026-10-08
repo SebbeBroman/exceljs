@@ -2,9 +2,7 @@ import {EventEmitter} from '../../utils/event-emitter.js';
 import {eachSaxChunk} from '../../utils/parse-sax.js';
 import utils from '../../utils/utils.js';
 import colCache from '../../utils/col-cache.js';
-import Dimensions from '../../doc/range.js';
-import Row from '../../doc/row.js';
-import Column from '../../doc/column.js';
+import {mergeStyles} from '../../model/cell-model.js';
 
 export interface WorksheetReaderOptions {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -22,7 +20,7 @@ export interface WorksheetReaderOptions {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyRow = any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyColumn = any;
+type AnyColumn = {min: number; max: number; styleId: number};
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type CellParseState = {
   ref: string;
@@ -43,10 +41,6 @@ class WorksheetReader extends EventEmitter {
   state?: string;
   _columns: AnyColumn[] | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  _keys: Record<string, any>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  _dimensions: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   hyperlinks?: Record<string, any>;
 
   constructor({workbook, id, iterator, options}: WorksheetReaderOptions) {
@@ -62,77 +56,6 @@ class WorksheetReader extends EventEmitter {
 
     // column definitions
     this._columns = null;
-    this._keys = {};
-
-    // keep a record of dimensions
-    this._dimensions = new Dimensions();
-  }
-
-  // destroy - not a valid operation for a streaming writer
-  // even though some streamers might be able to, it's a bad idea.
-  destroy(): never {
-    throw new Error('Invalid Operation: destroy');
-  }
-
-  // return the current dimensions of the writer
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  get dimensions(): any {
-    return this._dimensions;
-  }
-
-  // =========================================================================
-  // Columns
-
-  // get the current columns array.
-  get columns(): AnyColumn[] | null {
-    return this._columns;
-  }
-
-  // get a single column by col number. If it doesn't exist, it and any gaps before it
-  // are created.
-  getColumn(c: number | string): AnyColumn {
-    if (typeof c === 'string') {
-      // if it matches a key'd column, return that
-      const col = this._keys[c];
-      if (col) {
-        return col;
-      }
-
-      // otherise, assume letter
-      c = colCache.l2n(c);
-    }
-    if (!this._columns) {
-      this._columns = [];
-    }
-    if (c > this._columns.length) {
-      let n = this._columns.length + 1;
-      while (n <= c) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        this._columns.push(new Column(this as any, n++));
-      }
-    }
-    return this._columns[c - 1];
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  getColumnKey(key: string): any {
-    return this._keys[key];
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  setColumnKey(key: string, value: any): void {
-    this._keys[key] = value;
-  }
-
-  deleteColumnKey(key: string): void {
-    delete this._keys[key];
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  eachColumnKey(f: (value: any, key: string) => void): void {
-    for (const [key, value] of Object.entries(this._keys)) {
-      f(value, key);
-    }
   }
 
   async read(): Promise<void> {
@@ -231,7 +154,7 @@ class WorksheetReader extends EventEmitter {
               if (inRows) {
                 const r = parseInt(attr('r') || '', 10);
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                row = new Row(this as any, r);
+                row = {number: r, values: [], style: {}};
                 const ht = attr('ht');
                 if (ht) {
                   row.height = parseFloat(ht);
@@ -312,14 +235,13 @@ class WorksheetReader extends EventEmitter {
             case 'cols':
               inCols = false;
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              this._columns = Column.fromModel(cols as any);
+              this._columns = cols;
               break;
             case 'sheetData':
               inRows = false;
               break;
 
             case 'row':
-              this._dimensions.expandRow(row);
               batch.push({eventType: 'row', value: row});
               row = null;
               break;
@@ -327,7 +249,17 @@ class WorksheetReader extends EventEmitter {
             case 'c':
               if (row && c) {
                 const address = colCache.decodeAddress(c.ref);
-                const cell = row.getCell(address.col);
+                const column = this._columns?.find(
+                  col => col.min <= address.col! && col.max >= address.col!,
+                );
+                const cell = {
+                  value: undefined as any,
+                  style: mergeStyles(
+                    row.style,
+                    column?.styleId ? styles.getStyleModel(column.styleId) : undefined,
+                    {},
+                  ),
+                };
                 if (c.s) {
                   const style = styles.getStyleModel(c.s);
                   if (style) {
@@ -347,6 +279,9 @@ class WorksheetReader extends EventEmitter {
                       cellValue.result = parseFloat(c.v.text);
                     }
                   }
+                  // Preserve the streamed API's historical formula projection:
+                  // false/zero/NaN cached results were omitted by FormulaValue.value.
+                  if (cellValue.formula && !cellValue.result) delete cellValue.result;
                   cell.value = cellValue;
                 } else if (c.v) {
                   switch (c.t) {
@@ -376,7 +311,7 @@ class WorksheetReader extends EventEmitter {
                       break;
 
                     default:
-                      if (utils.isDateFmt(cell.numFmt)) {
+                      if (utils.isDateFmt(cell.style.numFmt)) {
                         cell.value = utils.excelToDate(
                           parseFloat(c.v.text),
                           properties.model && properties.model.date1904,
@@ -390,11 +325,10 @@ class WorksheetReader extends EventEmitter {
                 if (hyperlinks) {
                   const hyperlink = hyperlinks[c.ref];
                   if (hyperlink) {
-                    cell.text = cell.value;
-                    cell.value = undefined;
-                    cell.hyperlink = hyperlink;
+                    cell.value = {text: cell.value, hyperlink};
                   }
                 }
+                if (cell.value != null) row.values[address.col!] = cell.value;
                 c = null;
               }
               break;

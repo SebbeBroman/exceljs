@@ -1,6 +1,6 @@
 import {EventEmitter} from '../../utils/event-emitter.js';
 import {eachSaxChunk} from '../../utils/parse-sax.js';
-import Enums from '../../doc/enums.js';
+import Enums from '../../model/enums.js';
 import RelType from '../../xlsx/rel-type.js';
 
 export interface HyperlinkReaderOptions {

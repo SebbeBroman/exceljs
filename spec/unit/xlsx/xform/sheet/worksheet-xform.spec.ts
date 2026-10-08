@@ -24,7 +24,7 @@ import {fileURLToPath} from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const Enums = verquire('doc/enums');
+const Enums = verquire('model/enums');
 const XmlStream = verquire('utils/xml-stream');
 const WorksheetXform = verquire('xlsx/xform/sheet/worksheet-xform');
 

@@ -25,7 +25,7 @@ import type {
   WorkbookView,
   WorksheetProtection,
   WorksheetView,
-} from '../../index.js';
+} from './schema.js';
 
 /** Partial style patches accepted by the builder. */
 export type Style = Partial<

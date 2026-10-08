@@ -11,7 +11,6 @@
  * Contenders:
  *   - excel-ts (builder): public @sebbebroman/exceljs API via dist/
  *   - exceljs@4:          npm exceljs (devDependency)
- *   - excel-ts (legacy):  internal Doc Workbook (same encoder as builder bridge)
  */
 import {pathToFileURL} from 'node:url';
 import path from 'node:path';
@@ -25,9 +24,6 @@ const root = path.resolve(__dirname, '../..');
 const {workbook, writeBuffer, load} = await import(
   pathToFileURL(path.join(root, 'dist/excel.js')).href
 );
-const DocWorkbook = (await import(pathToFileURL(path.join(root, 'dist/lib/doc/workbook.js')).href))
-  .default;
-
 // --- CLI ---
 const args = process.argv.slice(2);
 function flag(name, fallback) {
@@ -42,7 +38,6 @@ const ROWS = Number(flag('rows', 5000));
 const COLS = Number(flag('cols', 8));
 const FILTER = flag('filter', null); // 'write' | 'read' | 'roundtrip' | null
 const INCLUDE_STYLES = flag('styles', false) === true || flag('styles', false) === 'true';
-const SKIP_LEGACY = flag('no-legacy', false) === true || flag('no-legacy', false) === 'true';
 
 // --- fixtures ---
 function makeGrid(nRows, nCols) {
@@ -106,18 +101,6 @@ async function writeExceljs(rows) {
   return wb.xlsx.writeBuffer(writeOpts);
 }
 
-async function writeLegacyDoc(rows) {
-  const wb = new DocWorkbook();
-  const ws = wb.addWorksheet('data');
-  if (INCLUDE_STYLES) {
-    ws.getRow(1).font = {bold: true};
-  }
-  // batch when possible
-  if (typeof ws.addRows === 'function') ws.addRows(rows);
-  else for (let i = 0; i < rows.length; i++) ws.addRow(rows[i]);
-  return wb.xlsx.writeBuffer(writeOpts);
-}
-
 async function readBuilder(bytes) {
   return load(bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes));
 }
@@ -128,24 +111,13 @@ async function readExceljs(bytes) {
   return wb;
 }
 
-async function readLegacyDoc(bytes) {
-  const wb = new DocWorkbook();
-  await wb.xlsx.load(bytes);
-  return wb;
-}
-
-const [bufBuilder, bufExceljs, bufLegacy] = await Promise.all([
-  writeBuilder(grid),
-  writeExceljs(grid),
-  SKIP_LEGACY ? Promise.resolve(null) : writeLegacyDoc(grid),
-]);
+const [bufBuilder, bufExceljs] = await Promise.all([writeBuilder(grid), writeExceljs(grid)]);
 
 console.log(
   JSON.stringify({
     fixtureBytes: {
       'excel-ts builder': bufLen(bufBuilder),
       'exceljs@4': bufLen(bufExceljs),
-      ...(SKIP_LEGACY ? {} : {'excel-ts legacy Doc': bufLen(bufLegacy)}),
     },
   }),
 );
@@ -168,13 +140,6 @@ maybe('write', () => {
         const buf = await writeExceljs(grid);
         if (bufLen(buf) < 500) throw new Error('tiny');
       }).gc('inner');
-
-      if (!SKIP_LEGACY) {
-        bench('excel-ts legacy DocWorkbook addRows + writeBuffer', async () => {
-          const buf = await writeLegacyDoc(grid);
-          if (bufLen(buf) < 500) throw new Error('tiny');
-        }).gc('inner');
-      }
     });
   });
 
@@ -234,13 +199,6 @@ maybe('read', () => {
         const wb = await readExceljs(bufBuilder);
         if (!wb.worksheets?.length) throw new Error('no sheets');
       }).gc('inner');
-
-      if (!SKIP_LEGACY) {
-        bench('excel-ts legacy DocWorkbook xlsx.load()', async () => {
-          const wb = await readLegacyDoc(bufLegacy);
-          if (!wb.worksheets?.length) throw new Error('no sheets');
-        }).gc('inner');
-      }
     });
   });
 });
@@ -262,15 +220,6 @@ maybe('roundtrip', () => {
         const v = wb.getWorksheet(1).getCell(1, 1).value;
         if (v == null && v !== 0) throw new Error('empty');
       }).gc('inner');
-
-      if (!SKIP_LEGACY) {
-        bench('excel-ts legacy Doc writeBuffer → load', async () => {
-          const buf = await writeLegacyDoc(grid);
-          const wb = await readLegacyDoc(buf);
-          const v = wb.getWorksheet(1).getCell(1, 1).value;
-          if (v == null && v !== 0) throw new Error('empty');
-        }).gc('inner');
-      }
     });
   });
 });

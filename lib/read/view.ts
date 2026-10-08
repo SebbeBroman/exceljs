@@ -482,7 +482,7 @@ class LazyXlsxWorkbookView implements WorkbookView {
 
 /**
  * Open CSV or OOXML bytes as a read-only {@link WorkbookView}.
- * Does not import the write/builder graph or DocWorkbook.
+ * Does not import the write/builder graph.
  */
 export async function viewWorkbook(
   data: ArrayBuffer | Uint8Array | ArrayBufferView | string,

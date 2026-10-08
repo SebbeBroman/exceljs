@@ -1,0 +1,132 @@
+{
+  "1519293514-KRISHNAPATNAM_LINE_UP.xlsx": {
+    "hash": "af7d6fecd1385ee28ec19aae59a2c4d417fe66385db972baa1fe5e48a816cd55",
+    "rows": 282
+  },
+  "1904.xlsx": {
+    "hash": "d4dc30207fc156469780b3ad281099848275e5130d2177998b0166120f4e4a61",
+    "rows": 3
+  },
+  "bogus-defined-name.xlsx": {
+    "hash": "432f22cb27797f73f37d871a42f1a15c9985432b152564dc38d667cb6ae9ccac",
+    "rows": 1
+  },
+  "chart-sheet.xlsx": {
+    "hash": "29818a300bffbc5b04d87eb45fd639c377ad543f5567b6f2602cf03e91cc73dd",
+    "rows": 7
+  },
+  "dateIssue.xlsx": {
+    "hash": "180485f5cd3ae2c6a799851f7180ef0167a179e1d19fdc2d0e1c857b9b328629",
+    "rows": 2
+  },
+  "duplicateRowTest.xlsx": {
+    "hash": "9afad76910db1ad7cf1de24a8c3d42e6669dfe5acef206f82a78581738556fa8",
+    "rows": 2
+  },
+  "fibonacci.xlsx": {
+    "hash": "42e190beb94e1016889b5c37921a3f5661f2dc293c8cb58de299850d87d3ae39",
+    "rows": 19
+  },
+  "formulas.xlsx": {
+    "hash": "588729b06b6d451804d75f8b0dfa4295fd5856d7d3325fb19c5e4ea99335ad8b",
+    "rows": 2
+  },
+  "gold.xlsx": {
+    "hash": "c539d61661103b4ce37bf6f94b96d9918232f8909602f3879380aa11726a20c2",
+    "rows": 6
+  },
+  "images.xlsx": {
+    "hash": "d437ecbfb4feea4ffe9ab2728a47565c0aaac11a7aba0616c939c18502749812",
+    "rows": 1
+  },
+  "invalid-xml.xlsx": {
+    "error": "non-whitespace outside of root node"
+  },
+  "many-columns.xlsx": {
+    "hash": "a6113f0fffa55eb86034c3da44a98ee74371434226be5ecfdba39f617c399bb4",
+    "rows": 2
+  },
+  "missing-bits.xlsx": {
+    "error": "Cannot read properties of undefined (reading 'sheets')"
+  },
+  "shared_string_with_escape.xlsx": {
+    "hash": "d26cd82d8802a34d285924531adc1e01d873faf1c59176c5603df3a2050daa3c",
+    "rows": 1
+  },
+  "test-issue-1364.xlsx": {
+    "hash": "e1ecb3bc16d33ce122ad62cd2e3e45f2fab18dfc19facb2ef2d9fcca7902bdcb",
+    "rows": 2
+  },
+  "test-issue-1575.xlsx": {
+    "hash": "02f7236393e740c41ba748a270ace36ab64ab287ac803390d9ef43e17aa4565d",
+    "rows": 3
+  },
+  "test-issue-163.xlsx": {
+    "hash": "bb62c237fbc300853de009263e94285267e57abfad5bdc7d6e3514cc4f408eaf",
+    "rows": 3
+  },
+  "test-issue-1669.xlsx": {
+    "hash": "9b07ea7d8fac5b19dbdf604ee872ff1d8f1fcf0db774dfe7ca912fa670aeb662",
+    "rows": 12
+  },
+  "test-issue-176.xlsx": {
+    "hash": "32b8668a82dc4b23380d7a3bfd19f872040905241a89113191d1bcc58f16b1cc",
+    "rows": 4
+  },
+  "test-issue-257.xlsx": {
+    "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "rows": 0
+  },
+  "test-issue-623.xlsx": {
+    "hash": "58c00762a40ced453be90dbef4c13756dac6cc7d27ac0134c09cabc02b4c3879",
+    "rows": 2
+  },
+  "test-issue-771.xlsx": {
+    "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "rows": 0
+  },
+  "test-issue-877.xlsx": {
+    "hash": "01d42db421ce061976ad7beb669a23fd8674f89f82f02c86bac5825d08504131",
+    "rows": 665
+  },
+  "test-issue-880.xlsx": {
+    "hash": "9b4a58df221567c2c121217349fe08b4030cebfef00b25fc5446dbe8840ad19b",
+    "rows": 615
+  },
+  "test-issue-988.xlsx": {
+    "hash": "b326a34cc88882dd85cc529c9ee83b44bcd5b0f1fdf4c0a9fce5ff0209ba7bba",
+    "rows": 5
+  },
+  "test-pr-1204.xlsx": {
+    "hash": "3330e12de40b1be37cab4e4f03c0e8caf4a8537113dce572baf7e96d96b17171",
+    "rows": 12
+  },
+  "test-pr-1220.xlsx": {
+    "hash": "ebd54ddfc748f62a0fe9efd41ee6752881fcb81a03a80fc7129cab750f08139d",
+    "rows": 341
+  },
+  "test-pr-567.xlsx": {
+    "hash": "c4ef140fc0a2f40deb4ff5453285fae1d24aecc10c7c862aa11c7e183ea4bd8a",
+    "rows": 1
+  },
+  "test-pr-728.xlsx": {
+    "hash": "a0457aab8bf9848dc51c81513260442b8b2bcc84f666c4f92767deafee876131",
+    "rows": 3
+  },
+  "test-row-styles.xlsx": {
+    "hash": "5b86537348b66c566fc17e6151bdaab11354517736756cdfc6e83b08d408fbdc",
+    "rows": 38
+  },
+  "hidden-test/google-sheets.xlsx": {
+    "hash": "613629ab346245897227901a0a5ee3381967720af25bfc58cd9443a9057206d7",
+    "rows": 3
+  },
+  "hidden-test/libre-calc-as-excel-2007-365.xlsx": {
+    "hash": "613629ab346245897227901a0a5ee3381967720af25bfc58cd9443a9057206d7",
+    "rows": 3
+  },
+  "hidden-test/libre-calc-as-office-open-xml-spreadsheet.xlsx": {
+    "hash": "613629ab346245897227901a0a5ee3381967720af25bfc58cd9443a9057206d7",
+    "rows": 3
+  }
+}

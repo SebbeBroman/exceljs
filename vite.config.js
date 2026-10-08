@@ -15,8 +15,7 @@ const root = path.dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
   staged: {
     // Keep pre-commit scoped to maintained surface
-    '{lib,scripts,spec}/**/*.{ts,js,mjs},excel.ts,vite.config.js,package.json,index.d.ts':
-      'vp check --fix',
+    '{lib,scripts,spec}/**/*.{ts,js,mjs},excel.ts,vite.config.js,package.json': 'vp check --fix',
   },
 
   lint: {
@@ -97,7 +96,7 @@ export default defineConfig({
         },
       },
     ],
-    // Hand-written public index.d.ts; full check via `pnpm typecheck` (tsc --strict)
+    // Hand-written public declarations; full check via `pnpm typecheck` (tsc --strict)
     options: {
       typeAware: false,
       typeCheck: false,

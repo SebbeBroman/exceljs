@@ -1,6 +1,6 @@
 /**
  * Compile builder ops into a plain Workbook snapshot.
- * Used by `build()`; write path materializes via the doc adapter instead.
+ * Used by `build()`; writes compile directly into the OOXML encoder model.
  */
 
 import type {
@@ -240,7 +240,7 @@ function fuseMetaAndRows(ops: BuilderOp[]): {
 /**
  * Convert style-free random `cell` / `cells` ops on a sheet into a single bulk
  * `rows` op when the sheet has no prior row/rows data ops. Enables the dense
- * materialize path for cell-by-cell builders (common bench / fill patterns).
+ * bulk compilation for cell-by-cell builders (common bench / fill patterns).
  *
  * Only runs when every cell is style-free and addresses are simple A1 (no sheet!).
  */
@@ -449,7 +449,7 @@ export function optimizeOps(ops: BuilderOp[]): BuilderOp[] {
 /**
  * True when the op log is rectangular-append only: sheets/meta/columns and
  * sequential row(s) — no random cell patches, styles, or merges.
- * Dense materialize uses bulk `addRows` without per-cell random access.
+ * Direct encoding and plain snapshot compilation can bulk-append these rows.
  */
 export function isDenseRectangularOps(ops: BuilderOp[]): boolean {
   for (const op of ops) {

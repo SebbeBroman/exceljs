@@ -52,4 +52,7 @@ package-lock.json
 
 # Ignore xlsx files generated during testing
 *.xlsx
+# Saved compatibility fixtures are source test data
+!spec/unit/builder/data/*.xlsx
+!spec/unit/builder/data/direct-model/*.xlsx
 npm-lock.yaml

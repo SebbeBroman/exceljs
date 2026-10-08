@@ -10,6 +10,6 @@
     "noImplicitReturns": false,
     "noImplicitOverride": false
   },
-  "include": ["spec/**/*.ts", "spec/**/*.d.ts", "lib/**/*.ts", "excel.ts", "index.d.ts"],
+  "include": ["spec/**/*.ts", "spec/**/*.d.ts", "lib/**/*.ts", "excel.ts"],
   "exclude": ["node_modules", "build", "dist", "spec/out", "test"]
 }
