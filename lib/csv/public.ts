@@ -1,11 +1,11 @@
 /**
  * Named CSV API (no side-effect registration).
  *
- *   import { csv, workbook } from '@sebbebroman/exceljs';
+ *   import {workbook} from '@sebbebroman/exceljs';
+ *   import {csv} from '@sebbebroman/exceljs/csv';
  *
  *   const init = await csv.parse('a,b\n1,2');
- *   const text = await workbook().sheet('Data', init).csv();
- *   // or: await csv.stringify(workbook().sheet('Data', init));
+ *   const text = await csv.stringify(workbook().sheet('Data', init));
  */
 
 import dayjs from 'dayjs';
@@ -13,6 +13,9 @@ import customParseFormat from 'dayjs/plugin/customParseFormat.js';
 import utc from 'dayjs/plugin/utc.js';
 import {parseText, writeToString, type BrowserParseOptions} from '@sebbebroman/fast-csv';
 import type {CellValue, RowInput, SheetInit, SheetModel, Workbook} from '../model/types.js';
+import {viewCsvGrid, type WorkbookView, type ViewWorkbookOptions} from '../read/view.js';
+import {decodeText, toUint8Array} from '../read/format.js';
+import type {ReadRowsOptions} from '../read/read-rows.js';
 import type {WorkbookBuilder} from '../builder/workbook-builder.js';
 
 // dayjs default export is callable + has .extend; typings vary by version
@@ -56,9 +59,9 @@ export interface CsvParseOptions {
   parserOptions?: Record<string, unknown>;
 }
 
-/** Options for `csv.stringify` / builder `.csv()` / Node `writeCsvFile`. */
+/** Options for `csv.stringify` / Node `writeCsvFile`. */
 export interface CsvStringifyOptions {
-  /** Sheet name to export (default: active/first sheet). */
+  /** Sheet name to export (default: first sheet). */
   sheetName?: string;
   /** Sheet model `id` or 1-based index into `sheets`. */
   sheetId?: number;
@@ -239,6 +242,26 @@ export async function stringifyCsv(
     rows as string[][],
     options.formatterOptions as Parameters<typeof writeToString>[1],
   );
+}
+
+/** Decode CSV without pulling its parser into the core XLSX entry. */
+export async function viewCsv(
+  data: ArrayBuffer | Uint8Array | ArrayBufferView | string,
+  options?: ViewWorkbookOptions,
+): Promise<WorkbookView> {
+  const text = decodeText(
+    typeof data === 'string' ? data : toUint8Array(data),
+    options?.encoding ?? 'utf-8',
+  );
+  return viewCsvGrid(parseText(text, {headers: false, ignoreEmpty: false, trim: false}));
+}
+
+export async function readCsvRows(
+  data: ArrayBuffer | Uint8Array | ArrayBufferView | string,
+  options?: ReadRowsOptions,
+): Promise<string[][]> {
+  const view = await viewCsv(data, options);
+  return view.sheet(options?.sheet ?? 0).rows({...options, values: 'string'});
 }
 
 /** Named CSV helpers. */

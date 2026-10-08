@@ -6,7 +6,8 @@ Short map of how `@sebbebroman/exceljs` turns builder calls into `.xlsx` bytes.
 
 | Entry                             | Role                                                                              |
 | --------------------------------- | --------------------------------------------------------------------------------- |
-| `@sebbebroman/exceljs`            | Browser-safe: `workbook`, `writeBuffer`, `load`, `csv`, enums                     |
+| `@sebbebroman/exceljs`            | Browser-safe: `workbook`, `writeBuffer`, `load`, enums                            |
+| `@sebbebroman/exceljs/csv`        | Optional CSV parse/stringify and views                                            |
 | `@sebbebroman/exceljs/protection` | Optional synchronous password hashing; core accepts prepared protection models    |
 | `@sebbebroman/exceljs/node`       | Same + `writeFile` / `readFile` / `streamWrite` / `streamRead` / CSV file helpers |
 
@@ -32,7 +33,7 @@ workbook().sheet(…).row(…).cell(…)
 
 - **Op-log:** fluent builder records ops; does not mutate a cell graph while chaining.
 - **Compile:** optimized ops populate the OOXML encoder model directly, using sparse row maps and cell slots. No Workbook/Worksheet/Row/Cell document instances are constructed. Plain snapshots import row/cell models directly without a per-cell op-log. Tables place values directly into model cells; image anchors use dimension-only helpers.
-- **Encode:** `writeBuffer` → XLSX writer → zip (default deflate **level 1** for speed; override with `{ zip: { level: 6 } }` for smaller files). Optional features (drawings, tables, comments, pivots) load via dynamic `import()` where possible.
+- **Encode:** `writeBuffer` → XLSX writer → zip (default deflate **level 1** for speed; override with `{ zip: { level: 6 } }` for smaller files). Optional features load automatically through dynamic imports.
 - **Cell-by-cell ops:** style-free `.cell()` / `.cells()` logs coalesce into bulk `.rows()` during optimize so they use bulk row compilation.
 
 Plain snapshots:
@@ -102,7 +103,7 @@ viewWorkbook(bytes) / readRows(bytes)
 
 ## CSV
 
-Named helpers in `lib/csv/public.ts` (`csv.parse` / `csv.stringify`). Builder `.csv()` dynamically imports the helper module. Bundlers can retain CSV chunks even in write-only clients because the builder exposes `.csv()`. Node `readCsvFile` / `writeCsvFile` wrap the same helpers with `fs`.
+Named helpers in `/csv` (`csv.parse` / `csv.stringify` / `viewCsv` / `readCsvRows`). Core builders and XLSX readers import no CSV parser or formatter. Node `readCsvFile` / `writeCsvFile` wrap the optional helpers with `fs`. Advanced OOXML transforms load automatically when a read/write encounters their feature data.
 
 ## Streaming (Node only)
 
@@ -136,14 +137,14 @@ See [the four independent cleanup comparisons](scripts/bench/internal-cleanup-re
 ## Bundle size (indicative)
 
 From `pnpm test:browser-bundle` (esbuild minify, **write-only** builder path;
-CSV enabled, no Node polyfills):
+CSV excluded; advanced features automatic, no Node polyfills):
 
 | Build                       | Size (0.2.0)         |
 | --------------------------- | -------------------- |
-| Single-file minified        | **268.0 KiB**        |
-| Single-file gzip            | **76.8 KiB**         |
-| Code-split write-only entry | **141.6 KiB**        |
-| Code-split write-only total | 266.0 KiB (31 files) |
+| Single-file minified        | **237.8 KiB**        |
+| Single-file gzip            | **65.8 KiB**         |
+| Code-split write-only entry | **141.3 KiB**        |
+| Code-split write-only total | 235.4 KiB (28 files) |
 
 The core and unused `/protection` imports include no password hashing crypto. Code-split entry size excludes shared static dependencies; use the single-file size when comparing complete bundles. See [the protection comparison](scripts/bench/protection-bundle-results.md).
 
@@ -168,3 +169,5 @@ pnpm test:esm
 | `lib/stream/xlsx/stream-read.ts`  | Node `streamRead`                    |
 | `lib/model/`                      | Structural types and feature helpers |
 | `excel.d.ts`                      | Public TypeScript types              |
+
+See [the CSV bundle comparison](scripts/bench/csv-split-results.md).

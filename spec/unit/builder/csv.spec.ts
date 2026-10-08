@@ -1,9 +1,10 @@
+import {csv} from '../../../csv.js';
 import {describe, it, expect} from 'vite-plus/test';
 
 import {mkdtemp, readFile, rm, writeFile as fsWriteFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {workbook, csv, load} from '../../../excel.js';
+import {workbook, load} from '../../../excel.js';
 import {readCsvFile, writeCsvFile} from '../../../node.js';
 
 describe('csv named API', () => {
@@ -38,13 +39,12 @@ describe('csv named API', () => {
     expect(text).toBe('name,value\nalpha,1');
   });
 
-  it('builder .csv() exports the active sheet', async () => {
-    const text = await workbook()
+  it('csv.stringify exports an explicitly selected sheet', async () => {
+    const text = await csv.stringify(workbook()
       .sheet('A')
       .row([1, 2])
       .sheet('B')
-      .row(['x', 'y'])
-      .csv();
+      .row(['x', 'y']), {sheetName: 'B'});
     expect(text).toBe('x,y');
   });
 
@@ -60,7 +60,7 @@ describe('csv named API', () => {
   });
 
   it('quotes fields that need it', async () => {
-    const text = await workbook().sheet('S').row(['hello, world', 'a"b']).csv();
+    const text = await csv.stringify(workbook().sheet('S').row(['hello, world', 'a"b']));
     expect(text).toBe('"hello, world","a""b"');
   });
 

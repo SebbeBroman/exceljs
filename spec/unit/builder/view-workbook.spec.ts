@@ -1,16 +1,16 @@
+import {viewCsv, readCsvRows} from '../../../csv.js';
 import {describe, it, expect} from 'vite-plus/test';
 
 import {
   viewWorkbook,
   isWorkbookView,
-  readRows,
   workbook,
   writeBuffer,
 } from '../../../excel.js';
 
 describe('viewWorkbook', () => {
   it('opens CSV and exposes sheetNames + rows slices', async () => {
-    const view = await viewWorkbook('a,b,c\n1,2,3\n4,5,6\n7,8,9', {format: 'csv'});
+    const view = await viewCsv('a,b,c\n1,2,3\n4,5,6\n7,8,9');
     expect(isWorkbookView(view)).toBe(true);
     expect(view.format).toBe('csv');
     expect(view.sheetNames).toEqual(['Sheet1']);
@@ -34,7 +34,7 @@ describe('viewWorkbook', () => {
   });
 
   it('records() uses header row of the slice', async () => {
-    const view = await viewWorkbook('name,score\nAda,98\nBob,70', {format: 'csv'});
+    const view = await viewCsv('name,score\nAda,98\nBob,70');
     const recs = view.sheet(0).records({header: true});
     expect(recs).toEqual([
       {name: 'Ada', score: '98'},
@@ -58,14 +58,14 @@ describe('viewWorkbook', () => {
   });
 
   it('workbook(view) builds a writable builder', async () => {
-    const view = await viewWorkbook('x,y\n1,2', {format: 'csv'});
+    const view = await viewCsv('x,y\n1,2');
     const out = await workbook(view).sheet('Sheet1').cell('A1', 'z').writeBuffer();
     const again = await viewWorkbook(out, {format: 'xlsx'});
     expect(again.sheet(0).rows({start: 1, end: 1})[0]?.[0]).toBe('z');
   });
 
   it('readRows is sugar over the view', async () => {
-    const rows = await readRows('a,b\n1,2', {format: 'csv'});
+    const rows = await readCsvRows('a,b\n1,2');
     expect(rows).toEqual([
       ['a', 'b'],
       ['1', '2'],

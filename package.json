@@ -58,6 +58,11 @@
       "types": "./protection.d.ts",
       "import": "./dist/protection.js",
       "default": "./dist/protection.js"
+    },
+    "./csv": {
+      "types": "./csv.d.ts",
+      "import": "./dist/csv.js",
+      "default": "./dist/csv.js"
     }
   },
   "sideEffects": false,
@@ -71,7 +76,8 @@
     "README_zh.md",
     "MIGRATION.md",
     "ARCHITECTURE.md",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "csv.d.ts"
   ],
   "scripts": {
     "build": "node scripts/build.mjs",

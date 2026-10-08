@@ -1,10 +1,11 @@
+import {readCsvRows} from '../../../csv.js';
 import {describe, it, expect} from 'vite-plus/test';
 
 import {readRows, workbook, writeBuffer} from '../../../excel.js';
 
 describe('readRows', () => {
   it('parses CSV text into string[][]', async () => {
-    const rows = await readRows('name,score\nAda,98\nBob,  70  \n\n', {
+    const rows = await readCsvRows('name,score\nAda,98\nBob,  70  \n\n', {
       format: 'csv',
     });
     expect(rows).toEqual([
@@ -17,7 +18,7 @@ describe('readRows', () => {
   it('sniffs CSV from file name', async () => {
     const enc = new TextEncoder();
     const buf = enc.encode('a,b\n1,2');
-    const rows = await readRows(buf, {name: 'fighters.csv'});
+    const rows = await readCsvRows(buf, {name: 'fighters.csv'});
     expect(rows).toEqual([
       ['a', 'b'],
       ['1', '2'],

@@ -26,6 +26,6 @@
     "types": ["node"],
     "rootDir": "."
   },
-  "include": ["lib/**/*", "excel.js", "excel.ts", "protection.ts"],
+  "include": ["lib/**/*", "excel.js", "excel.ts", "protection.ts", "csv.ts"],
   "exclude": ["node_modules", "build", "dist", "spec", "test", "scripts"]
 }

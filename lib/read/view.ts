@@ -9,11 +9,10 @@
  *   const wb = workbook(view);
  */
 
-import {parseText} from '@sebbebroman/fast-csv';
 import type {CellValue, SheetModel, Workbook, WorkbookMeta} from '../model/types.js';
 import colCache from '../utils/col-cache.js';
 import {cellToDisplayString} from './cells.js';
-import {decodeText, sniffFormat, toUint8Array, type ViewFormat} from './format.js';
+import {sniffFormat, toUint8Array, type ViewFormat} from './format.js';
 import {parseA1Range, resolveSlice, sheetExtent, type ColSlice} from './slice.js';
 import {
   openLightPackage,
@@ -108,10 +107,6 @@ export function isWorkbookView(value: unknown): value is WorkbookView {
     (value as WorkbookView)[WORKBOOK_VIEW] === true &&
     typeof (value as WorkbookView).toJSON === 'function',
   );
-}
-
-async function parseCsvGrid(text: string): Promise<string[][]> {
-  return parseText(text, {headers: false, ignoreEmpty: false, trim: false});
 }
 
 function gridToSheetModel(grid: string[][], name: string, id: number): SheetModel {
@@ -481,7 +476,7 @@ class LazyXlsxWorkbookView implements WorkbookView {
 }
 
 /**
- * Open CSV or OOXML bytes as a read-only {@link WorkbookView}.
+ * Open OOXML bytes (CSV uses viewCsv from the optional /csv entry) as a read-only {@link WorkbookView}.
  * Does not import the write/builder graph.
  */
 export async function viewWorkbook(
@@ -502,18 +497,16 @@ export async function viewWorkbook(
   );
 
   if (format === 'csv') {
-    const text = decodeText(
-      typeof data === 'string' ? data : (binaryOrText as Uint8Array),
-      opts.encoding ?? 'utf-8',
-    );
-    const grid = await parseCsvGrid(text);
-    const sheet = gridToSheetModel(grid, 'Sheet1', 1);
-    const plain: Workbook = {meta: {}, sheets: [sheet]};
-    return new WorkbookViewImpl('csv', plain);
+    throw new Error('CSV views require viewCsv() from @sebbebroman/exceljs/csv');
   }
 
   const bytes =
     typeof data === 'string' ? new TextEncoder().encode(data) : (binaryOrText as Uint8Array);
   const pkg = await openLightPackage(bytes);
   return new LazyXlsxWorkbookView(pkg);
+}
+
+/** @internal Construct a view from a CSV decoder without importing that decoder into core. */
+export function viewCsvGrid(grid: string[][]): WorkbookView {
+  return new WorkbookViewImpl('csv', {meta: {}, sheets: [gridToSheetModel(grid, 'Sheet1', 1)]});
 }

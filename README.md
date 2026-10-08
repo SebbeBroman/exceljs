@@ -4,7 +4,7 @@ Read, manipulate, and write Excel workbooks (`.xlsx`) with a **builder-first** E
 
 Fork of [ExcelJS](https://github.com/exceljs/exceljs) aimed at modern Node and bundlers (Vite, SvelteKit, Rollup, esbuild).
 
-> **0.2.0** — builder-first public API (`.`, `./node`, and optional `./protection`). Write, load, CSV, advanced sheet features, Node streaming. Breaking changes: [CHANGELOG.md](./CHANGELOG.md). See [MIGRATION.md](./MIGRATION.md) and [ARCHITECTURE.md](./ARCHITECTURE.md).
+> **0.2.0** — builder-first public API (`.`, `./node`, and optional `./protection`, `./csv`). Write, load, CSV, advanced sheet features, Node streaming. Breaking changes: [CHANGELOG.md](./CHANGELOG.md). See [MIGRATION.md](./MIGRATION.md) and [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ## Install
 
@@ -107,7 +107,7 @@ import { workbook, writeBuffer } from '@sebbebroman/exceljs';
 const data = reader.result as ArrayBuffer;
 const view = await viewWorkbook(data, {
   format: 'auto',
-  filename: file.name, // optional sniff (.csv / .xlsx / .xlsm)
+  filename: file.name, // optional sniff (.xlsx / .xlsm); CSV uses viewCsv()
 });
 
 view.sheetNames; // ['Sheet1', ...]
@@ -197,20 +197,20 @@ for await (const { sheetName, rowNumber, values } of streamRead('big.xlsx')) {
 ### CSV
 
 ```ts
-import { workbook, csv } from '@sebbebroman/exceljs';
+import {workbook} from '@sebbebroman/exceljs';
+import {csv} from '@sebbebroman/exceljs/csv';
 
 // Parse text → sheet → xlsx
 const init = await csv.parse('name,value\nalpha,1');
 const buffer = await workbook().sheet('Data', init).writeBuffer();
 
-// Stringify active sheet
-const text = await workbook()
+// Stringify the first sheet (use sheetName to select another)
+const text = await csv.stringify(workbook()
   .sheet('Data')
   .rows([
     ['name', 'value'],
     ['alpha', 1],
-  ])
-  .csv();
+  ]));
 ```
 
 Node:
@@ -226,11 +226,12 @@ await writeCsvFile('out.csv', data);
 
 | Import | Purpose |
 |--------|---------|
-| `@sebbebroman/exceljs` | Builder, `writeBuffer`, `load`, `csv`, enums (browser-safe) |
+| `@sebbebroman/exceljs` | Builder, `writeBuffer`, `load`, enums (browser-safe) |
+| `@sebbebroman/exceljs/csv` | Optional CSV parse/stringify, `viewCsv`, and `readCsvRows` |
 | `@sebbebroman/exceljs/protection` | Optional synchronous `sheetProtection(password, options)` factory |
 | `@sebbebroman/exceljs/node` | + `writeFile` / `readFile` / `streamWrite` / `streamRead` / `readCsvFile` / `writeCsvFile` |
 
-The supported runtime entry points are the main entry, `/node`, and `/protection`; `./package.json` is also exported. There is no `./csv`, `./stream/xlsx`, or default `ExcelJS` class. Types resolve to [`excel.d.ts`](./excel.d.ts) and [`node.d.ts`](./node.d.ts). The mutable document API has been removed; stream coordinators are internal.
+The supported runtime entry points are the main entry, `/node`, `/protection`, and `/csv`; `./package.json` is also exported. There is no `./stream/xlsx`, or default `ExcelJS` class. Types resolve to [`excel.d.ts`](./excel.d.ts) and [`node.d.ts`](./node.d.ts). The mutable document API has been removed; stream coordinators are internal.
 
 Password hashing is opt-in, so unused protection crypto can be tree-shaken out even in single-file browser bundles:
 
@@ -246,6 +247,8 @@ const bytes = await workbook().sheet('Data').row([1, 2])
 `.protect()` now takes a prepared protection model; the previous password/options overload has been removed. For passwordless protection, use `.protect({sheet: true})`. Hashing runs synchronously when the optional factory is called. Loaded hashes can be re-encoded through the core without importing crypto.
 
 Pipeline overview: [ARCHITECTURE.md](./ARCHITECTURE.md) (op-log → materialize → XLSX).
+
+CSV views and dense rows use `viewCsv(data)` and `readCsvRows(data)` from `/csv`; core `viewWorkbook` and `readRows` accept XLSX inputs.
 
 ## Browser / bundlers
 
@@ -263,13 +266,13 @@ const buffer = await workbook()
 
 ### Tree-shaking
 
-- Named exports only (`workbook`, `writeBuffer`, `load`, `csv`, …).
+- Named exports only; CSV has a separate opt-in entry.
 - `"sideEffects": false` (importing the package does not extend `dayjs`; CSV helpers extend it on first use).
 - Import `@sebbebroman/exceljs/node` only in Node code paths.
 - `writeBuffer` and `load` are separate modules (read does not pull write).
-- Builder `.csv()` imports the CSV helper module dynamically. Bundlers can retain CSV chunks even in write-only clients because the builder exposes `.csv()`.
+- CSV lives in `/csv`; use `csv.stringify(builder)` rather than a builder method.
 
-Heavy OOXML features still load with the current encoder bridge; later milestones split more of the encoder. Optional drawings/tables/comments/pivots already use dynamic `import()`.
+Advanced XLSX features are detected and loaded automatically. Dynamic imports keep their code out of the initial download when the bundler supports code splitting; single-file bundles still include them.
 
 ### Dense export optimizations
 
@@ -306,7 +309,7 @@ Contenders (browser): **@sebbebroman/exceljs** esbuild browser bundle vs **excel
 | Phase 6: named `csv`, Node streamWrite / streamRead | ✅ |
 | Phase 7: public API cleanup (builder-only exports + docs) | ✅ |
 | Builder write (rows, cells, styles, merges, columns) | ✅ |
-| CSV (`csv.parse` / `.csv()` / Node file helpers) | ✅ |
+| CSV (`/csv` parse/stringify/views / Node file helpers) | ✅ |
 | Streaming (`streamWrite` / `streamRead` on `./node`) | ✅ |
 | Sheet protection | ✅ write; load re-encodes hash (password not recoverable) |
 | Tables / images / defined names | ✅ write; load best-effort |
@@ -319,12 +322,12 @@ Contenders (browser): **@sebbebroman/exceljs** esbuild browser bundle vs **excel
 
 ### Bundle size (indicative — write-only fixture)
 
-Measured by `pnpm test:browser-bundle` (esbuild minify, write-only builder path, CSV enabled, 2-cell fixture):
+Measured by `pnpm test:browser-bundle` (esbuild minify, write-only builder path, CSV excluded; advanced features automatic, 2-cell fixture):
 
 | Build | Size |
 |-------|------|
-| Single-file minified | ~268 KiB (gzip ~77 KiB) |
-| Code-split entry | ~142 KiB (excludes shared/async chunks; total ~266 KiB) |
+| Single-file minified | ~238 KiB (gzip ~66 KiB) |
+| Code-split entry | ~141 KiB (excludes shared/async chunks; total ~235 KiB) |
 
 Not representative of `load`/styles/tables/comments/CSV builds. Quote with fixture + flags + commit hash.
 

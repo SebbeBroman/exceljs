@@ -1,0 +1,50 @@
+{
+  "write": {
+    "before": {
+      "minified": 274374,
+      "gzip": 78587,
+      "csv": true
+    },
+    "after": {
+      "minified": 243424,
+      "gzip": 67364,
+      "csv": false
+    },
+    "saved": {
+      "minified": 30950,
+      "gzip": 11223
+    }
+  },
+  "readRows": {
+    "before": {
+      "minified": 45183,
+      "gzip": 17227,
+      "csv": true
+    },
+    "after": {
+      "minified": 34968,
+      "gzip": 14054,
+      "csv": false
+    },
+    "saved": {
+      "minified": 10215,
+      "gzip": 3173
+    }
+  },
+  "load": {
+    "before": {
+      "minified": 219443,
+      "gzip": 60713,
+      "csv": false
+    },
+    "after": {
+      "minified": 219443,
+      "gzip": 60713,
+      "csv": false
+    },
+    "saved": {
+      "minified": 0,
+      "gzip": 0
+    }
+  }
+}

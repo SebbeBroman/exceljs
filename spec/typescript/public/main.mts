@@ -1,4 +1,5 @@
-import {workbook, load, readRows, csv, type Workbook} from '@sebbebroman/exceljs';
+import {csv} from '@sebbebroman/exceljs/csv';
+import {workbook, load, readRows, type Workbook} from '@sebbebroman/exceljs';
 import * as main from '@sebbebroman/exceljs';
 
 const builder = workbook().sheet('Data').row(['name', 42]);

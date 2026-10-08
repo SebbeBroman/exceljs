@@ -1,3 +1,4 @@
+import type {CsvParseOptions, CsvStringifyOptions} from './csv.js';
 /**
  * Node-only types for `@sebbebroman/exceljs/node`.
  *
@@ -12,8 +13,6 @@ import type {
   WorkbookBuilder,
   WriteOptions,
   LoadOptions,
-  CsvParseOptions,
-  CsvStringifyOptions,
   ColumnInput,
   RowInput,
   WorksheetViewInput,

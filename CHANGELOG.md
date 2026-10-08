@@ -2,6 +2,14 @@
 
 ## 0.2.0
 
+### Breaking: optional CSV
+
+- CSV helpers and types move from core to `@sebbebroman/exceljs/csv`. Replace `builder.csv(opts)` with `csv.stringify(builder, opts)`; use `sheetName` to select the previous active sheet.
+- CSV views and dense row reads move to `viewCsv` / `readCsvRows`. Core `viewWorkbook` / `readRows` support XLSX; Node CSV file helpers stay available.
+- Unused CSV imports are eliminated from single-file browser bundles. Advanced XLSX features continue to load automatically.
+
+See [MIGRATION.md](./MIGRATION.md#upgrading-from-01x-to-020-optional-csv) for details.
+
 ### Breaking: opt-in sheet protection hashing
 
 The core builder no longer hashes passwords. Import the synchronous factory from `@sebbebroman/exceljs/protection` and pass its prepared model to `.protect()`.

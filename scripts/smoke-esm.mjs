@@ -4,7 +4,7 @@
 import {readFileSync, unlinkSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {workbook, writeBuffer, load, csv, ValueType} from '@sebbebroman/exceljs';
+import {workbook, writeBuffer, load, ValueType} from '@sebbebroman/exceljs';
 import {
   writeFile,
   readFile,
@@ -13,6 +13,7 @@ import {
   streamWrite,
   streamRead,
 } from '@sebbebroman/exceljs/node';
+import {csv} from '@sebbebroman/exceljs/csv';
 import {sheetProtection} from '@sebbebroman/exceljs/protection';
 import {unzipSync, strFromU8} from 'fflate';
 
@@ -85,12 +86,12 @@ unlinkSync(out);
 const buf2 = await writeBuffer(workbook().sheet('T').row([1, 2, 3]));
 assert(buf2.byteLength > 100, 'free writeBuffer failed');
 
-// CSV parse → sheet → writeBuffer; stringify / .csv()
+// CSV parse → sheet → writeBuffer; stringify through the optional entry
 const csvInit = await csv.parse('name,value\nalpha,1');
 const fromCsv = await workbook().sheet('Csv', csvInit).writeBuffer();
 assert(fromCsv.byteLength > 100, 'csv→xlsx failed');
-const csvText = await workbook().sheet('Csv', csvInit).csv();
-assert(csvText.includes('alpha'), `builder .csv failed: ${csvText}`);
+const csvText = await csv.stringify(workbook().sheet('Csv', csvInit));
+assert(csvText.includes('alpha'), `csv.stringify failed: ${csvText}`);
 const csvText2 = await csv.stringify(workbook().sheet('Csv', csvInit));
 assert(csvText2.includes('name'), 'csv.stringify failed');
 
@@ -150,6 +151,8 @@ assert(
   typeof main.sheetProtection === 'undefined',
   'sheetProtection must only be exported from /protection',
 );
+assert(typeof main.csv === 'undefined', 'CSV must only be exported from /csv');
+assert(typeof workbook().csv === 'undefined', 'builder must not retain a CSV method');
 assert(typeof main.default === 'undefined', 'main entry must not default-export ExcelJS');
 assert(typeof main.Workbook !== 'function', 'main entry must not export Doc Workbook class');
 const nodeMod = await import('@sebbebroman/exceljs/node');
@@ -158,7 +161,7 @@ assert(typeof nodeMod.streamWrite === 'function', 'streamWrite missing on node e
 assert(typeof nodeMod.streamRead === 'function', 'streamRead missing on node entry');
 
 console.log('esm smoke ok');
-console.log('  - named workbook / writeBuffer / load / csv');
+console.log('  - named workbook / writeBuffer / load; optional /csv');
 console.log('  - builder writeBuffer + load edit loop');
 console.log('  - node writeFile / readFile / readCsvFile / writeCsvFile');
 console.log('  - node streamWrite / streamRead');

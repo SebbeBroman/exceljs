@@ -1174,7 +1174,7 @@ export interface WorkbookView {
   toJSON(): Workbook;
 }
 
-/** Options for `readRows` (CSV/xlsx → dense `string[][]`). */
+/** Options for `readRows` (xlsx → dense `string[][]`). */
 export interface ReadRowsOptions extends ViewWorkbookOptions, RowsOptions {
   /** Sheet name or 0-based index. Default `0`. */
   sheet?: string | number;
@@ -1188,33 +1188,6 @@ export interface SheetInit {
   views?: WorksheetViewInput[];
   pageSetup?: Partial<PageSetup>;
   headerFooter?: Partial<HeaderFooter>;
-}
-
-/** Options for `csv.parse` / Node `readCsvFile`. */
-export interface CsvParseOptions {
-  /** Sheet name used by Node `readCsvFile` (default `"Sheet1"`). Ignored by `csv.parse`. */
-  sheetName?: string;
-  dateFormats?: string[];
-  map?: (datum: string, index?: number) => unknown;
-  /** Pass-through to fast-csv parse options. */
-  parserOptions?: Record<string, unknown>;
-}
-
-/** Options for `csv.stringify` / builder `.csv()` / Node `writeCsvFile`. */
-export interface CsvStringifyOptions {
-  /** Sheet name to export (default: active/first sheet). */
-  sheetName?: string;
-  /** Sheet model `id` or 1-based index into `sheets`. */
-  sheetId?: number;
-  dateFormat?: string;
-  dateUTC?: boolean;
-  map?: (value: unknown, index?: number) => unknown;
-  /** When true (default), emit blank lines for missing row numbers. */
-  includeEmptyRows?: boolean;
-  /** Pass-through to fast-csv format options. */
-  formatterOptions?: Record<string, unknown>;
-  /** File encoding for Node `writeCsvFile` only. */
-  encoding?: BufferEncoding;
 }
 
 export interface SheetBuilder {
@@ -1268,31 +1241,9 @@ export interface WorkbookBuilder {
   definedName(name: string, refersTo: string): WorkbookBuilder;
   build(): Workbook;
   writeBuffer(opts?: WriteOptions): Promise<Uint8Array>;
-  /** Stringify the active (or first) sheet as CSV. */
-  csv(opts?: CsvStringifyOptions): Promise<string>;
 }
 
-/** Named CSV helpers. */
-export const csv: {
-  parse(text: string, opts?: CsvParseOptions): Promise<SheetInit>;
-  stringify(input: Workbook | WorkbookBuilder, opts?: CsvStringifyOptions): Promise<string>;
-};
-
-export function parseCsv(text: string, opts?: CsvParseOptions): Promise<SheetInit>;
-export function stringifyCsv(
-  input: Workbook | WorkbookBuilder,
-  opts?: CsvStringifyOptions,
-): Promise<string>;
-
-/**
- * Create a builder, optionally seeded from a `WorkbookInit`, a plain `Workbook`
- * snapshot, or a read-only `WorkbookView`.
- *
- * WARNING: `WorkbookView` (`viewWorkbook`/`readRows`) is values-only (no styles,
- * merges, formulas, hyperlinks, images; dates arrive numeric) — `workbook(view)`
- * re-encodes from values, so never use it for fidelity round-trips. Use `load()`
- * when formatting must survive.
- */
+/** Start a workbook builder. */
 export function workbook(init?: WorkbookInit | Workbook | WorkbookView): WorkbookBuilder;
 export function isWorkbookBuilder(value: unknown): value is WorkbookBuilder;
 export function writeBuffer(
@@ -1304,7 +1255,7 @@ export function load(
   options?: LoadOptions,
 ): Promise<Workbook>;
 
-/** Read-only view over CSV or OOXML (xlsx/xlsm/…). */
+/** Read-only view over OOXML (xlsx/xlsm/…). CSV uses the optional /csv entry. */
 export function viewWorkbook(
   data: ArrayBuffer | Uint8Array | ArrayBufferView | string,
   options?: ViewWorkbookOptions,
@@ -1312,7 +1263,7 @@ export function viewWorkbook(
 export function isWorkbookView(value: unknown): value is WorkbookView;
 
 /**
- * CSV or xlsx → dense `string[][]`.
+ * XLSX → dense `string[][]`. CSV uses readCsvRows from the optional /csv entry.
  * Sugar: `(await viewWorkbook(data, opts)).sheet(opts.sheet ?? 0).rows({ values: 'string', ... })`
  */
 export function readRows(

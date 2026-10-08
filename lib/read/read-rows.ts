@@ -1,5 +1,5 @@
 /**
- * Sugar: CSV/xlsx → dense `string[][]` via {@link viewWorkbook} / light package.
+ * Sugar: XLSX → dense `string[][]` via {@link viewWorkbook} / light package.
  *
  *   const rows = await readRows(arrayBuffer, { filename: file.name });
  */
@@ -24,7 +24,7 @@ export interface ReadRowsOptions extends ViewWorkbookOptions, RowsOptions {
 }
 
 /**
- * Read CSV or xlsx into a dense `string[][]`.
+ * Read xlsx into a dense `string[][]`.
  *
  * Equivalent to:
  *   `(await viewWorkbook(data, opts)).sheet(opts.sheet ?? 0).rows({ ...opts, values: 'string' })`

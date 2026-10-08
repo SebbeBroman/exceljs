@@ -1,6 +1,6 @@
 # Migration from ExcelJS 4.x to @sebbebroman/exceljs 0.2
 
-`@sebbebroman/exceljs` 0.2 is a **breaking** redesign of the ExcelJS 4.x API. The public API is a fluent **builder** plus three package entry points. The mutable ExcelJS-style `Workbook` / `Worksheet` classes are no longer exported.
+`@sebbebroman/exceljs` 0.2 is a **breaking** redesign of the ExcelJS 4.x API. The public API is a fluent **builder** plus four package entry points. The mutable ExcelJS-style `Workbook` / `Worksheet` classes are no longer exported.
 
 For the 0.1.x protection API changes, see [the upgrade section](#upgrading-from-01x-to-020-opt-in-protection-hashing) and [CHANGELOG.md](./CHANGELOG.md).
 
@@ -8,13 +8,14 @@ For the 0.1.x protection API changes, see [the upgrade section](#upgrading-from-
 
 | Import                            | Role                                                                              |
 | --------------------------------- | --------------------------------------------------------------------------------- |
-| `@sebbebroman/exceljs`            | Builder, `writeBuffer`, `load`, `csv`, types, enums (browser-safe)                |
+| `@sebbebroman/exceljs`            | Builder, `writeBuffer`, `load`, types, enums (browser-safe)                       |
+| `@sebbebroman/exceljs/csv`        | Optional CSV parsing, formatting and views                                        |
 | `@sebbebroman/exceljs/protection` | Optional synchronous `sheetProtection(password, options)` factory                 |
 | `@sebbebroman/exceljs/node`       | Same + `writeFile` / `readFile` / `streamWrite` / `streamRead` / CSV file helpers |
 
 Differences from ExcelJS 4.x:
 
-- `@sebbebroman/exceljs/csv` (side-effect import) — use named `csv` from the main entry instead
+- CSV uses named imports from `@sebbebroman/exceljs/csv` (no side-effect registration)
 - `@sebbebroman/exceljs/stream/xlsx` — use `streamWrite` / `streamRead` on `./node` (no public `WorkbookWriter` / `WorkbookReader`)
 - Default export `import ExcelJS from '…'`
 
@@ -45,7 +46,7 @@ Differences from ExcelJS 4.x:
 | `await wb.xlsx.load(buf)`                                                                   | `await load(buf)` → plain `{ meta, sheets }`                                           |
 | `await wb.xlsx.readFile(p)`                                                                 | `await readFile(p)` from `@sebbebroman/exceljs/node`                                   |
 | edit after load                                                                             | `workbook(await load(buf)).sheet(…).cell(…).writeBuffer()`                             |
-| `import '…/csv'` + `wb.csv.read/write`                                                      | `csv.parse` / `csv.stringify` / `.csv()`; Node `readCsvFile` / `writeCsvFile`          |
+| `import '…/csv'` + `wb.csv.read/write`                                                      | `csv.parse` / `csv.stringify` from `/csv`; Node `readCsvFile` / `writeCsvFile`         |
 | `new ExcelJS.stream.xlsx.WorkbookWriter({filename})` + `addWorksheet` / `addRow` / `commit` | `streamWrite(path, spec)` on `@sebbebroman/exceljs/node`                               |
 | `new ExcelJS.stream.xlsx.WorkbookReader(path)` async iterate                                | `streamRead(path)` on `./node` (row-oriented); or `readFile` for full plain model      |
 
@@ -116,20 +117,22 @@ await writeFile('out.xlsx', workbook(data).sheet('Sheet1').cell('A1', 'x'));
 ### CSV (named API — no side-effect import)
 
 ```ts
-import {workbook, csv} from '@sebbebroman/exceljs';
+import {workbook} from '@sebbebroman/exceljs';
+import {csv} from '@sebbebroman/exceljs/csv';
 
 // Parse → sheet init → xlsx
 const init = await csv.parse('name,value\nalpha,1');
 const xlsx = await workbook().sheet('Data', init).writeBuffer();
 
-// Stringify active sheet
-const text = await workbook()
-  .sheet('Data')
-  .rows([
-    ['name', 'value'],
-    ['alpha', 1],
-  ])
-  .csv();
+// Stringify the first sheet (use sheetName to select another)
+const text = await csv.stringify(
+  workbook()
+    .sheet('Data')
+    .rows([
+      ['name', 'value'],
+      ['alpha', 1],
+    ]),
+);
 
 // Or free helpers
 const again = await csv.stringify(workbook().sheet('Data', init));
@@ -145,7 +148,7 @@ await writeCsvFile('out.csv', data);
 await writeCsvFile('sheet-b.csv', data, {sheetName: 'B'});
 ```
 
-**ExcelJS 4.x → fork 0.2.x:** replace `wb.csv.read/write` with `csv.parse` / `csv.stringify` or builder `.csv()`. The fork has no `./csv` entry or mutable Workbook class.
+**ExcelJS 4.x → fork 0.2.x:** replace `wb.csv.read/write` with `csv.parse` / `csv.stringify` from `/csv`. The fork has no mutable Workbook class.
 
 ### Advanced sheet features (Phase 5)
 
@@ -266,7 +269,7 @@ Phases 1–7 of the builder rewrite are complete for the **public** product:
 | 6     | CSV + Node streamWrite / streamRead                  | ✅     |
 | 7     | Cleanup: exports, docs, internal-only legacy entries | ✅     |
 
-**Supported:** builder write path (sheets, rows, cells, styles, merges, columns), advanced sheet features (views, pageSetup, headerFooter, dataValidation, CF, notes, protect, tables, images, defined names), `writeBuffer`, `load`, Node `writeFile` / `readFile`, Node `streamWrite` / `streamRead`, edit loop via `workbook(plain)`, named `csv` parse/stringify, builder `.csv()`, Node `readCsvFile` / `writeCsvFile`.
+**Supported:** builder write path (sheets, rows, cells, styles, merges, columns), advanced sheet features (views, pageSetup, headerFooter, dataValidation, CF, notes, protect, tables, images, defined names), `writeBuffer`, `load`, Node `writeFile` / `readFile`, Node `streamWrite` / `streamRead`, edit loop via `workbook(plain)`, optional `/csv` parse/stringify/views, Node `readCsvFile` / `writeCsvFile`.
 
 **Load covers (core):** null/number/string/boolean/Date/formula/hyperlink/richText cell values, basic cell styles, merges, column widths, workbook meta.
 
@@ -281,10 +284,10 @@ Phases 1–7 of the builder rewrite are complete for the **public** product:
 ## Tree-shaking
 
 - Prefer named imports: `import { workbook, writeBuffer } from '@sebbebroman/exceljs'`.
-- Builder `.csv()` imports its helper module dynamically; bundlers can retain CSV chunks even in write-only clients.
+- CSV is an opt-in `/csv` entry; builders have no `.csv()` method.
 - Do not import `@sebbebroman/exceljs/node` from browser bundles.
 - `"sideEffects": false` on the package.
-- There is no `./csv` package export — CSV is folded into the main entry.
+- Advanced XLSX features are detected and loaded automatically; callers do not need to know the file contents ahead of time.
 
 ## Compact ranges and native streams
 
@@ -309,3 +312,9 @@ remain available. Tests use direct imports and native Vitest assertions, and
 ## Upgrading from 0.1.x to 0.2.0: opt-in protection hashing
 
 Import `sheetProtection` from `@sebbebroman/exceljs/protection` to prepare a password hash, then pass that model to `.protect()`. The factory is synchronous. The previous `.protect(password, options)` and plain-model `sheet.protect` APIs have been removed; plain models store prepared data in `sheet.sheetProtection`. Passwordless protection accepts `.protect({sheet: true, selectLockedCells: false})` directly. Core writes and edits of loaded protection models require no crypto import.
+
+## Upgrading from 0.1.x to 0.2.0: optional CSV
+
+CSV is no longer exported from the core or `/node`, and builders no longer expose `.csv()`. Import `csv` (or individual helpers) from `@sebbebroman/exceljs/csv`; replace `builder.csv(options)` with `csv.stringify(builder, options)`. The default sheet is the first sheet; pass `{sheetName}` to preserve an active-sheet selection. Replace CSV calls to core `viewWorkbook`/`readRows` with `viewCsv`/`readCsvRows`. Node `readCsvFile`/`writeCsvFile` continue to work, and their option types are exported from `/csv`.
+
+Advanced XLSX feature handling remains automatic for both reads and writes.

@@ -23,7 +23,6 @@ import {type BuilderOp, emptyUsedFlags, noteFormulaValue, type UsedFlags} from '
 import colCache from '../utils/col-cache.js';
 import {compileToPlainWorkbook} from '../compile/ops-to-model.js';
 import {writeBuffer as encodeWriteBuffer} from '../xlsx/write-buffer.js';
-import type {CsvStringifyOptions} from '../csv/public.js';
 
 /** Duck-type BookView without importing the read graph (tree-shake). */
 const WORKBOOK_VIEW_BRAND = Symbol.for('@sebbebroman/exceljs.WorkbookView');
@@ -132,11 +131,6 @@ export interface WorkbookBuilder {
   /** Plain data snapshot (no I/O). */
   build(): Workbook;
   writeBuffer(opts?: WriteOptions): Promise<Uint8Array>;
-  /**
-   * Stringify the active (or first) sheet as CSV.
-   * Implementation is loaded on demand so write-only bundles can tree-shake CSV.
-   */
-  csv(opts?: CsvStringifyOptions): Promise<string>;
 
   /** @internal */
   readonly _ops: BuilderOp[];
@@ -533,16 +527,6 @@ class WorkbookBuilderImpl implements WorkbookBuilder {
 
   writeBuffer(opts?: WriteOptions): Promise<Uint8Array> {
     return encodeWriteBuffer(this, opts);
-  }
-
-  async csv(opts?: CsvStringifyOptions): Promise<string> {
-    // Dynamic import: keep CSV out of write-only static graphs.
-    const {stringifyCsv} = await import('../csv/public.js');
-    const options: CsvStringifyOptions = opts ? {...opts} : {};
-    if (options.sheetName == null && options.sheetId == null && this._cursor) {
-      options.sheetName = this._cursor;
-    }
-    return stringifyCsv(this, options);
   }
 }
 

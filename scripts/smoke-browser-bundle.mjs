@@ -3,7 +3,7 @@
  * Asserts the client write path works and does not depend on a live `process` object.
  * Reports minified single-file size and code-split entry chunk sizes (write-only).
  *
- * CSV stays enabled through fast-csv/browser, without Node polyfills.
+ * CSV is opt-in; advanced XLSX features are handled automatically.
  */
 import * as esbuild from 'esbuild';
 import {writeFileSync, mkdirSync, readFileSync, readdirSync, statSync, rmSync} from 'node:fs';
@@ -43,7 +43,17 @@ function assertCrypto(result, expected) {
         /(?:@noble|utils\/encryptor|protection\/sheet-protection)/.test(path),
     ),
   );
+  if (!expected) assertCsv(result, false);
   if (included !== expected) throw new Error(`crypto inclusion mismatch: expected ${expected}`);
+}
+
+function assertCsv(result, expected) {
+  const included = Object.values(result.metafile.outputs).some(output =>
+    Object.entries(output.inputs).some(
+      ([path, info]) => info.bytesInOutput > 0 && /(?:fast-csv|dayjs|lib\/csv\/)/.test(path),
+    ),
+  );
+  if (included !== expected) throw new Error(`CSV inclusion mismatch: expected ${expected}`);
 }
 
 const writeOnlyEntry = join(outDir, 'entry-write-only.js');
@@ -128,7 +138,9 @@ async function measureSplit(label, entryPoint) {
 }
 
 const split = await measureSplit('write-only', writeOnlyEntry);
-console.log('  (builder write-only path; CSV enabled; node entry not imported)');
+console.log(
+  '  (builder write-only path; CSV excluded; advanced features automatic; node entry not imported)',
+);
 
 // Persist sizes for docs
 const sizesPath = join(outDir, 'sizes.txt');
@@ -148,6 +160,7 @@ writeFileSync(
   unusedEntry,
   `
 import {sheetProtection} from '@sebbebroman/exceljs/protection';
+import {csv} from '@sebbebroman/exceljs/csv';
 import {workbook} from '@sebbebroman/exceljs';
 export const run = () => workbook().sheet('S').row([1]).writeBuffer();
 `,
@@ -160,6 +173,7 @@ const unused = await esbuild.build({
   minify: true,
 });
 assertCrypto(unused, false);
+await measureSplit('unused-optional', unusedEntry);
 
 // The opt-in entry must also work when bundled for the browser.
 const protectedEntry = join(outDir, 'entry-protected.js');
@@ -189,3 +203,27 @@ await (await import(pathToFileURL(protectedFile).href + `?t=${Date.now()}`)).run
 console.log(
   '  protection: absent from core and unused opt-in imports; explicit opt-in round-trip passed',
 );
+
+const csvEntry = join(outDir, 'entry-csv.js');
+writeFileSync(
+  csvEntry,
+  `
+import {csv, readCsvRows} from '@sebbebroman/exceljs/csv';
+export async function run() {
+  const rows = await readCsvRows('name,value\\nAda,1');
+  if (rows[1][0] !== 'Ada') throw new Error('CSV row missing');
+  return csv.stringify({meta: {}, sheets: [{name: 'S', rows: [{number: 1, cells: {1: {value: 'hello, world'}}}]}]});
+}
+`,
+);
+const csvFile = join(outDir, 'csv.mjs');
+const csvResult = await esbuild.build({
+  ...sharedBuild,
+  entryPoints: [csvEntry],
+  outfile: csvFile,
+  metafile: true,
+  minify: true,
+});
+assertCsv(csvResult, true);
+await (await import(pathToFileURL(csvFile).href + `?t=${Date.now()}`)).run();
+console.log('  CSV: absent from core/unused imports; explicit CSV entry works');

@@ -31,9 +31,6 @@ export {
   isWorkbookView,
   readRows,
   cellToDisplayString,
-  csv,
-  parseCsv,
-  stringifyCsv,
   ValueType,
   FormulaType,
   RelationshipType,
@@ -64,8 +61,6 @@ export type {
   RecordsOptions,
   WorkbookBuilder,
   SheetBuilder,
-  CsvParseOptions,
-  CsvStringifyOptions,
 } from './excel.js';
 
 export {streamWrite} from './lib/stream/xlsx/stream-write.js';

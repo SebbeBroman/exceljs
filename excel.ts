@@ -1,7 +1,7 @@
 /**
  * Package entry for @sebbebroman/exceljs (builder-first API).
  *
- *   import { workbook, writeBuffer, load, csv } from '@sebbebroman/exceljs';
+ *   import { workbook, writeBuffer, load } from '@sebbebroman/exceljs';
  *
  *   const buf = await workbook()
  *     .sheet('Data')
@@ -11,7 +11,7 @@
  *   const data = await load(buf);
  *   const out = await workbook(data).sheet('Data').cell('A1', 'updated').writeBuffer();
  *
- *   const text = await workbook().sheet('Data', await csv.parse('a,1\nb,2')).csv();
+ * CSV helpers: `@sebbebroman/exceljs/csv`
  *
  * Node filesystem helpers: `@sebbebroman/exceljs/node`
  */
@@ -32,13 +32,9 @@ export type {
   RecordsOptions,
 } from './lib/read/view.js';
 
-/** CSV/xlsx → dense `string[][]` (sugar over viewWorkbook). */
+/** XLSX → dense `string[][]` (CSV uses the optional /csv entry). */
 export {readRows, cellToDisplayString} from './lib/read/read-rows.js';
 export type {ReadRowsOptions, ReadRowsFormat} from './lib/read/read-rows.js';
-
-/** Named CSV helpers (`csv.parse` / `csv.stringify`). Tree-shaken when unused. */
-export {csv, parseCsv, stringifyCsv} from './lib/csv/public.js';
-export type {CsvParseOptions, CsvStringifyOptions} from './lib/csv/public.js';
 
 export type {
   Workbook,
