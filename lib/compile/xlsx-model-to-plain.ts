@@ -110,16 +110,36 @@ export function xlsxModelToPlain(model: XlsxWorkbookModel): Workbook {
     if (worksheet.sheetProtection) sheet.sheetProtection = {...worksheet.sheetProtection};
     if (worksheet.tables?.length)
       sheet.tables = worksheet.tables.map(table => {
-        const m = table as unknown as TableProperties;
+        const m = table as unknown as TableProperties & {tableRef: string};
+        const range = new Range(m.tableRef);
+        const rowCells = new Map(rows.map(row => [row.number, row.cells]));
+        const first = range.top! + (m.headerRow ? 1 : 0);
+        const last = range.bottom! - (m.totalsRow ? 1 : 0);
+        const body = Array.from({length: Math.max(0, last - first + 1)}, (_, i) =>
+          m.columns.map((_, col) => rowCells.get(first + i)?.[range.left! + col]?.value ?? null),
+        );
+        const columns = m.columns.map((column, index) => {
+          const result: TableProperties['columns'][number] & {totalsRowResult?: unknown} = {
+            ...column,
+          };
+          if (m.totalsRow && index > 0) {
+            const value = rowCells.get(range.bottom!)?.[range.left! + index]?.value;
+            if (value && typeof value === 'object' && 'formula' in value) {
+              if (column.totalsRowFunction === 'custom') result.totalsRowFormula = value.formula;
+              if (value.result !== undefined) result.totalsRowResult = value.result;
+            }
+          }
+          return result;
+        });
         return {
           name: m.name,
           displayName: m.displayName,
-          ref: m.ref,
+          ref: colCache.encodeAddress(range.top!, range.left!),
           headerRow: m.headerRow,
           totalsRow: m.totalsRow,
           style: m.style,
-          columns: m.columns,
-          rows: m.rows,
+          columns,
+          rows: body,
         };
       });
     const images = (worksheet.media ?? []).filter(

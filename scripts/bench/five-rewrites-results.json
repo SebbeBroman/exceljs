@@ -1,0 +1,115 @@
+{
+  "method": "Browser ESM, esbuild minification + gzip; initial includes static imports, excludes lazy chunks. Runtime: median of 11 after 3 warmups, 1000 x 8 cells; timings are indicative, not regression thresholds.",
+  "stages": {
+    "baseline": {
+      "stage": "baseline",
+      "bundles": {
+        "write": {
+          "minified": 243424,
+          "gzip": 67364,
+          "initialMinified": 168979,
+          "initialGzip": 50674,
+          "splitTotal": 241100
+        },
+        "load": {
+          "minified": 219443,
+          "gzip": 60713,
+          "initialMinified": 149772,
+          "initialGzip": 45519,
+          "splitTotal": 219295
+        },
+        "readRows": {
+          "minified": 34968,
+          "gzip": 14054,
+          "initialMinified": 34781,
+          "initialGzip": 14745,
+          "splitTotal": 116915
+        }
+      },
+      "runtime": {
+        "write": {
+          "medianMs": 6.290707999999995,
+          "minMs": 5.616791999999975,
+          "maxMs": 7.374000000000024
+        },
+        "load": {
+          "medianMs": 9.679542000000026,
+          "minMs": 8.567458999999985,
+          "maxMs": 10.827208000000041
+        },
+        "readRows": {
+          "medianMs": 4.367166000000111,
+          "minMs": 4.228708000000097,
+          "maxMs": 5.267417000000023
+        },
+        "tableEdit": {
+          "works": false,
+          "error": "Table must have ref"
+        }
+      },
+      "addresses": {
+        "value": "XFD",
+        "coldMs": 5.375500000000002,
+        "retainedBytes": 1369352,
+        "warmMs": 0.9522499999999994,
+        "checksum": 294904
+      }
+    },
+    "tables": {
+      "stage": "tables",
+      "bundles": {
+        "write": {
+          "minified": 243525,
+          "gzip": 67414,
+          "initialMinified": 168979,
+          "initialGzip": 50682,
+          "splitTotal": 241201
+        },
+        "load": {
+          "minified": 219937,
+          "gzip": 60924,
+          "initialMinified": 150265,
+          "initialGzip": 45746,
+          "splitTotal": 219889
+        },
+        "readRows": {
+          "minified": 34968,
+          "gzip": 14054,
+          "initialMinified": 34781,
+          "initialGzip": 14747,
+          "splitTotal": 117016
+        }
+      },
+      "runtime": {
+        "write": {
+          "medianMs": 6.256582999999978,
+          "minMs": 5.59537499999999,
+          "maxMs": 7.533665999999982
+        },
+        "load": {
+          "medianMs": 9.537624999999991,
+          "minMs": 7.991207999999972,
+          "maxMs": 11.343084000000033
+        },
+        "readRows": {
+          "medianMs": 4.6379590000000235,
+          "minMs": 4.402999999999963,
+          "maxMs": 5.825958000000014
+        },
+        "tableEdit": {
+          "works": true,
+          "medianMs": 1.2188749999999118,
+          "minMs": 1.082208000000037,
+          "maxMs": 1.5726250000000164
+        }
+      },
+      "addresses": {
+        "value": "XFD",
+        "coldMs": 5.417000000000002,
+        "retainedBytes": 1372416,
+        "warmMs": 0.9983750000000029,
+        "checksum": 294904
+      }
+    }
+  }
+}

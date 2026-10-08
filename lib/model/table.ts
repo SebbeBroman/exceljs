@@ -116,6 +116,11 @@ export function placeTable(
 
   table.columns.forEach((column, i) => {
     assert(column.name, `Column ${i} must have a name`);
+    // Parsed differential styles carry the format's OOXML model.
+    const numFmt = column.style?.numFmt as unknown;
+    if (numFmt && typeof numFmt === 'object' && 'formatCode' in numFmt) {
+      column.style!.numFmt = String(numFmt.formatCode);
+    }
     if (i === 0) {
       assign(column, 'totalsRowLabel', 'Total');
     } else {

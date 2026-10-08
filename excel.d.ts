@@ -912,6 +912,8 @@ interface TableColumnProperties {
    * Optional formula for custom functions
    */
   totalsRowFormula?: string;
+  /** Cached result for the totals formula. */
+  totalsRowResult?: CellValue;
 
   /**
    * Styles applied to the column
