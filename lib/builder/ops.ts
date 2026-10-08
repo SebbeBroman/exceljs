@@ -7,7 +7,6 @@ import type {
   MediaImage,
   NoteValue,
   PageSetup,
-  ProtectOptions,
   RowInput,
   SheetImageRange,
   Style,
@@ -67,7 +66,6 @@ export type BuilderOp =
   | {op: 'dataValidation'; sheet: string; address: string; rules: DataValidation}
   | {op: 'conditionalFormatting'; sheet: string; cf: ConditionalFormattingOptions}
   | {op: 'note'; sheet: string; address: string; note: NoteValue}
-  | {op: 'protect'; sheet: string; password?: string; options?: ProtectOptions}
   /** Loaded / pre-hashed protection model applied as-is at materialize. */
   | {op: 'sheetProtection'; sheet: string; model: Record<string, unknown>}
   | {op: 'table'; sheet: string; table: TableProperties}

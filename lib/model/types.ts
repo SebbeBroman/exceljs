@@ -142,11 +142,14 @@ export type SheetImageRange =
       hyperlinks?: {hyperlink: string; tooltip?: string};
     };
 
-/** Deferred sheet protection (password hashed at materialize/encode time). */
-export interface ProtectConfig {
-  password?: string;
-  options?: ProtectOptions;
-}
+/** Prepared OOXML sheet protection; create password hashes through the protection entry. */
+export type SheetProtection = ProtectOptions & {
+  sheet?: boolean;
+  algorithmName?: string;
+  saltValue?: string;
+  hashValue?: string;
+  [key: string]: unknown;
+};
 
 /** Defined name entry for plain model / builder. */
 export interface DefinedNameEntry {
@@ -176,15 +179,10 @@ export interface SheetModel {
   /** Cell address → note text or comment object. */
   notes?: Record<string, NoteValue>;
   /**
-   * Deferred protect config from the builder (password hashed on write).
-   * Prefer this over `sheetProtection` when both would apply.
-   */
-  protect?: ProtectConfig;
-  /**
    * Pre-hashed OOXML protection model (e.g. from load). Applied as-is on write.
    * Write-only for re-encode; password cannot be recovered.
    */
-  sheetProtection?: Record<string, unknown>;
+  sheetProtection?: SheetProtection;
   tables?: TableProperties[];
   /** Sheet-level image placements (media is on Workbook). */
   images?: SheetImagePlacement[];

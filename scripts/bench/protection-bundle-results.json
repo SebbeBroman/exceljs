@@ -1,0 +1,50 @@
+{
+  "write": {
+    "before": {
+      "minified": 282881,
+      "gzip": 82529,
+      "crypto": true
+    },
+    "after": {
+      "minified": 274374,
+      "gzip": 78587,
+      "crypto": false
+    },
+    "saved": {
+      "minified": 8507,
+      "gzip": 3942
+    }
+  },
+  "readRows": {
+    "before": {
+      "minified": 45183,
+      "gzip": 17226,
+      "crypto": false
+    },
+    "after": {
+      "minified": 45183,
+      "gzip": 17227,
+      "crypto": false
+    },
+    "saved": {
+      "minified": 0,
+      "gzip": -1
+    }
+  },
+  "load": {
+    "before": {
+      "minified": 219443,
+      "gzip": 60699,
+      "crypto": false
+    },
+    "after": {
+      "minified": 219443,
+      "gzip": 60713,
+      "crypto": false
+    },
+    "saved": {
+      "minified": 0,
+      "gzip": -14
+    }
+  }
+}

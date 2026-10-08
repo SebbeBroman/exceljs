@@ -1,6 +1,6 @@
 /** Compile directly into the existing OOXML encoder's model, without a document graph. */
 import type {BuilderOp} from '../builder/ops.js';
-import type {Workbook, ColumnInput, RowInput, Style, ProtectOptions} from '../model/types.js';
+import type {Workbook, ColumnInput, RowInput, Style} from '../model/types.js';
 import {optimizeOps} from './ops-to-model.js';
 import {valueToModel, mergeStyles} from '../model/cell-model.js';
 import colCache from '../utils/col-cache.js';
@@ -9,7 +9,6 @@ import Range from '../model/range.js';
 import DefinedNames from '../model/defined-names.js';
 import Note from '../model/note.js';
 import Enums from '../model/enums.js';
-import Encryptor from '../utils/encryptor.js';
 import type {CellValueModel} from '../model/cell-model.js';
 import type {RowModelData} from '../model/xlsx-model.js';
 import type {WorksheetModelData} from '../model/xlsx-model.js';
@@ -197,27 +196,6 @@ function mergeRange(sheet: SheetState, range: string): void {
   sheet.merges.push(dimensions);
   sheet.model.merges!.push(dimensions.range);
 }
-function protection(password?: string, options?: ProtectOptions): Record<string, unknown> {
-  const model: Record<string, unknown> = {sheet: true};
-  const spinCount =
-    options?.spinCount == null
-      ? 100000
-      : Number.isFinite(options.spinCount)
-        ? Math.round(Math.max(0, options.spinCount))
-        : 100000;
-  if (password) {
-    const salt = Encryptor.randomBytesBase64(16);
-    Object.assign(model, {
-      algorithmName: 'SHA-512',
-      saltValue: salt,
-      spinCount,
-      hashValue: Encryptor.convertPasswordToHash(password, 'SHA512', salt, spinCount),
-    });
-  }
-  Object.assign(model, options);
-  if (!password) delete model.spinCount;
-  return model;
-}
 function finishSheet(sheet: SheetState): WorksheetModelData {
   const model = sheet.model;
   model.cols = columnsToModel(sheet.columns);
@@ -382,9 +360,6 @@ export async function compileToXlsxModel(
         ).model;
         break;
       }
-      case 'protect':
-        ensure(op.sheet).model.sheetProtection = protection(op.password, op.options);
-        break;
       case 'sheetProtection':
         ensure(op.sheet).model.sheetProtection = {...op.model};
         break;
@@ -462,8 +437,7 @@ export async function plainToXlsxModel(workbook: Workbook): Promise<XlsxWorkbook
       ops.push({op: 'conditionalFormatting', sheet: sheet.name, cf});
     for (const [address, note] of Object.entries(sheet.notes ?? {}))
       ops.push({op: 'note', sheet: sheet.name, address, note});
-    if (sheet.protect) ops.push({op: 'protect', sheet: sheet.name, ...sheet.protect});
-    else if (sheet.sheetProtection)
+    if (sheet.sheetProtection)
       ops.push({op: 'sheetProtection', sheet: sheet.name, model: sheet.sheetProtection});
     for (const table of sheet.tables ?? []) ops.push({op: 'table', sheet: sheet.name, table});
     for (const image of sheet.images ?? [])

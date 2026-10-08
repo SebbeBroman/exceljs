@@ -63,7 +63,7 @@ export type {
   MediaImage,
   SheetImageRange,
   ProtectOptions,
-  ProtectConfig,
+  SheetProtection,
   DefinedNameEntry,
   WorksheetViewInput,
   SheetTitleInput,

@@ -35,6 +35,17 @@ const sharedBuild = {
   logLevel: 'warning',
 };
 
+function assertCrypto(result, expected) {
+  const included = Object.values(result.metafile.outputs).some(output =>
+    Object.entries(output.inputs).some(
+      ([path, info]) =>
+        info.bytesInOutput > 0 &&
+        /(?:@noble|utils\/encryptor|protection\/sheet-protection)/.test(path),
+    ),
+  );
+  if (included !== expected) throw new Error(`crypto inclusion mismatch: expected ${expected}`);
+}
+
 const writeOnlyEntry = join(outDir, 'entry-write-only.js');
 writeFileSync(
   writeOnlyEntry,
@@ -54,12 +65,15 @@ export async function run() {
 
 // --- Single-file minified ---
 const outfile = join(outDir, 'bundle.mjs');
-await esbuild.build({
+const single = await esbuild.build({
   ...sharedBuild,
+  metafile: true,
   entryPoints: [writeOnlyEntry],
   outfile,
   minify: true,
 });
+
+assertCrypto(single, false);
 
 const code = readFileSync(outfile, 'utf8');
 if (code.includes('from "readable-stream"') || code.includes("from 'readable-stream'")) {
@@ -87,8 +101,9 @@ async function measureSplit(label, entryPoint) {
   rmSync(splitDir, {recursive: true, force: true});
   mkdirSync(splitDir, {recursive: true});
 
-  await esbuild.build({
+  const result = await esbuild.build({
     ...sharedBuild,
+    metafile: true,
     entryPoints: [entryPoint],
     outdir: splitDir,
     entryNames: 'entry',
@@ -96,6 +111,8 @@ async function measureSplit(label, entryPoint) {
     splitting: true,
     minify: true,
   });
+
+  assertCrypto(result, false);
 
   const files = readdirSync(splitDir).filter(f => f.endsWith('.js'));
   let entryBytes = 0;
@@ -124,3 +141,51 @@ writeFileSync(
   ].join('\n') + '\n',
 );
 console.log(`  wrote ${sizesPath}`);
+
+// An unused optional import must disappear even from a single-file bundle.
+const unusedEntry = join(outDir, 'entry-unused-protection.js');
+writeFileSync(
+  unusedEntry,
+  `
+import {sheetProtection} from '@sebbebroman/exceljs/protection';
+import {workbook} from '@sebbebroman/exceljs';
+export const run = () => workbook().sheet('S').row([1]).writeBuffer();
+`,
+);
+const unused = await esbuild.build({
+  ...sharedBuild,
+  entryPoints: [unusedEntry],
+  write: false,
+  metafile: true,
+  minify: true,
+});
+assertCrypto(unused, false);
+
+// The opt-in entry must also work when bundled for the browser.
+const protectedEntry = join(outDir, 'entry-protected.js');
+writeFileSync(
+  protectedEntry,
+  `
+import {sheetProtection} from '@sebbebroman/exceljs/protection';
+import {workbook, load} from '@sebbebroman/exceljs';
+export async function run() {
+  const protection = sheetProtection('pw', {spinCount: 2});
+  const bytes = await workbook().sheet('S').row([1]).protect(protection).writeBuffer();
+  const loaded = await load(bytes);
+  if (loaded.sheets[0].sheetProtection.hashValue !== protection.hashValue) throw new Error('protection hash lost');
+}
+`,
+);
+const protectedFile = join(outDir, 'protected.mjs');
+const protectedResult = await esbuild.build({
+  ...sharedBuild,
+  entryPoints: [protectedEntry],
+  outfile: protectedFile,
+  metafile: true,
+  minify: true,
+});
+assertCrypto(protectedResult, true);
+await (await import(pathToFileURL(protectedFile).href + `?t=${Date.now()}`)).run();
+console.log(
+  '  protection: absent from core and unused opt-in imports; explicit opt-in round-trip passed',
+);

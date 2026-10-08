@@ -13,7 +13,6 @@ import type {
   MediaImage,
   NoteValue,
   PageSetup,
-  ProtectConfig,
   RowInput,
   SheetCell,
   SheetImagePlacement,
@@ -42,7 +41,6 @@ interface MutableSheet {
   dataValidations?: Record<string, DataValidation>;
   conditionalFormattings?: ConditionalFormattingOptions[];
   notes?: Record<string, NoteValue>;
-  protect?: ProtectConfig;
   sheetProtection?: Record<string, unknown>;
   tables?: TableProperties[];
   images?: SheetImagePlacement[];
@@ -308,7 +306,6 @@ function coalesceStyleFreeCellsToRows(ops: BuilderOp[]): BuilderOp[] {
       op.op === 'conditionalFormatting' ||
       op.op === 'table' ||
       op.op === 'sheetImage' ||
-      op.op === 'protect' ||
       op.op === 'sheetProtection' ||
       op.op === 'views' ||
       op.op === 'pageSetup' ||
@@ -567,9 +564,6 @@ export function compileToPlainWorkbook(ops: BuilderOp[]): Workbook {
         s.notes[op.address] = op.note;
         break;
       }
-      case 'protect':
-        ensure(op.sheet).protect = {password: op.password, options: op.options};
-        break;
       case 'sheetProtection':
         ensure(op.sheet).sheetProtection = op.model;
         break;
@@ -628,7 +622,6 @@ export function compileToPlainWorkbook(ops: BuilderOp[]): Workbook {
     }
     if (s.conditionalFormattings?.length) sheet.conditionalFormattings = s.conditionalFormattings;
     if (s.notes && Object.keys(s.notes).length) sheet.notes = s.notes;
-    if (s.protect) sheet.protect = s.protect;
     if (s.sheetProtection) sheet.sheetProtection = s.sheetProtection;
     if (s.tables?.length) sheet.tables = s.tables;
     if (s.images?.length) sheet.images = s.images;

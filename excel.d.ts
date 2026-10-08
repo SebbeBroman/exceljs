@@ -1063,10 +1063,13 @@ export type SheetImageRange =
       hyperlinks?: {hyperlink: string; tooltip?: string};
     };
 
-export interface ProtectConfig {
-  password?: string;
-  options?: ProtectOptions;
-}
+export type SheetProtection = ProtectOptions & {
+  sheet?: boolean;
+  algorithmName?: string;
+  saltValue?: string;
+  hashValue?: string;
+  [key: string]: unknown;
+};
 
 export interface DefinedNameEntry {
   name: string;
@@ -1090,8 +1093,7 @@ export interface SheetModel {
   dataValidations?: Record<string, DataValidation>;
   conditionalFormattings?: ConditionalFormattingOptions[];
   notes?: Record<string, NoteValue>;
-  protect?: ProtectConfig;
-  sheetProtection?: Record<string, unknown>;
+  sheetProtection?: SheetProtection;
   tables?: TableProperties[];
   images?: SheetImagePlacement[];
 }
@@ -1230,8 +1232,8 @@ export interface SheetBuilder {
   dataValidation(address: string, rules: DataValidation): SheetBuilder;
   conditionalFormatting(cf: ConditionalFormattingOptions): SheetBuilder;
   note(address: string, note: NoteValue): SheetBuilder;
-  /** Deferred: password hashed at materialize/encode time (chain stays sync). */
-  protect(password?: string, options?: ProtectOptions): SheetBuilder;
+  /** Apply a prepared protection model; create password hashes through the optional /protection entry. */
+  protect(model: SheetProtection): SheetBuilder;
   table(table: TableProperties): SheetBuilder;
   image(imageId: number, range: SheetImageRange): SheetBuilder;
 }
@@ -1254,8 +1256,8 @@ export interface WorkbookBuilder {
   dataValidation(address: string, rules: DataValidation): WorkbookBuilder;
   conditionalFormatting(cf: ConditionalFormattingOptions): WorkbookBuilder;
   note(address: string, note: NoteValue): WorkbookBuilder;
-  /** Deferred: password hashed at materialize/encode time (chain stays sync). */
-  protect(password?: string, options?: ProtectOptions): WorkbookBuilder;
+  /** Apply a prepared protection model; create password hashes through the optional /protection entry. */
+  protect(model: SheetProtection): WorkbookBuilder;
   table(table: TableProperties): WorkbookBuilder;
   /** Register workbook media; returns image id. */
   image(def: MediaImage): number;

@@ -1,6 +1,6 @@
 {
   "name": "@sebbebroman/exceljs",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Builder-first Excel (xlsx) for modern bundlers. ESM TypeScript fork of ExcelJS.",
   "private": false,
   "license": "MIT",
@@ -53,18 +53,25 @@
       "import": "./dist/node.js",
       "default": "./dist/node.js"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./protection": {
+      "types": "./protection.d.ts",
+      "import": "./dist/protection.js",
+      "default": "./dist/protection.js"
+    }
   },
   "sideEffects": false,
   "files": [
     "dist",
     "excel.d.ts",
     "node.d.ts",
+    "protection.d.ts",
     "LICENSE",
     "README.md",
     "README_zh.md",
     "MIGRATION.md",
-    "ARCHITECTURE.md"
+    "ARCHITECTURE.md",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "build": "node scripts/build.mjs",

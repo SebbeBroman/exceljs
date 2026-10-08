@@ -1,13 +1,16 @@
-# Migration from ExcelJS 4.x to @sebbebroman/exceljs 0.1
+# Migration from ExcelJS 4.x to @sebbebroman/exceljs 0.2
 
-`@sebbebroman/exceljs` 0.1 is a **breaking** redesign of the ExcelJS 4.x API. The public API is a fluent **builder** plus two package entry points. The mutable ExcelJS-style `Workbook` / `Worksheet` classes are no longer exported.
+`@sebbebroman/exceljs` 0.2 is a **breaking** redesign of the ExcelJS 4.x API. The public API is a fluent **builder** plus three package entry points. The mutable ExcelJS-style `Workbook` / `Worksheet` classes are no longer exported.
+
+For the 0.1.x protection API changes, see [the upgrade section](#upgrading-from-01x-to-020-opt-in-protection-hashing) and [CHANGELOG.md](./CHANGELOG.md).
 
 ## Entry points
 
-| Import                      | Role                                                                              |
-| --------------------------- | --------------------------------------------------------------------------------- |
-| `@sebbebroman/exceljs`      | Builder, `writeBuffer`, `load`, `csv`, types, enums (browser-safe)                |
-| `@sebbebroman/exceljs/node` | Same + `writeFile` / `readFile` / `streamWrite` / `streamRead` / CSV file helpers |
+| Import                            | Role                                                                              |
+| --------------------------------- | --------------------------------------------------------------------------------- |
+| `@sebbebroman/exceljs`            | Builder, `writeBuffer`, `load`, `csv`, types, enums (browser-safe)                |
+| `@sebbebroman/exceljs/protection` | Optional synchronous `sheetProtection(password, options)` factory                 |
+| `@sebbebroman/exceljs/node`       | Same + `writeFile` / `readFile` / `streamWrite` / `streamRead` / CSV file helpers |
 
 Differences from ExcelJS 4.x:
 
@@ -17,7 +20,7 @@ Differences from ExcelJS 4.x:
 
 ## API map
 
-| 4.x (mutable)                                                                               | 0.1.x (builder)                                                                        |
+| 4.x (mutable)                                                                               | 0.2.x (builder)                                                                        |
 | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
 | `new Workbook()`                                                                            | `workbook()`                                                                           |
 | `wb.creator = '…'`                                                                          | `workbook({ creator: '…' })` or `.props({ creator: '…' })`                             |
@@ -33,7 +36,7 @@ Differences from ExcelJS 4.x:
 | `cell.dataValidation = {…}`                                                                 | `.dataValidation(address, rules)`                                                      |
 | `ws.addConditionalFormatting(cf)`                                                           | `.conditionalFormatting(cf)`                                                           |
 | `cell.note = '…'`                                                                           | `.note(address, text \| note)`                                                         |
-| `await ws.protect(pw, opts)`                                                                | `.protect(pw, opts)` (deferred hash; chain stays sync)                                 |
+| `await ws.protect(pw, opts)`                                                                | `.protect(sheetProtection(pw, opts))` (opt-in `/protection` import)                    |
 | `ws.addTable(props)`                                                                        | `.table(props)`                                                                        |
 | `wb.addImage` + `ws.addImage`                                                               | `const id = b.image(def); b.image(id, range)`                                          |
 | `wb.definedNames.add(range, name)`                                                          | `.definedName(name, refersTo)`                                                         |
@@ -142,12 +145,13 @@ await writeCsvFile('out.csv', data);
 await writeCsvFile('sheet-b.csv', data, {sheetName: 'B'});
 ```
 
-**ExcelJS 4.x → fork 0.1.x:** replace `wb.csv.read/write` with `csv.parse` / `csv.stringify` or builder `.csv()`. The fork has no `./csv` entry or mutable Workbook class.
+**ExcelJS 4.x → fork 0.2.x:** replace `wb.csv.read/write` with `csv.parse` / `csv.stringify` or builder `.csv()`. The fork has no `./csv` entry or mutable Workbook class.
 
 ### Advanced sheet features (Phase 5)
 
 ```ts
 import {workbook} from '@sebbebroman/exceljs';
+import {sheetProtection} from '@sebbebroman/exceljs/protection';
 
 const buf = await workbook()
   .sheet('Report')
@@ -179,7 +183,7 @@ const buf = await workbook()
     ],
   })
   .note('A2', 'Top performer')
-  .protect('secret', {spinCount: 1000}) // hashed at write time; chain stays sync
+  .protect(sheetProtection('secret', {spinCount: 1000})) // import from /protection; hashes now
   .table({
     name: 'Scores',
     ref: 'A1:B3',
@@ -213,7 +217,7 @@ for (const row of source) {
 }
 await wb.commit();
 
-// Fork 0.1.x — declarative
+// Fork 0.2.x — declarative
 import {streamWrite, streamRead} from '@sebbebroman/exceljs/node';
 
 await streamWrite('out.xlsx', {
@@ -230,7 +234,7 @@ await streamWrite('out.xlsx', {
   ],
 });
 
-// Fork 0.1.x — callback (control flow)
+// Fork 0.2.x — callback (control flow)
 await streamWrite('out.xlsx', async w => {
   const sheet = w.sheet('Data', {
     columns: [
@@ -249,7 +253,7 @@ for await (const {sheetName, rowNumber, values} of streamRead('out.xlsx')) {
 
 `WorkbookWriter` / `WorkbookReader` are **not** public package exports. There is no `./stream/xlsx` export.
 
-## 0.1.0 status
+## 0.2.0 status
 
 Phases 1–7 of the builder rewrite are complete for the **public** product:
 
@@ -301,3 +305,7 @@ Internal XLSX file/stream wrappers, the old ZIP facade, `StreamBuf`, and the cus
 event emitter have been removed. The public Node file and streaming functions
 remain available. Tests use direct imports and native Vitest assertions, and
 `pnpm typecheck:spec` checks the complete maintained test suite.
+
+## Upgrading from 0.1.x to 0.2.0: opt-in protection hashing
+
+Import `sheetProtection` from `@sebbebroman/exceljs/protection` to prepare a password hash, then pass that model to `.protect()`. The factory is synchronous. The previous `.protect(password, options)` and plain-model `sheet.protect` APIs have been removed; plain models store prepared data in `sheet.sheetProtection`. Passwordless protection accepts `.protect({sheet: true, selectLockedCells: false})` directly. Core writes and edits of loaded protection models require no crypto import.

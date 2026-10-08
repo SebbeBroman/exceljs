@@ -1,3 +1,4 @@
+import {sheetProtection} from '../../../protection.js';
 import {describe, it, expect} from 'vite-plus/test';
 
 import {workbook, load} from '../../../excel.js';
@@ -174,11 +175,11 @@ describe('builder advanced features (Phase 5)', () => {
   });
 
   describe('protect', () => {
-    it('writes sheetProtection (deferred hash, low spinCount)', async () => {
+    it('writes prepared sheetProtection (low spinCount)', async () => {
       const buf = await workbook()
         .sheet('Locked')
         .cell('A1', 1)
-        .protect('secret', {spinCount: 1})
+        .protect(sheetProtection('secret', {spinCount: 1}))
         .writeBuffer();
 
       const xml = allSheetXml(buf);
@@ -188,10 +189,13 @@ describe('builder advanced features (Phase 5)', () => {
     });
 
     it('protect keeps builder chain sync and appears on build()', () => {
-      const b = workbook().sheet('P').row([1]).protect('pw', {spinCount: 1});
+      const model = sheetProtection('pw', {spinCount: 1});
+      const b = workbook().sheet('P').row([1]).protect(model);
       expect(b._used.protection).toBe(true);
       const plain = b.build();
-      expect(plain.sheets[0]!.protect?.password).toBe('pw');
+      expect(plain.sheets[0]!.sheetProtection).toEqual(model);
+      expect(model.hashValue).toBeTypeOf('string');
+      expect(plain.sheets[0]).not.toHaveProperty('protect');
     });
   });
 
@@ -340,12 +344,12 @@ describe('builder advanced features (Phase 5)', () => {
       const buf = await workbook()
         .sheet('P')
         .cell('A1', 1)
-        .protect('pw', {spinCount: 1})
+        .protect(sheetProtection('pw', {spinCount: 1}))
         .writeBuffer();
 
       const plain = await load(buf);
       // Password is not recoverable; hashed model should round-trip for re-encode
-      expect(plain.sheets[0]!.sheetProtection || plain.sheets[0]!.protect).toBeTruthy();
+      expect(plain.sheets[0]!.sheetProtection).toBeTruthy();
     });
   });
 
@@ -358,7 +362,7 @@ describe('builder advanced features (Phase 5)', () => {
             .views([{state: 'frozen', ySplit: 1}])
             .dataValidation('B1', {type: 'whole', formulae: [0], operator: 'greaterThan'})
             .note('A1', 'hi')
-            .protect(undefined, {spinCount: 1}),
+            .protect({sheet: true}),
         )
         .writeBuffer();
 

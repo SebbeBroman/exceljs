@@ -13,6 +13,7 @@ import {
   streamWrite,
   streamRead,
 } from '@sebbebroman/exceljs/node';
+import {sheetProtection} from '@sebbebroman/exceljs/protection';
 import {unzipSync, strFromU8} from 'fflate';
 
 const assert = (cond, msg) => {
@@ -53,6 +54,15 @@ const edited = await workbook(plain).sheet('Sheet1').cell('A1', 'updated esm').w
 const plain2 = await load(edited);
 const a1b = plain2.sheets[0].rows.find(r => r.number === 1).cells[1].value;
 assert(a1b === 'updated esm', `edit loop A1 mismatch: ${a1b}`);
+
+const protection = sheetProtection('pw', {spinCount: 2});
+const protectedPlain = await load(
+  await workbook().sheet('Locked').protect(protection).writeBuffer(),
+);
+assert(
+  protectedPlain.sheets[0].sheetProtection.hashValue === protection.hashValue,
+  'opt-in protection hash mismatch',
+);
 
 const out = join(tmpdir(), `exceljs-esm-smoke-${Date.now()}.xlsx`);
 await writeFile(
@@ -136,6 +146,10 @@ for (const name of [
 ]) {
   assert(typeof main[name] === 'undefined', `${name} must only be exported from /node`);
 }
+assert(
+  typeof main.sheetProtection === 'undefined',
+  'sheetProtection must only be exported from /protection',
+);
 assert(typeof main.default === 'undefined', 'main entry must not default-export ExcelJS');
 assert(typeof main.Workbook !== 'function', 'main entry must not export Doc Workbook class');
 const nodeMod = await import('@sebbebroman/exceljs/node');

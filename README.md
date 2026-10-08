@@ -4,7 +4,7 @@ Read, manipulate, and write Excel workbooks (`.xlsx`) with a **builder-first** E
 
 Fork of [ExcelJS](https://github.com/exceljs/exceljs) aimed at modern Node and bundlers (Vite, SvelteKit, Rollup, esbuild).
 
-> **0.1.0** — builder-first public API only (`.` + `./node`). Write, load, CSV, advanced sheet features, Node streaming. See [MIGRATION.md](./MIGRATION.md) and [ARCHITECTURE.md](./ARCHITECTURE.md).
+> **0.2.0** — builder-first public API (`.`, `./node`, and optional `./protection`). Write, load, CSV, advanced sheet features, Node streaming. Breaking changes: [CHANGELOG.md](./CHANGELOG.md). See [MIGRATION.md](./MIGRATION.md) and [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ## Install
 
@@ -227,9 +227,23 @@ await writeCsvFile('out.csv', data);
 | Import | Purpose |
 |--------|---------|
 | `@sebbebroman/exceljs` | Builder, `writeBuffer`, `load`, `csv`, enums (browser-safe) |
+| `@sebbebroman/exceljs/protection` | Optional synchronous `sheetProtection(password, options)` factory |
 | `@sebbebroman/exceljs/node` | + `writeFile` / `readFile` / `streamWrite` / `streamRead` / `readCsvFile` / `writeCsvFile` |
 
-The supported runtime entry points are the main entry and `/node`; `./package.json` is also exported. There is no `./csv`, `./stream/xlsx`, or default `ExcelJS` class. Types resolve to [`excel.d.ts`](./excel.d.ts) and [`node.d.ts`](./node.d.ts). The mutable document API has been removed; stream coordinators are internal.
+The supported runtime entry points are the main entry, `/node`, and `/protection`; `./package.json` is also exported. There is no `./csv`, `./stream/xlsx`, or default `ExcelJS` class. Types resolve to [`excel.d.ts`](./excel.d.ts) and [`node.d.ts`](./node.d.ts). The mutable document API has been removed; stream coordinators are internal.
+
+Password hashing is opt-in, so unused protection crypto can be tree-shaken out even in single-file browser bundles:
+
+```ts
+import {workbook} from '@sebbebroman/exceljs';
+import {sheetProtection} from '@sebbebroman/exceljs/protection';
+
+const bytes = await workbook().sheet('Data').row([1, 2])
+  .protect(sheetProtection('secret'))
+  .writeBuffer();
+```
+
+`.protect()` now takes a prepared protection model; the previous password/options overload has been removed. For passwordless protection, use `.protect({sheet: true})`. Hashing runs synchronously when the optional factory is called. Loaded hashes can be re-encoded through the core without importing crypto.
 
 Pipeline overview: [ARCHITECTURE.md](./ARCHITECTURE.md) (op-log → materialize → XLSX).
 
@@ -281,7 +295,7 @@ Contenders (Node): **@sebbebroman/exceljs builder**, **exceljs@4** (npm).
 
 Contenders (browser): **@sebbebroman/exceljs** esbuild browser bundle vs **exceljs** official `dist/exceljs.min.js` (their browser field). Node often favors exceljs; browser compares the polyfill-heavy UMD build against the ESM/fflate path. Needs Chrome (`CHROME_PATH` override supported).
 
-## Status (0.1.0)
+## Status (0.2.0)
 
 | Phase / feature | Status |
 |-----------------|--------|
@@ -309,8 +323,8 @@ Measured by `pnpm test:browser-bundle` (esbuild minify, write-only builder path,
 
 | Build | Size |
 |-------|------|
-| Single-file minified | ~297 KiB (gzip ~87 KiB) |
-| Code-split entry | ~164 KiB (excludes async chunks needed at runtime; total ~295 KiB) |
+| Single-file minified | ~268 KiB (gzip ~77 KiB) |
+| Code-split entry | ~142 KiB (excludes shared/async chunks; total ~266 KiB) |
 
 Not representative of `load`/styles/tables/comments/CSV builds. Quote with fixture + flags + commit hash.
 

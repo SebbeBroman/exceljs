@@ -7,7 +7,7 @@ import type {
   MediaImage,
   NoteValue,
   PageSetup,
-  ProtectOptions,
+  SheetProtection,
   RowInput,
   SheetImageRange,
   SheetInit,
@@ -35,6 +35,15 @@ function isWorkbookViewLike(value: unknown): value is {toJSON(): Workbook} {
     (value as {[k: symbol]: unknown})[WORKBOOK_VIEW_BRAND] === true &&
     typeof (value as {toJSON?: unknown}).toJSON === 'function',
   );
+}
+
+function protectionModel(model: SheetProtection): SheetProtection {
+  if (!model || typeof model !== 'object' || Array.isArray(model)) {
+    throw new TypeError(
+      'protect expects a protection model; import sheetProtection from @sebbebroman/exceljs/protection',
+    );
+  }
+  return {sheet: true, ...model};
 }
 
 function normalizeTitle(title: SheetTitleInput): {text: string; style?: Style; merge?: string} {
@@ -75,8 +84,8 @@ export interface SheetBuilder {
   dataValidation(address: string, rules: DataValidation): SheetBuilder;
   conditionalFormatting(cf: ConditionalFormattingOptions): SheetBuilder;
   note(address: string, note: NoteValue): SheetBuilder;
-  /** Deferred: password hashed at materialize/encode time (chain stays sync). */
-  protect(password?: string, options?: ProtectOptions): SheetBuilder;
+  /** Apply a prepared protection model; create password hashes through the optional /protection entry. */
+  protect(model: SheetProtection): SheetBuilder;
   table(table: TableProperties): SheetBuilder;
   /** Place a workbook media image on this sheet. */
   image(imageId: number, range: SheetImageRange): SheetBuilder;
@@ -105,8 +114,8 @@ export interface WorkbookBuilder {
   dataValidation(address: string, rules: DataValidation): WorkbookBuilder;
   conditionalFormatting(cf: ConditionalFormattingOptions): WorkbookBuilder;
   note(address: string, note: NoteValue): WorkbookBuilder;
-  /** Deferred: password hashed at materialize/encode time (chain stays sync). */
-  protect(password?: string, options?: ProtectOptions): WorkbookBuilder;
+  /** Apply a prepared protection model; create password hashes through the optional /protection entry. */
+  protect(model: SheetProtection): WorkbookBuilder;
   table(table: TableProperties): WorkbookBuilder;
   /**
    * Register workbook media. Returns the image id for `.image(id, range)` on a sheet.
@@ -223,9 +232,9 @@ class SheetBuilderImpl implements SheetBuilder {
     return this;
   }
 
-  protect(password?: string, options?: ProtectOptions): SheetBuilder {
+  protect(model: SheetProtection): SheetBuilder {
     this.wb._used.protection = true;
-    this.wb._push({op: 'protect', sheet: this.name, password, options});
+    this.wb._push({op: 'sheetProtection', sheet: this.name, model: protectionModel(model)});
     return this;
   }
 
@@ -475,9 +484,13 @@ class WorkbookBuilderImpl implements WorkbookBuilder {
     return this;
   }
 
-  protect(password?: string, options?: ProtectOptions): WorkbookBuilder {
+  protect(model: SheetProtection): WorkbookBuilder {
     this._used.protection = true;
-    this._ops.push({op: 'protect', sheet: this.requireCursor(), password, options});
+    this._ops.push({
+      op: 'sheetProtection',
+      sheet: this.requireCursor(),
+      model: protectionModel(model),
+    });
     return this;
   }
 
@@ -567,15 +580,7 @@ function replaySheetFeatures(wb: WorkbookBuilderImpl, sheet: Workbook['sheets'][
       wb._push({op: 'note', sheet: name, address, note});
     }
   }
-  if (sheet.protect) {
-    wb._used.protection = true;
-    wb._push({
-      op: 'protect',
-      sheet: name,
-      password: sheet.protect.password,
-      options: sheet.protect.options,
-    });
-  } else if (sheet.sheetProtection) {
+  if (sheet.sheetProtection) {
     wb._used.protection = true;
     wb._push({op: 'sheetProtection', sheet: name, model: sheet.sheetProtection});
   }

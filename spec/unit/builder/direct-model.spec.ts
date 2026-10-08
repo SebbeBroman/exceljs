@@ -16,7 +16,11 @@ const goldenDir = new URL('./data/direct-model/', import.meta.url);
 const hashes: Record<string, string> = JSON.parse(await readFile(new URL('projections.json', goldenDir), 'utf8'));
 function digest(v: unknown): string {return createHash('sha256').update(normalizeWorkbook(v)).digest('hex');}
 async function baselineWrite(builder: WorkbookBuilder, sharedStrings = true): Promise<Uint8Array> {
-  return readFile(new URL(`${digest({ops: builder._ops, sharedStrings})}.xlsx`, goldenDir));
+  // Preserve the historical fixture lookup; compare its OOXML with the new prepared model.
+  const ops = builder._ops.map(op => op.op === 'sheetProtection' && !op.model.hashValue
+    ? {op: 'protect', sheet: op.sheet, options: Object.fromEntries(Object.entries(op.model).filter(([key]) => key !== 'sheet'))}
+    : op);
+  return readFile(new URL(`${digest({ops, sharedStrings})}.xlsx`, goldenDir));
 }
 async function assertBaselineProjection(bytes: Uint8Array, options?: {ignoreNodes: string[]}): Promise<void> {
   expect(digest(await load(bytes, options))).toBe(hashes[digest(parts(bytes))]);
@@ -55,7 +59,7 @@ describe('direct OOXML model compatibility', () => {
       .note('A1', 'comment').dataValidation('B2', {type: 'whole', operator: 'between', formulae: [1, 10]})
       .conditionalFormatting({ref: 'A1:B2', rules: [{type: 'expression', priority: 1, formulae: ['TRUE'], style: {font: {italic: true}}}]})
       .views([{state: 'frozen', ySplit: 1}]).pageSetup({orientation: 'landscape', printArea: 'A1:D4', printTitlesRow: '1:1'})
-      .headerFooter({oddHeader: 'Header', oddFooter: '&P'}).protect(undefined, {selectLockedCells: false})
+      .headerFooter({oddHeader: 'Header', oddFooter: '&P'}).protect({sheet: true, selectLockedCells: false})
       .definedName('Cells', 'Features!$A$1:$B$2').sheet('Empty').sheet('Last').row([42]));
   });
   it('matches legacy table placement and totals, including later cell edits', async () => {

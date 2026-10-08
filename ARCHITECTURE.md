@@ -1,13 +1,14 @@
-# Architecture (0.1)
+# Architecture (0.2)
 
 Short map of how `@sebbebroman/exceljs` turns builder calls into `.xlsx` bytes.
 
 ## Public surface
 
-| Entry                       | Role                                                                              |
-| --------------------------- | --------------------------------------------------------------------------------- |
-| `@sebbebroman/exceljs`      | Browser-safe: `workbook`, `writeBuffer`, `load`, `csv`, enums                     |
-| `@sebbebroman/exceljs/node` | Same + `writeFile` / `readFile` / `streamWrite` / `streamRead` / CSV file helpers |
+| Entry                             | Role                                                                              |
+| --------------------------------- | --------------------------------------------------------------------------------- |
+| `@sebbebroman/exceljs`            | Browser-safe: `workbook`, `writeBuffer`, `load`, `csv`, enums                     |
+| `@sebbebroman/exceljs/protection` | Optional synchronous password hashing; core accepts prepared protection models    |
+| `@sebbebroman/exceljs/node`       | Same + `writeFile` / `readFile` / `streamWrite` / `streamRead` / CSV file helpers |
 
 `./package.json` is also exported; the package declares `sideEffects: false`. Internal stream coordinators and OOXML transforms are not package exports. The mutable document API and namespace entries have been removed.
 
@@ -137,12 +138,14 @@ See [the four independent cleanup comparisons](scripts/bench/internal-cleanup-re
 From `pnpm test:browser-bundle` (esbuild minify, **write-only** builder path;
 CSV enabled, no Node polyfills):
 
-| Build                       | Size (0.1.0)         |
+| Build                       | Size (0.2.0)         |
 | --------------------------- | -------------------- |
-| Single-file minified        | **276.3 KiB**        |
-| Single-file gzip            | **80.6 KiB**         |
-| Code-split write-only entry | **149.8 KiB**        |
-| Code-split write-only total | 274.3 KiB (31 files) |
+| Single-file minified        | **268.0 KiB**        |
+| Single-file gzip            | **76.8 KiB**         |
+| Code-split write-only entry | **141.6 KiB**        |
+| Code-split write-only total | 266.0 KiB (31 files) |
+
+The core and unused `/protection` imports include no password hashing crypto. Code-split entry size excludes shared static dependencies; use the single-file size when comparing complete bundles. See [the protection comparison](scripts/bench/protection-bundle-results.md).
 
 Re-measure after dependency or encoder changes:
 
