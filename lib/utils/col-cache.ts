@@ -39,116 +39,53 @@ export type DecodeExResult = CellAddress | RangeAddressEx | ErrorAddress;
 
 // =========================================================================
 // Column Letter to Number conversion
+// Memoize common columns only; a far-right lookup must not allocate all 16,384.
+const columnLetters: string[] = [];
+const addresses: Record<string, CellAddress> = Object.create(null);
+const addressKeys: string[] = [];
+let nextAddressKey = 0;
+const ADDRESS_CACHE_LIMIT = 2048;
+function cacheAddress(key: string, address: CellAddress): void {
+  if (!addresses[key]) {
+    if (addressKeys.length < ADDRESS_CACHE_LIMIT) addressKeys.push(key);
+    else {
+      delete addresses[addressKeys[nextAddressKey]];
+      addressKeys[nextAddressKey] = key;
+      nextAddressKey = (nextAddressKey + 1) % ADDRESS_CACHE_LIMIT;
+    }
+  }
+  addresses[key] = address;
+}
+
 const colCache = {
-  _dictionary: [
-    'A',
-    'B',
-    'C',
-    'D',
-    'E',
-    'F',
-    'G',
-    'H',
-    'I',
-    'J',
-    'K',
-    'L',
-    'M',
-    'N',
-    'O',
-    'P',
-    'Q',
-    'R',
-    'S',
-    'T',
-    'U',
-    'V',
-    'W',
-    'X',
-    'Y',
-    'Z',
-  ] as string[],
-  _l2nFill: 0,
-  _l2n: {} as Record<string, number>,
-  _n2l: [] as string[],
-  _level(n: number): number {
-    if (n <= 26) {
-      return 1;
+  l2n(letter: string): number {
+    if (typeof letter !== 'string' || !/^[A-Z]{1,3}$/.test(letter)) {
+      throw new Error(`Out of bounds. Invalid column letter: ${letter}`);
     }
-    if (n <= 26 * 26) {
-      return 2;
-    }
-    return 3;
+    let number = 0;
+    for (let i = 0; i < letter.length; i++) number = number * 26 + letter.charCodeAt(i) - 64;
+    if (number > 16384) throw new Error(`Out of bounds. Invalid column letter: ${letter}`);
+    return number;
   },
-  _fill(level: number): void {
-    let c: string;
-    let v: number;
-    let l1: number;
-    let l2: number;
-    let l3: number;
-    let n = 1;
-    if (level >= 4) {
-      throw new Error('Out of bounds. Excel supports columns from 1 to 16384');
+  n2l(number: number): string {
+    if (!Number.isInteger(number) || number < 1 || number > 16384) {
+      throw new Error(`${number} is out of bounds. Excel supports columns from 1 to 16384`);
     }
-    if (this._l2nFill < 1 && level >= 1) {
-      while (n <= 26) {
-        c = this._dictionary[n - 1];
-        this._n2l[n] = c;
-        this._l2n[c] = n;
-        n++;
-      }
-      this._l2nFill = 1;
+    const cached = number <= 256 && columnLetters[number];
+    if (cached) return cached;
+    let value = number;
+    let letter = '';
+    while (value > 0) {
+      value--;
+      letter = String.fromCharCode(65 + (value % 26)) + letter;
+      value = Math.floor(value / 26);
     }
-    if (this._l2nFill < 2 && level >= 2) {
-      n = 27;
-      while (n <= 26 + 26 * 26) {
-        v = n - (26 + 1);
-        l1 = v % 26;
-        l2 = Math.floor(v / 26);
-        c = this._dictionary[l2] + this._dictionary[l1];
-        this._n2l[n] = c;
-        this._l2n[c] = n;
-        n++;
-      }
-      this._l2nFill = 2;
-    }
-    if (this._l2nFill < 3 && level >= 3) {
-      n = 26 + 26 * 26 + 1;
-      while (n <= 16384) {
-        v = n - (26 * 26 + 26 + 1);
-        l1 = v % 26;
-        l2 = Math.floor(v / 26) % 26;
-        l3 = Math.floor(v / (26 * 26));
-        c = this._dictionary[l3] + this._dictionary[l2] + this._dictionary[l1];
-        this._n2l[n] = c;
-        this._l2n[c] = n;
-        n++;
-      }
-      this._l2nFill = 3;
-    }
-  },
-  l2n(l: string): number {
-    if (!this._l2n[l]) {
-      this._fill(l.length);
-    }
-    if (!this._l2n[l]) {
-      throw new Error(`Out of bounds. Invalid column letter: ${l}`);
-    }
-    return this._l2n[l];
-  },
-  n2l(n: number): string {
-    if (n < 1 || n > 16384) {
-      throw new Error(`${n} is out of bounds. Excel supports columns from 1 to 16384`);
-    }
-    if (!this._n2l[n]) {
-      this._fill(this._level(n));
-    }
-    return this._n2l[n];
+    if (number <= 256) columnLetters[number] = letter;
+    return letter;
   },
 
   // =========================================================================
   // Address processing
-  _hash: {} as Record<string, CellAddress>,
 
   // check if value looks like an address
   validateAddress(value: string): true {
@@ -160,7 +97,7 @@ const colCache = {
 
   // convert address string into structure
   decodeAddress(value: string): CellAddress {
-    const addr = value.length < 5 && this._hash[value];
+    const addr = value.length <= 8 && addresses[value];
     if (addr) {
       return addr;
     }
@@ -211,15 +148,15 @@ const colCache = {
       $col$row: `$${col}$${row}`,
     };
 
-    // mem fix - cache only the tl 100x100 square
+    // Keep hot small addresses bounded rather than retaining the whole 100x100 square.
     if (
       colNumber !== undefined &&
       rowNumber !== undefined &&
       colNumber <= 100 &&
       rowNumber <= 100
     ) {
-      this._hash[value] = address;
-      this._hash[address.$col$row] = address;
+      cacheAddress(value, address);
+      cacheAddress(address.$col$row, address);
     }
 
     return address;
@@ -274,8 +211,10 @@ const colCache = {
       const bottom = Math.max(tl.row as number, br.row as number);
       const right = Math.max(tl.col as number, br.col as number);
 
-      const tlStr = this.n2l(left) + top;
-      const brStr = this.n2l(right) + bottom;
+      const leftLetters = Number.isFinite(left) ? this.n2l(left) : '';
+      const rightLetters = Number.isFinite(right) ? this.n2l(right) : '';
+      const tlStr = leftLetters + (Number.isFinite(top) ? top : '');
+      const brStr = rightLetters + (Number.isFinite(bottom) ? bottom : '');
 
       return {
         top,
@@ -287,14 +226,14 @@ const colCache = {
           address: tlStr,
           col: left,
           row: top,
-          $col$row: `$${this.n2l(left)}$${top}`,
+          $col$row: `$${leftLetters}$${Number.isFinite(top) ? top : ''}`,
           sheetName,
         },
         br: {
           address: brStr,
           col: right,
           row: bottom,
-          $col$row: `$${this.n2l(right)}$${bottom}`,
+          $col$row: `$${rightLetters}$${Number.isFinite(bottom) ? bottom : ''}`,
           sheetName,
         },
         dimensions: `${tlStr}:${brStr}`,

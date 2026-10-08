@@ -33,7 +33,9 @@ workbook().sheet(…).row(…).cell(…)
 
 - **Op-log:** fluent builder records ops; does not mutate a cell graph while chaining.
 - **Compile:** optimized ops populate the OOXML encoder model directly, using sparse row maps and cell slots. No Workbook/Worksheet/Row/Cell document instances are constructed. Plain snapshots import row/cell models directly without a per-cell op-log. Tables place values directly into model cells; image anchors use dimension-only helpers.
-- **Encode:** `writeBuffer` → XLSX writer → zip (default deflate **level 1** for speed; override with `{ zip: { level: 6 } }` for smaller files). Optional features load automatically through dynamic imports.
+- **Encode:** `writeBuffer` → `lib/xlsx/xlsx-writer.ts` → zip (default deflate **level 1** for speed; override with `{ zip: { level: 6 } }` for smaller files). Optional features load automatically through dynamic imports.
+- **Styles:** basic builder exports use a standalone minimal stylesheet encoder. The full style manager loads dynamically when styles are enabled; differential formats load automatically when needed. There is no caller codec selection.
+- **Utilities:** internal helpers are named functions; column conversion uses arithmetic with bounded memoization, and the address cache has a fixed limit.
 - **Cell-by-cell ops:** style-free `.cell()` / `.cells()` logs coalesce into bulk `.rows()` during optimize so they use bulk row compilation.
 
 Plain snapshots:
@@ -51,7 +53,7 @@ writeBuffer(plain | builder)
 load(bytes) / readFile(path)
         │
         ▼
-   XLSX.decode                 lib/xlsx/load.ts + xforms
+   XLSX.decode                 lib/xlsx/xlsx-reader.ts + xforms
         │
         ▼
    reconciled encoder model
@@ -60,7 +62,7 @@ load(bytes) / readFile(path)
    plain { meta, sheets }     lib/compile/xlsx-model-to-plain.ts
 ```
 
-Edit loop: `workbook(await load(buf)).sheet(…).cell(…).writeBuffer()`.
+Edit loop: `workbook(await load(buf)).sheet(…).cell(…).writeBuffer()`. Loaded tables reconstruct their top-left reference and body values from the worksheet, including totals metadata. Reader and writer orchestration live in separate modules so bundlers can discard the unused direction.
 
 Model-loading `load` runs in two phases: package parts first (workbook,
 SST, styles, rels, …), then sheets — each sheet flows parse → reconcile-ready

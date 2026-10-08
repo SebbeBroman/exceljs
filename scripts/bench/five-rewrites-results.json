@@ -283,10 +283,68 @@
       },
       "addresses": {
         "value": "XFD",
-        "coldMs": 5.693707999999997,
-        "retainedBytes": 1372416,
-        "warmMs": 1.0478330000000007,
-        "checksum": 294904
+        "coldMs": 5.940374999999996,
+        "retainedBytes": 1370648,
+        "warmMs": 1.1446660000000008,
+        "checksum": 294904,
+        "addressRetainedBytes": 1852384
+      }
+    },
+    "addresses": {
+      "stage": "addresses",
+      "bundles": {
+        "write": {
+          "minified": 223499,
+          "gzip": 60568,
+          "initialMinified": 132054,
+          "initialGzip": 40940,
+          "splitTotal": 228062
+        },
+        "load": {
+          "minified": 186485,
+          "gzip": 51088,
+          "initialMinified": 131945,
+          "initialGzip": 41082,
+          "splitTotal": 202292
+        },
+        "readRows": {
+          "minified": 34655,
+          "gzip": 13931,
+          "initialMinified": 34433,
+          "initialGzip": 14658,
+          "splitTotal": 139292
+        }
+      },
+      "runtime": {
+        "write": {
+          "medianMs": 6.32241700000003,
+          "minMs": 5.68629199999998,
+          "maxMs": 7.210458000000017
+        },
+        "load": {
+          "medianMs": 9.981291999999996,
+          "minMs": 8.772333000000003,
+          "maxMs": 10.837874999999997
+        },
+        "readRows": {
+          "medianMs": 4.672790999999961,
+          "minMs": 4.2752080000000205,
+          "maxMs": 6.035958000000051
+        },
+        "tableEdit": {
+          "works": true,
+          "medianMs": 1.2501249999999118,
+          "minMs": 1.063833000000045,
+          "maxMs": 1.4876659999999902
+        }
+      },
+      "addresses": {
+        "value": "XFD",
+        "coldMs": 0.041875000000000995,
+        "retainedBytes": -2432,
+        "warmMs": 3.943999999999999,
+        "checksum": 294904,
+        "addressRetainedBytes": 257848
       }
     }
   }

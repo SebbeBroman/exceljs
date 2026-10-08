@@ -43,4 +43,10 @@ const builder = workbook()
 
 Buffered XLSX reads and writes now use direct models rather than the legacy document graph. Removed legacy document classes, unused XLSX wrappers and ZIP facade, and custom stream buffers. Validation and defined-name ranges stay compact. Node streaming uses standard streams with backpressure. Tests use native Vitest imports.
 
+- Loaded table snapshots now include their top-left reference, body rows and cached/custom totals, supporting load/edit/rewrite.
+- Buffered XLSX reader and writer are separate internal modules; minimal styles no longer inherit the full stylesheet engine. Advanced features still load automatically.
+- Utilities use named exports and unused helpers are removed. Column/address caches are bounded, avoiding bulk allocation on wide-column lookups.
+
+See [internal rewrite measurements](./scripts/bench/five-rewrites-results.md) for independent bundle, timing and memory comparisons.
+
 See [MIGRATION.md](./MIGRATION.md) for the public API and upgrade guide.

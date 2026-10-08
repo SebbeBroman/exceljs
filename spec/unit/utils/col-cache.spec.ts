@@ -2,49 +2,30 @@ import {describe, it, expect} from 'vite-plus/test';
 import colCache from '../../../lib/utils/col-cache.js';
 
 describe('colCache', () => {
-  it('caches values', () => {
-    expect(colCache.l2n('A')).toBe(1);
-    expect(colCache._l2n.A).toBe(1);
-    expect(colCache._n2l[1]).toBe('A');
+  it('round trips every supported column without a bulk cache', () => {
+    for (let number = 1; number <= 16384; number++) {
+      expect(colCache.l2n(colCache.n2l(number))).toBe(number);
+    }
+    expect(colCache.n2l(16384)).toBe('XFD');
+  });
 
-    // also, because of the fill heuristic A-Z will be there too
-    const dic = [
-      'A',
-      'B',
-      'C',
-      'D',
-      'E',
-      'F',
-      'G',
-      'H',
-      'I',
-      'J',
-      'K',
-      'L',
-      'M',
-      'N',
-      'O',
-      'P',
-      'Q',
-      'R',
-      'S',
-      'T',
-      'U',
-      'V',
-      'W',
-      'X',
-      'Y',
-      'Z',
-    ];
-    dic.forEach((letter, index) => {
-      expect(colCache._l2n[letter]).toBe(index + 1);
-      expect(colCache._n2l[index + 1]).toBe(letter);
-    });
+  it('rejects nonintegral and invalid columns', () => {
+    for (const value of [NaN, Infinity, 1.5]) expect(() => colCache.n2l(value)).toThrow();
+    for (const value of ['a', 'XFE', 'constructor', 'A1']) expect(() => colCache.l2n(value)).toThrow();
+  });
 
-    // next level
-    expect(colCache.n2l(27)).toBe('AA');
-    expect(colCache._l2n.AB).toBe(28);
-    expect(colCache._n2l[28]).toBe('AB');
+  it('decodes row-only and column-only print-title ranges', () => {
+    expect(colCache.decodeEx('S!$1:$5')).toMatchObject({sheetName: 'S', top: 1, bottom: 5});
+    expect(colCache.decodeEx('S!$A:$C')).toMatchObject({sheetName: 'S', left: 1, right: 3});
+  });
+
+  it('preserves addresses after cache eviction', () => {
+    const first = colCache.decodeAddress('$A$1');
+    for (let row = 1; row <= 100; row++) {
+      for (let col = 1; col <= 100; col++) colCache.decodeAddress(colCache.encodeAddress(row, col));
+    }
+    expect(colCache.decodeAddress('A1')).toEqual(first);
+    expect(colCache.decodeAddress('$A$1')).toEqual(first);
   });
 
   it('converts numbers to letters', () => {

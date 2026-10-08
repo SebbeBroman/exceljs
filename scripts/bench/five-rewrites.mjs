@@ -117,11 +117,12 @@ try {
   runtime.tableEdit = {works: false, error: error.message};
 }
 // Fresh process: avoids measurements being masked by earlier column-cache warmup.
-const addressScript = `import {performance} from 'node:perf_hooks';import col from ${JSON.stringify(pathToFileURL(join(directory, 'lib/utils/col-cache.js')).href)};global.gc();const heap=process.memoryUsage().heapUsed;const start=performance.now();const value=col.n2l(16384);const coldMs=performance.now()-start;global.gc();const retainedBytes=process.memoryUsage().heapUsed-heap;let checksum=0;const warm=performance.now();for(let i=0;i<100000;i++)checksum+=col.n2l(i%16384+1).length;console.log(JSON.stringify({value,coldMs,retainedBytes,warmMs:performance.now()-warm,checksum}));`;
 const addresses = JSON.parse(
-  execFileSync(process.execPath, ['--expose-gc', '--input-type=module', '-e', addressScript], {
-    encoding: 'utf8',
-  }),
+  execFileSync(
+    process.execPath,
+    ['--expose-gc', join(root, 'scripts/bench/address-cache.mjs'), directory],
+    {encoding: 'utf8'},
+  ),
 );
 const result = {stage, bundles, runtime, addresses};
 writeFileSync(output, JSON.stringify(result, null, 2) + '\n');
