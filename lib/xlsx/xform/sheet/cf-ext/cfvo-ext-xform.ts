@@ -1,5 +1,5 @@
 import CompositeXform from '../../composite-xform.js';
-import type {XmlStreamLike, XmlNode} from '../../base-xform.js';
+import type {XmlStreamLike} from '../../base-xform.js';
 import FExtXform from './f-ext-xform.js';
 
 export interface CfvoExtModel {
@@ -31,20 +31,6 @@ class CfvoExtXform extends CompositeXform<CfvoExtModel> {
       this.fExtXform.render(xmlStream, model.value);
     }
     xmlStream.closeNode();
-  }
-
-  override createNewModel(node?: XmlNode): CfvoExtModel {
-    return {
-      type: node?.attributes.type,
-    };
-  }
-
-  override onParserClose(name: string, parser: {model: unknown}): void {
-    switch (name) {
-      case 'xm:f':
-        (this.model as CfvoExtModel).value = parser.model ? parseFloat(parser.model as string) : 0;
-        break;
-    }
   }
 }
 

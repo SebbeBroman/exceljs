@@ -1,5 +1,5 @@
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode} from '../base-xform.js';
+import type {XmlStreamLike} from '../base-xform.js';
 
 export interface IntegerXformOptions {
   tag: string;
@@ -39,31 +39,6 @@ class IntegerXform extends BaseXform<number> {
       }
       xmlStream.closeNode();
     }
-  }
-
-  override parseOpen(node: XmlNode): boolean {
-    if (node.name === this.tag) {
-      if (this.attr) {
-        this.model = parseInt(node.attributes[this.attr], 10);
-      } else {
-        this.text = [];
-      }
-      return true;
-    }
-    return false;
-  }
-
-  override parseText(text: string): void {
-    if (!this.attr) {
-      this.text!.push(text);
-    }
-  }
-
-  override parseClose(): boolean {
-    if (!this.attr) {
-      this.model = parseInt(this.text!.join('') || '0', 10);
-    }
-    return false;
   }
 }
 

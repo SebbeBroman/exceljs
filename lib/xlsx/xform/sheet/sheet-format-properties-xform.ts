@@ -1,5 +1,5 @@
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode} from '../base-xform.js';
+import type {XmlStreamLike} from '../base-xform.js';
 
 export interface SheetFormatPropertiesModel {
   defaultRowHeight?: number;
@@ -33,28 +33,6 @@ class SheetFormatPropertiesXform extends BaseXform<SheetFormatPropertiesModel> {
         xmlStream.leafNode('sheetFormatPr', attributes);
       }
     }
-  }
-
-  override parseOpen(node: XmlNode): boolean {
-    if (node.name === 'sheetFormatPr') {
-      this.model = {
-        defaultRowHeight: parseFloat(node.attributes.defaultRowHeight || '0'),
-        dyDescent: parseFloat(node.attributes['x14ac:dyDescent'] || '0'),
-        outlineLevelRow: parseInt(node.attributes.outlineLevelRow || '0', 10),
-        outlineLevelCol: parseInt(node.attributes.outlineLevelCol || '0', 10),
-      };
-      if (node.attributes.defaultColWidth) {
-        this.model.defaultColWidth = parseFloat(node.attributes.defaultColWidth);
-      }
-      return true;
-    }
-    return false;
-  }
-
-  override parseText(): void {}
-
-  override parseClose(): boolean {
-    return false;
   }
 }
 

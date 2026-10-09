@@ -1,5 +1,5 @@
 import CompositeXform from '../../composite-xform.js';
-import type {XmlStreamLike, XmlNode} from '../../base-xform.js';
+import type {XmlStreamLike} from '../../base-xform.js';
 import CfRuleXform from './cf-rule-xform.js';
 import type {CfRuleModel} from './cf-rule-xform.js';
 
@@ -38,17 +38,6 @@ class ConditionalFormattingXform extends CompositeXform<ConditionalFormattingMod
     });
 
     xmlStream.closeNode();
-  }
-
-  override createNewModel(node?: XmlNode): ConditionalFormattingModel {
-    return {
-      ref: node?.attributes.sqref as string,
-      rules: [],
-    };
-  }
-
-  override onParserClose(_name: string, parser: {model: unknown}): void {
-    (this.model as ConditionalFormattingModel).rules.push(parser.model as CfRuleModel);
   }
 }
 

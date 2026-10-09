@@ -1,3 +1,4 @@
+import NumFmtXformParser from '../../../../../lib/xlsx/parser/style/numfmt-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -7,6 +8,7 @@ const expectations = [
   {
     title: 'date',
     create: () => new NumFmtXform(),
+    createParser: () => new NumFmtXformParser(),
     preparedModel: {id: 165, formatCode: 'd-mmm-yyyy'},
     xml: '<numFmt numFmtId="165" formatCode="d-mmm-yyyy"/>',
     get parsedModel() {
@@ -17,6 +19,7 @@ const expectations = [
   {
     title: 'thing',
     create: () => new NumFmtXform(),
+    createParser: () => new NumFmtXformParser(),
     preparedModel: {id: 165, formatCode: '[Green]#,##0 ;[Red](#,##0)'},
     xml: '<numFmt numFmtId="165" formatCode="[Green]#,##0 ;[Red](#,##0)"/>',
     get parsedModel() {

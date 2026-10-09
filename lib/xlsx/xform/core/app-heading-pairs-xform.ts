@@ -1,5 +1,5 @@
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode} from '../base-xform.js';
+import type {XmlStreamLike} from '../base-xform.js';
 
 class AppHeadingPairsXform extends BaseXform<unknown[]> {
   override render(xmlStream: XmlStreamLike, model?: unknown[] | null): void {
@@ -16,17 +16,6 @@ class AppHeadingPairsXform extends BaseXform<unknown[]> {
 
     xmlStream.closeNode();
     xmlStream.closeNode();
-  }
-
-  override parseOpen(node: XmlNode): boolean {
-    // no parsing
-    return node.name === 'HeadingPairs';
-  }
-
-  override parseText(): void {}
-
-  override parseClose(name?: string): boolean {
-    return name !== 'HeadingPairs';
   }
 }
 

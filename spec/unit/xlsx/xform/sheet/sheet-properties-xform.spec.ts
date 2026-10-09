@@ -1,3 +1,4 @@
+import SheetPropertiesXformParser from '../../../../../lib/xlsx/parser/sheet/sheet-properties-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -19,6 +20,9 @@ const expectations = [
     create() {
       return new SheetPropertiesXform();
     },
+    createParser() {
+      return new SheetPropertiesXformParser();
+    },
     preparedModel: {tabColor: {argb: 'FFFF0000'}},
     xml: '<sheetPr><tabColor rgb="FFFF0000"/></sheetPr>',
     parsedModel: {tabColor: {argb: 'FFFF0000'}},
@@ -28,6 +32,9 @@ const expectations = [
     title: 'pageSetup',
     create() {
       return new SheetPropertiesXform();
+    },
+    createParser() {
+      return new SheetPropertiesXformParser();
     },
     preparedModel: {pageSetup: {fitToPage: true}},
     xml: '<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr>',
@@ -39,6 +46,9 @@ const expectations = [
     create() {
       return new SheetPropertiesXform();
     },
+    createParser() {
+      return new SheetPropertiesXformParser();
+    },
     preparedModel: {outlineProperties: {summaryBelow: false}},
     xml: '<sheetPr><outlinePr summaryBelow="0"/></sheetPr>',
     parsedModel: {outlineProperties: {summaryBelow: false}},
@@ -48,6 +58,9 @@ const expectations = [
     title: 'tabColor + pageSetup',
     create() {
       return new SheetPropertiesXform();
+    },
+    createParser() {
+      return new SheetPropertiesXformParser();
     },
     preparedModel: {
       tabColor: {argb: 'FFFF0000'},
@@ -66,6 +79,9 @@ const expectations = [
     create() {
       return new SheetPropertiesXform();
     },
+    createParser() {
+      return new SheetPropertiesXformParser();
+    },
     preparedModel: {
       tabColor: {argb: 'FFFF0000'},
       outlineProperties: {summaryBelow: false},
@@ -83,6 +99,9 @@ const expectations = [
     create() {
       return new SheetPropertiesXform();
     },
+    createParser() {
+      return new SheetPropertiesXformParser();
+    },
     preparedModel: {
       pageSetup: {fitToPage: true},
       outlineProperties: {summaryBelow: false},
@@ -99,6 +118,9 @@ const expectations = [
     title: 'tabColor + outlineProperties + pageSetup',
     create() {
       return new SheetPropertiesXform();
+    },
+    createParser() {
+      return new SheetPropertiesXformParser();
     },
     preparedModel: {
       tabColor: {argb: 'FFFF0000'},

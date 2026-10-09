@@ -1,3 +1,4 @@
+import WorkbookCalcPropertiesXformParser from '../../../../../lib/xlsx/parser/book/workbook-calc-properties-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -18,6 +19,9 @@ const expectations = [
     title: 'fullCalcOnLoad',
     create() {
       return new WorkbookCalcPropertiesXform();
+    },
+    createParser() {
+      return new WorkbookCalcPropertiesXformParser();
     },
     preparedModel: {fullCalcOnLoad: true},
     xml: '<calcPr calcId="171027" fullCalcOnLoad="1"></calcPr>',

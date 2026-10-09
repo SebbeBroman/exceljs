@@ -1,3 +1,4 @@
+import TableColumnXformParser from '../../../../../lib/xlsx/parser/table/table-column-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -9,6 +10,9 @@ const expectations = [
     create() {
       return new TableColumnXform();
     },
+    createParser() {
+      return new TableColumnXformParser();
+    },
     preparedModel: {id: 1, name: 'Foo', totalsRowLabel: 'Bar'},
     xml: '<tableColumn id="1" name="Foo" totalsRowLabel="Bar" />',
     parsedModel: {name: 'Foo', totalsRowLabel: 'Bar'},
@@ -18,6 +22,9 @@ const expectations = [
     title: 'function',
     create() {
       return new TableColumnXform();
+    },
+    createParser() {
+      return new TableColumnXformParser();
     },
     preparedModel: {id: 1, name: 'Foo', totalsRowFunction: 'Baz'},
     xml: '<tableColumn id="1" name="Foo" totalsRowFunction="Baz" />',

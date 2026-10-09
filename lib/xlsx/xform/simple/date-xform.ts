@@ -1,5 +1,5 @@
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode} from '../base-xform.js';
+import type {XmlStreamLike} from '../base-xform.js';
 
 export interface DateXformOptions {
   tag: string;
@@ -13,8 +13,6 @@ class DateXform extends BaseXform<Date> {
   attr: string | undefined;
   attrs: Record<string, unknown> | undefined;
   _format: (dt: Date) => string;
-  _parse: (str: string) => Date;
-  text?: string[];
 
   constructor(options: DateXformOptions) {
     super();
@@ -32,11 +30,6 @@ class DateXform extends BaseXform<Date> {
           return '';
         }
       };
-    this._parse =
-      options.parse ||
-      function (str: string) {
-        return new Date(str);
-      };
   }
 
   override render(xmlStream: XmlStreamLike, model?: Date | null): void {
@@ -52,29 +45,6 @@ class DateXform extends BaseXform<Date> {
       }
       xmlStream.closeNode();
     }
-  }
-
-  override parseOpen(node: XmlNode): void {
-    if (node.name === this.tag) {
-      if (this.attr) {
-        this.model = this._parse(node.attributes[this.attr]);
-      } else {
-        this.text = [];
-      }
-    }
-  }
-
-  override parseText(text: string): void {
-    if (!this.attr) {
-      this.text!.push(text);
-    }
-  }
-
-  override parseClose(): boolean {
-    if (!this.attr) {
-      this.model = this._parse(this.text!.join(''));
-    }
-    return false;
   }
 }
 

@@ -1,3 +1,4 @@
+import RowXformParser from '../../../../../lib/xlsx/parser/sheet/row-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -22,6 +23,7 @@ const expectations = [
   {
     title: 'Plain',
     create: () => new RowXform(),
+    createParser: () => new RowXformParser(),
     initialModel: {
       number: 1,
       min: 1,
@@ -57,6 +59,7 @@ const expectations = [
   {
     title: 'No spans',
     create: () => new RowXform(),
+    createParser: () => new RowXformParser(),
     initialModel: {
       number: 1,
       style: {},
@@ -85,6 +88,7 @@ const expectations = [
   {
     title: 'Styled',
     create: () => new RowXform(),
+    createParser: () => new RowXformParser(),
     initialModel: {
       number: 2,
       min: 1,
@@ -126,6 +130,7 @@ const expectations = [
   {
     title: 'Outline',
     create: () => new RowXform(),
+    createParser: () => new RowXformParser(),
     initialModel: {
       number: 2,
       min: 1,

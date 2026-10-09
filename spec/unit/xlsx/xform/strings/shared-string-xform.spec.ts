@@ -1,3 +1,4 @@
+import SharedStringXformParser from '../../../../../lib/xlsx/parser/strings/shared-string-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -9,6 +10,9 @@ const expectations = [
     create() {
       return new SharedStringXform();
     },
+    createParser() {
+      return new SharedStringXformParser();
+    },
     preparedModel: 'Hello, World!',
     xml: '<si><t>Hello, World!</t></si>',
     parsedModel: 'Hello, World!',
@@ -18,6 +22,9 @@ const expectations = [
     title: 'rich text',
     create() {
       return new SharedStringXform();
+    },
+    createParser() {
+      return new SharedStringXformParser();
     },
     preparedModel: {
       richText: [
@@ -58,6 +65,9 @@ const expectations = [
     create() {
       return new SharedStringXform();
     },
+    createParser() {
+      return new SharedStringXformParser();
+    },
     preparedModel: {
       richText: [],
     },
@@ -69,6 +79,9 @@ const expectations = [
     title: 'text + phonetic',
     create() {
       return new SharedStringXform();
+    },
+    createParser() {
+      return new SharedStringXformParser();
     },
     preparedModel: {
       text: 'Hello, World!',
@@ -83,6 +96,9 @@ const expectations = [
     title: 'Kanji + Katakana',
     create() {
       return new SharedStringXform();
+    },
+    createParser() {
+      return new SharedStringXformParser();
     },
     preparedModel: {
       text: '役割',
@@ -102,6 +118,9 @@ const expectations = [
     title: 'text with newline',
     create() {
       return new SharedStringXform();
+    },
+    createParser() {
+      return new SharedStringXformParser();
     },
     preparedModel: 'Hello,\nWorld!',
     xml: '<si><t xml:space="preserve">Hello,\nWorld!</t></si>',

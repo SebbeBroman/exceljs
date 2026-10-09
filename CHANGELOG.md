@@ -45,6 +45,7 @@ Buffered XLSX reads and writes now use direct models rather than the legacy docu
 
 - Loaded table snapshots now include their top-left reference, body rows and cached/custom totals, supporting load/edit/rewrite.
 - Buffered XLSX reader and writer are separate internal modules; minimal styles no longer inherit the full stylesheet engine. Advanced features still load automatically.
+- OOXML parsing/reconciliation and preparation/rendering now use separate internal transform trees. Full `load` and basic write browser bundles shrink by about 28%; advanced features still load automatically. Public APIs are unchanged. See [transform split measurements](./scripts/bench/xform-split-results.md).
 - Utilities use named exports and unused helpers are removed. Column/address caches are bounded, avoiding bulk allocation on wide-column lookups.
 
 See [internal rewrite measurements](./scripts/bench/five-rewrites-results.md) for independent bundle, timing and memory comparisons.

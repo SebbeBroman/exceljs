@@ -1,5 +1,5 @@
 import BaseXform from '../../base-xform.js';
-import type {XmlStreamLike, XmlNode} from '../../base-xform.js';
+import type {XmlStreamLike} from '../../base-xform.js';
 
 export interface VmlProtectionXformOptions {
   tag: string;
@@ -18,24 +18,6 @@ class VmlProtectionXform extends BaseXform {
 
   override render(xmlStream: XmlStreamLike, model?: unknown): void {
     xmlStream.leafNode(this.tag, undefined, model);
-  }
-
-  override parseOpen(node: XmlNode): boolean {
-    switch (node.name) {
-      case this.tag:
-        this.text = '';
-        return true;
-      default:
-        return false;
-    }
-  }
-
-  override parseText(text: string): void {
-    this.text = text;
-  }
-
-  override parseClose(): boolean {
-    return false;
   }
 }
 

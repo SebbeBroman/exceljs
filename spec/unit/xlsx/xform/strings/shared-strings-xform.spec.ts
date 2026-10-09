@@ -1,3 +1,4 @@
+import SharedStringsXformParser from '../../../../../lib/xlsx/parser/strings/shared-strings-xform.js';
 import {describe} from 'vite-plus/test';
 import fs from 'node:fs';
 import testXformHelper from '../test-xform-helper.js';
@@ -15,6 +16,9 @@ const expectations = [
     title: 'Shared Strings',
     create() {
       return new SharedStringsXform();
+    },
+    createParser() {
+      return new SharedStringsXformParser();
     },
     preparedModel: __json_0,
     xml: fs.readFileSync(`${__dirname}/data/sharedStrings.xml`).toString(),

@@ -1,3 +1,4 @@
+import UnderlineXformParser from '../../../../../lib/xlsx/parser/style/underline-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -8,6 +9,9 @@ const expectations = [
     title: 'single',
     create() {
       return new UnderlineXform();
+    },
+    createParser() {
+      return new UnderlineXformParser();
     },
     preparedModel: true,
     get parsedModel() {
@@ -20,6 +24,9 @@ const expectations = [
     title: 'double',
     create() {
       return new UnderlineXform();
+    },
+    createParser() {
+      return new UnderlineXformParser();
     },
     preparedModel: 'double',
     get parsedModel() {

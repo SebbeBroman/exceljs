@@ -1,5 +1,5 @@
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode} from '../base-xform.js';
+import type {XmlStreamLike} from '../base-xform.js';
 
 // Color encapsulates translation from color model to/from xlsx
 export interface ColorModel {
@@ -38,31 +38,6 @@ class ColorXform extends BaseXform<ColorModel> {
       xmlStream.closeNode();
       return true;
     }
-    return false;
-  }
-
-  override parseOpen(node: XmlNode): boolean {
-    if (node.name === this.name) {
-      if (node.attributes.rgb) {
-        this.model = {argb: node.attributes.rgb};
-      } else if (node.attributes.theme) {
-        this.model = {theme: parseInt(node.attributes.theme, 10)};
-        if (node.attributes.tint) {
-          this.model.tint = parseFloat(node.attributes.tint);
-        }
-      } else if (node.attributes.indexed) {
-        this.model = {indexed: parseInt(node.attributes.indexed, 10)};
-      } else {
-        this.model = undefined;
-      }
-      return true;
-    }
-    return false;
-  }
-
-  override parseText(): void {}
-
-  override parseClose(): boolean {
     return false;
   }
 }

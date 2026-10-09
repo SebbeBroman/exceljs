@@ -1,6 +1,6 @@
 import XmlStream from '../../../utils/xml-stream.js';
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode} from '../base-xform.js';
+import type {XmlStreamLike} from '../base-xform.js';
 import SharedStringXform from './shared-string-xform.js';
 import type {SharedStringModel} from './shared-string-xform.js';
 
@@ -94,46 +94,6 @@ class SharedStringsXform extends BaseXform<SharedStringsModel> {
       sx.render(xmlStream, sharedString);
     });
     xmlStream.closeNode();
-  }
-
-  override parseOpen(node: XmlNode): boolean {
-    if (this.parser) {
-      this.parser.parseOpen(node);
-      return true;
-    }
-    switch (node.name) {
-      case 'sst':
-        return true;
-      case 'si':
-        this.parser = this.sharedStringXform;
-        this.parser.parseOpen(node);
-        return true;
-      default:
-        throw new Error(`Unexpected xml node in parseOpen: ${JSON.stringify(node)}`);
-    }
-  }
-
-  override parseText(text: string): void {
-    if (this.parser) {
-      this.parser.parseText(text);
-    }
-  }
-
-  override parseClose(name?: string): boolean {
-    if (this.parser) {
-      if (!this.parser.parseClose(name)) {
-        this.model!.values.push(this.parser.model as SharedStringModel);
-        this.model!.count++;
-        this.parser = undefined;
-      }
-      return true;
-    }
-    switch (name) {
-      case 'sst':
-        return false;
-      default:
-        throw new Error(`Unexpected xml node in parseClose: ${name}`);
-    }
   }
 }
 

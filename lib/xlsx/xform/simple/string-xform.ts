@@ -1,5 +1,5 @@
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode} from '../base-xform.js';
+import type {XmlStreamLike} from '../base-xform.js';
 
 export interface StringXformOptions {
   tag: string;
@@ -33,29 +33,6 @@ class StringXform extends BaseXform<string> {
       }
       xmlStream.closeNode();
     }
-  }
-
-  override parseOpen(node: XmlNode): void {
-    if (node.name === this.tag) {
-      if (this.attr) {
-        this.model = node.attributes[this.attr];
-      } else {
-        this.text = [];
-      }
-    }
-  }
-
-  override parseText(text: string): void {
-    if (!this.attr) {
-      this.text!.push(text);
-    }
-  }
-
-  override parseClose(): boolean {
-    if (!this.attr) {
-      this.model = this.text!.join('');
-    }
-    return false;
   }
 }
 

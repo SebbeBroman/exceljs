@@ -1,10 +1,11 @@
 import BaseXform from '../../../../lib/xlsx/xform/base-xform.js';
+import type XformState from '../../../../lib/xlsx/xform/xform-state.js';
 import type {XmlNode, XmlStreamLike} from '../../../../lib/xlsx/xform/base-xform.js';
 
 interface Child {
   name?: string;
   tag?: string;
-  xform: BaseXform;
+  xform: XformState;
 }
 
 /** Test composite that checks transforms nested inside another XML element. */

@@ -1,6 +1,6 @@
 import XmlStream from '../../../utils/xml-stream.js';
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode} from '../base-xform.js';
+import type {XmlStreamLike} from '../base-xform.js';
 import StringXform from '../simple/string-xform.js';
 import AppHeadingPairsXform from './app-heading-pairs-xform.js';
 import AppTitleOfPartsXform from './app-titles-of-parts-xform.js';
@@ -50,52 +50,6 @@ class AppXform extends BaseXform<AppModel> {
     xmlStream.leafNode('AppVersion', undefined, '16.0300');
 
     xmlStream.closeNode();
-  }
-
-  override parseOpen(node: XmlNode): boolean {
-    if (this.parser) {
-      this.parser.parseOpen(node);
-      return true;
-    }
-    switch (node.name) {
-      case 'Properties':
-        return true;
-      default:
-        this.parser = this.map[node.name as keyof typeof this.map];
-        if (this.parser) {
-          this.parser.parseOpen(node);
-          return true;
-        }
-
-        // there's a lot we don't bother to parse
-        return false;
-    }
-  }
-
-  override parseText(text: string): void {
-    if (this.parser) {
-      this.parser.parseText(text);
-    }
-  }
-
-  override parseClose(name?: string): boolean {
-    if (this.parser) {
-      if (!this.parser.parseClose(name)) {
-        this.parser = undefined;
-      }
-      return true;
-    }
-    switch (name) {
-      case 'Properties':
-        this.model = {
-          worksheets: this.map.TitleOfParts.model as {name: string}[] | undefined,
-          company: this.map.Company.model as string | undefined,
-          manager: this.map.Manager.model as string | undefined,
-        };
-        return false;
-      default:
-        return true;
-    }
   }
 
   static DateFormat(dt: Date): string {

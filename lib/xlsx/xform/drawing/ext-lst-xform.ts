@@ -1,5 +1,5 @@
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode} from '../base-xform.js';
+import type {XmlStreamLike} from '../base-xform.js';
 
 class ExtLstXform extends BaseXform {
   override tag = 'a:extLst';
@@ -15,27 +15,6 @@ class ExtLstXform extends BaseXform {
     });
     xmlStream.closeNode();
     xmlStream.closeNode();
-  }
-
-  override parseOpen(node: XmlNode): boolean {
-    switch (node.name) {
-      case this.tag:
-        return true;
-      default:
-        return true;
-    }
-  }
-
-  override parseText(): void {}
-
-  override parseClose(name?: string): boolean {
-    switch (name) {
-      case this.tag:
-        return false;
-      default:
-        // unprocessed internal nodes
-        return true;
-    }
   }
 }
 

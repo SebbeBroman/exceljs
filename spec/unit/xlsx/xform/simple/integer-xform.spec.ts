@@ -1,3 +1,4 @@
+import IntegerXformParser from '../../../../../lib/xlsx/parser/simple/integer-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -8,6 +9,9 @@ const expectations = [
     title: 'five',
     create() {
       return new IntegerXform({tag: 'integer', attr: 'val'});
+    },
+    createParser() {
+      return new IntegerXformParser({tag: 'integer', attr: 'val'});
     },
     preparedModel: 5,
     xml: '<integer val="5"/>',

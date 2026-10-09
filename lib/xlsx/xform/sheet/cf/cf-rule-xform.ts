@@ -1,6 +1,6 @@
 import BaseXform from '../../base-xform.js';
 import CompositeXform from '../../composite-xform.js';
-import type {XmlStreamLike, XmlNode} from '../../base-xform.js';
+import type {XmlStreamLike} from '../../base-xform.js';
 import Range from '../../../../model/range.js';
 import DatabarXform from './databar-xform.js';
 import ExtLstRefXform from './ext-lst-ref-xform.js';
@@ -89,24 +89,6 @@ const getTimePeriodFormula = (model: CfRuleModel): string | undefined => {
       return `AND(MONTH(${tl})=MONTH(EDATE(TODAY(),0+1)),YEAR(${tl})=YEAR(EDATE(TODAY(),0+1)))`;
     default:
       return undefined;
-  }
-};
-
-const opType = (attributes: Record<string, string>): {type: string; operator?: string} => {
-  const {type, operator} = attributes;
-  switch (type) {
-    case 'containsText':
-    case 'containsBlanks':
-    case 'notContainsBlanks':
-    case 'containsErrors':
-    case 'notContainsErrors':
-      return {
-        type: 'containsText',
-        operator: type,
-      };
-
-    default:
-      return {type, operator};
   }
 };
 
@@ -293,41 +275,6 @@ class CfRuleXform extends CompositeXform<CfRuleModel> {
     }
 
     xmlStream.closeNode();
-  }
-
-  override createNewModel(node?: XmlNode): CfRuleModel {
-    const attributes = node?.attributes || {};
-    return {
-      ...opType(attributes),
-      dxfId: BaseXform.toIntValue(attributes.dxfId),
-      priority: BaseXform.toIntValue(attributes.priority),
-      timePeriod: attributes.timePeriod,
-      percent: BaseXform.toBoolValue(attributes.percent),
-      bottom: BaseXform.toBoolValue(attributes.bottom),
-      rank: BaseXform.toIntValue(attributes.rank),
-      aboveAverage: BaseXform.toBoolValue(attributes.aboveAverage),
-    };
-  }
-
-  override onParserClose(name: string, parser: {model: unknown}): void {
-    switch (name) {
-      case 'dataBar':
-      case 'extLst':
-      case 'colorScale':
-      case 'iconSet':
-        // merge parser model with ours
-        Object.assign(this.model as CfRuleModel, parser.model);
-        break;
-
-      case 'formula':
-        // except - formula is a string and appends to formulae
-        {
-          const m = this.model as CfRuleModel;
-          m.formulae = m.formulae || [];
-          m.formulae.push(parser.model as string);
-        }
-        break;
-    }
   }
 }
 

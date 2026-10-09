@@ -6,11 +6,15 @@ import {normalizeXml} from '../../../utils/normalize-xml.js';
 import parseSax from '../../../../lib/utils/parse-sax.js';
 import XmlStream from '../../../../lib/utils/xml-stream.js';
 import BooleanXform from '../../../../lib/xlsx/xform/simple/boolean-xform.js';
-import type BaseXform from '../../../../lib/xlsx/xform/base-xform.js';
+import BooleanParser from '../../../../lib/xlsx/parser/simple/boolean-xform.js';
+import BaseParser from '../../../../lib/xlsx/base-parser.js';
+import type BaseXform from '../../../../lib/xlsx/xform/xform-state.js';
+import type BaseWriter from '../../../../lib/xlsx/xform/base-xform.js';
 
 interface Expectation {
   title: string;
-  create(): BaseXform;
+  create(): BaseWriter;
+  createParser?(): BaseXform;
   tests: string[];
   options?: Record<string, unknown>;
   [key: string]: unknown;
@@ -22,14 +26,15 @@ function getExpectation(expectation: Expectation, name: string) {
   return cloneDeep(expectation[name]);
 }
 
-function composite(expectation: Expectation): CompyXform {
-  const child = expectation.create();
+function composite(expectation: Expectation, reading = false): CompyXform {
+  const child = reading && expectation.createParser ? expectation.createParser() : expectation.create();
+  const BooleanElement = reading ? BooleanParser : BooleanXform;
   return new CompyXform({
     tag: 'compy',
     children: [
-      {name: 'pre', xform: new BooleanXform({tag: 'pre', attr: 'val'})},
+      {name: 'pre', xform: new BooleanElement({tag: 'pre', attr: 'val'})},
       {name: child.tag, xform: child},
-      {name: 'post', xform: new BooleanXform({tag: 'post', attr: 'val'})},
+      {name: 'post', xform: new BooleanElement({tag: 'post', attr: 'val'})},
     ],
   });
 }
@@ -37,7 +42,7 @@ function composite(expectation: Expectation): CompyXform {
 async function parse(xform: BaseXform, xml: string) {
   const stream = new PassThrough();
   stream.end(xml);
-  return xform.parse(parseSax(stream));
+  return BaseParser.prototype.parse.call(xform, parseSax(stream));
 }
 
 const its = {
@@ -79,7 +84,7 @@ const its = {
   },
   parseIn(e: Expectation) {
     it('Parse within composite', async () => {
-      const xform = composite(e);
+      const xform = composite(e, true);
       const child = xform.map[Object.keys(xform.map)[1]!];
       const model = await parse(xform, `<compy><pre/>${getExpectation(e, 'xml')}<post/></compy>`);
       expect(cloneDeep(model, false)).toEqual({
@@ -91,14 +96,14 @@ const its = {
   },
   parse(e: Expectation) {
     it('Parse to Model', async () => {
-      const model = await parse(e.create(), getExpectation(e, 'xml') as string);
+      const model = await parse(e.createParser ? e.createParser() : e.create(), getExpectation(e, 'xml') as string);
       expect(cloneDeep(model, false)).toEqual(getExpectation(e, 'parsedModel'));
     });
   },
   reconcile(e: Expectation) {
     it('Reconcile Model', () => {
       const model = getExpectation(e, 'parsedModel');
-      e.create().reconcile(model, e.options);
+      (e.createParser ? e.createParser() : e.create()).reconcile(model, e.options);
       expect(cloneDeep(model, false)).toEqual(getExpectation(e, 'reconciledModel'));
     });
   },

@@ -1,3 +1,4 @@
+import WorkbookViewXformParser from '../../../../../lib/xlsx/parser/book/workbook-view-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -8,6 +9,9 @@ const expectations = [
     title: 'Normal',
     create() {
       return new WorkbookViewXform();
+    },
+    createParser() {
+      return new WorkbookViewXformParser();
     },
     preparedModel: {},
     xml:
@@ -26,6 +30,9 @@ const expectations = [
     create() {
       return new WorkbookViewXform();
     },
+    createParser() {
+      return new WorkbookViewXformParser();
+    },
     preparedModel: {visibility: 'hidden'},
     xml:
       '<workbookView visibility="hidden" xWindow="0" yWindow="0" windowWidth="12000" windowHeight="24000"/>',
@@ -42,6 +49,9 @@ const expectations = [
     title: 'Active Tab & First Sheet',
     create() {
       return new WorkbookViewXform();
+    },
+    createParser() {
+      return new WorkbookViewXformParser();
     },
     preparedModel: {activeTab: 2, firstSheet: 3},
     xml:

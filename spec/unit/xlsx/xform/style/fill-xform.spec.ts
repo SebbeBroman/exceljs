@@ -1,3 +1,4 @@
+import FillXformParser from '../../../../../lib/xlsx/parser/style/fill-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -18,6 +19,9 @@ const expectations = [
     create() {
       return new FillXform();
     },
+    createParser() {
+      return new FillXformParser();
+    },
     preparedModel: {type: 'pattern', pattern: 'none'},
     xml: '<fill><patternFill patternType="none"/></fill>',
     get parsedModel() {
@@ -30,6 +34,9 @@ const expectations = [
     create() {
       return new FillXform();
     },
+    createParser() {
+      return new FillXformParser();
+    },
     preparedModel: {type: 'pattern', pattern: 'gray125'},
     xml: '<fill><patternFill patternType="gray125"/></fill>',
     get parsedModel() {
@@ -41,6 +48,9 @@ const expectations = [
     title: 'Red Dark Vertical Pattern',
     create() {
       return new FillXform();
+    },
+    createParser() {
+      return new FillXformParser();
     },
     preparedModel: {
       type: 'pattern',
@@ -59,6 +69,9 @@ const expectations = [
     create() {
       return new FillXform();
     },
+    createParser() {
+      return new FillXformParser();
+    },
     preparedModel: {
       type: 'pattern',
       pattern: 'darkTrellis',
@@ -76,6 +89,9 @@ const expectations = [
     title: 'Blue White Horizontal Gradient',
     create() {
       return new FillXform();
+    },
+    createParser() {
+      return new FillXformParser();
     },
     preparedModel: {
       type: 'gradient',
@@ -100,6 +116,9 @@ const expectations = [
     title: 'RGB Path Gradient',
     create() {
       return new FillXform();
+    },
+    createParser() {
+      return new FillXformParser();
     },
     preparedModel: {
       type: 'gradient',

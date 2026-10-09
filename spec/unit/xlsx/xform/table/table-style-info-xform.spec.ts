@@ -1,3 +1,4 @@
+import TableStyleInfoXformParser from '../../../../../lib/xlsx/parser/table/table-style-info-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -8,6 +9,9 @@ const expectations = [
     title: 'row',
     create() {
       return new TableStyleInfoXform();
+    },
+    createParser() {
+      return new TableStyleInfoXformParser();
     },
     preparedModel: {
       theme: 'TableStyle',
@@ -27,6 +31,9 @@ const expectations = [
     title: 'col',
     create() {
       return new TableStyleInfoXform();
+    },
+    createParser() {
+      return new TableStyleInfoXformParser();
     },
     preparedModel: {
       theme: null,

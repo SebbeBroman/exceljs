@@ -1,6 +1,6 @@
 import XmlStream from '../../../utils/xml-stream.js';
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode, XformOptions} from '../base-xform.js';
+import type {XmlStreamLike} from '../base-xform.js';
 import VmlShapeXform from './vml-shape-xform.js';
 import type {VmlShapeModel, VmlShapeRenderModel} from './vml-shape-xform.js';
 
@@ -51,61 +51,6 @@ class VmlNotesXform extends BaseXform<VmlNotesModel> {
     });
 
     xmlStream.closeNode();
-  }
-
-  override parseOpen(node: XmlNode): boolean {
-    if (this.parser) {
-      this.parser.parseOpen(node);
-      return true;
-    }
-    switch (node.name) {
-      case this.tag:
-        this.reset();
-        this.model = {
-          comments: [],
-        };
-        break;
-      default:
-        this.parser = this.map[node.name];
-        if (this.parser) {
-          this.parser.parseOpen(node);
-        }
-        break;
-    }
-    return true;
-  }
-
-  override parseText(text: string): void {
-    if (this.parser) {
-      this.parser.parseText(text);
-    }
-  }
-
-  override parseClose(name?: string): boolean {
-    if (this.parser) {
-      if (!this.parser.parseClose(name)) {
-        this.model!.comments.push(this.parser.model as VmlShapeModel);
-        this.parser = undefined;
-      }
-      return true;
-    }
-    switch (name) {
-      case this.tag:
-        return false;
-      default:
-        // could be some unrecognised tags
-        return true;
-    }
-  }
-
-  override reconcile(model?: VmlNotesModel | null, options?: XformOptions): void {
-    model!.anchors!.forEach(anchor => {
-      if (anchor.br) {
-        this.map['xdr:twoCellAnchor'].reconcile(anchor, options);
-      } else {
-        this.map['xdr:oneCellAnchor'].reconcile(anchor, options);
-      }
-    });
   }
 }
 

@@ -1,3 +1,4 @@
+import IconSetXformParser from '../../../../../../lib/xlsx/parser/sheet/cf/icon-set-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../../test-xform-helper.js';
 
@@ -8,6 +9,9 @@ const expectations = [
     title: 'Default Set',
     create() {
       return new IconSetXform();
+    },
+    createParser() {
+      return new IconSetXformParser();
     },
     preparedModel: {
       iconSet: '3TrafficLights',
@@ -33,6 +37,9 @@ const expectations = [
     title: 'Reversed & Hide Values',
     create() {
       return new IconSetXform();
+    },
+    createParser() {
+      return new IconSetXformParser();
     },
     preparedModel: {
       iconSet: '5Arrows',

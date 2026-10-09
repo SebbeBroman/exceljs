@@ -1,3 +1,4 @@
+import ColorXformParser from '../../../../../lib/xlsx/parser/style/color-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -7,6 +8,7 @@ const expectations = [
   {
     title: 'RGB',
     create: () => new ColorXform(),
+    createParser: () => new ColorXformParser(),
     preparedModel: {argb: 'FF00FF00'},
     xml: '<color rgb="FF00FF00"/>',
     get parsedModel() {
@@ -17,6 +19,7 @@ const expectations = [
   {
     title: 'Theme',
     create: () => new ColorXform(),
+    createParser: () => new ColorXformParser(),
     preparedModel: {theme: 1},
     xml: '<color theme="1"/>',
     get parsedModel() {
@@ -27,6 +30,7 @@ const expectations = [
   {
     title: 'Theme with Tint',
     create: () => new ColorXform(),
+    createParser: () => new ColorXformParser(),
     preparedModel: {theme: 1, tint: 0.5},
     xml: '<color theme="1" tint="0.5"/>',
     get parsedModel() {
@@ -37,6 +41,7 @@ const expectations = [
   {
     title: 'Theme with Tint Zero',
     create: () => new ColorXform(),
+    createParser: () => new ColorXformParser(),
     preparedModel: {theme: 0, tint: 0},
     xml: '<color theme="0" tint="0"/>',
     get parsedModel() {
@@ -47,6 +52,7 @@ const expectations = [
   {
     title: 'Indexed',
     create: () => new ColorXform(),
+    createParser: () => new ColorXformParser(),
     preparedModel: {indexed: 1},
     xml: '<color indexed="1"/>',
     get parsedModel() {
@@ -57,6 +63,7 @@ const expectations = [
   {
     title: 'Indexed Zero',
     create: () => new ColorXform(),
+    createParser: () => new ColorXformParser(),
     preparedModel: {indexed: 0},
     xml: '<color indexed="0"/>',
     get parsedModel() {

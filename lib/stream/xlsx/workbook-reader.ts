@@ -5,9 +5,9 @@ import path from 'path';
 import {Readable} from 'node:stream';
 import {eachSaxChunk} from '../../utils/parse-sax.js';
 import streamZipEntries from '../../utils/stream-zip-reader.js';
-import StyleManager from '../../xlsx/xform/style/styles-xform.js';
-import WorkbookXform from '../../xlsx/xform/book/workbook-xform.js';
-import RelationshipsXform from '../../xlsx/xform/core/relationships-xform.js';
+import StyleManager from '../../xlsx/parser/style/styles-xform.js';
+import WorkbookXform from '../../xlsx/parser/book/workbook-xform.js';
+import RelationshipsXform from '../../xlsx/parser/core/relationships-xform.js';
 import WorksheetReader from './worksheet-reader.js';
 import HyperlinkReader from './hyperlink-reader.js';
 

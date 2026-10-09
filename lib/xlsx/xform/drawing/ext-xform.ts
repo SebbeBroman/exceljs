@@ -1,5 +1,5 @@
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode} from '../base-xform.js';
+import type {XmlStreamLike} from '../base-xform.js';
 
 /** https://en.wikipedia.org/wiki/Office_Open_XML_file_formats#DrawingML */
 const EMU_PER_PIXEL_AT_96_DPI = 9525;
@@ -33,23 +33,6 @@ class ExtXform extends BaseXform<ExtModel> {
     xmlStream.addAttribute('cy', height);
 
     xmlStream.closeNode();
-  }
-
-  override parseOpen(node: XmlNode): boolean {
-    if (node.name === this.tag) {
-      this.model = {
-        width: parseInt(node.attributes.cx || '0', 10) / EMU_PER_PIXEL_AT_96_DPI,
-        height: parseInt(node.attributes.cy || '0', 10) / EMU_PER_PIXEL_AT_96_DPI,
-      };
-      return true;
-    }
-    return false;
-  }
-
-  override parseText(_text?: string): void {}
-
-  override parseClose(_name?: string): boolean {
-    return false;
   }
 }
 

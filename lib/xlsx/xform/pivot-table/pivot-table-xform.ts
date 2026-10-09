@@ -130,22 +130,6 @@ class PivotTableXform extends BaseXform<PivotTableModel> {
     xmlStream.closeNode();
   }
 
-  override parseOpen(_node?: unknown): void {
-    // TK
-  }
-
-  override parseText(_text?: string): void {
-    // TK
-  }
-
-  override parseClose(_name?: string): void {
-    // TK
-  }
-
-  override reconcile(_model?: PivotTableModel | null, _options?: unknown): void {
-    // TK
-  }
-
   static PIVOT_TABLE_ATTRIBUTES: Record<string, string> = {
     xmlns: 'http://schemas.openxmlformats.org/spreadsheetml/2006/main',
     'xmlns:mc': 'http://schemas.openxmlformats.org/markup-compatibility/2006',

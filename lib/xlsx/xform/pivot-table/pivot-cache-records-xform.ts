@@ -83,22 +83,6 @@ class PivotCacheRecordsXform extends BaseXform<PivotCacheRecordsModel> {
     }
   }
 
-  override parseOpen(_node?: unknown): void {
-    // TK
-  }
-
-  override parseText(_text?: string): void {
-    // TK
-  }
-
-  override parseClose(_name?: string): void {
-    // TK
-  }
-
-  override reconcile(_model?: PivotCacheRecordsModel | null, _options?: unknown): void {
-    // TK
-  }
-
   static PIVOT_CACHE_RECORDS_ATTRIBUTES: Record<string, string> = {
     xmlns: 'http://schemas.openxmlformats.org/spreadsheetml/2006/main',
     'xmlns:r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',

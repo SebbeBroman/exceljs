@@ -1,3 +1,4 @@
+import StringXformParser from '../../../../../lib/xlsx/parser/simple/string-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -9,6 +10,9 @@ const expectations = [
     create() {
       return new StringXform({tag: 'string', attr: 'val'});
     },
+    createParser() {
+      return new StringXformParser({tag: 'string', attr: 'val'});
+    },
     preparedModel: 'Hello, World!',
     xml: '<string val="Hello, World!"/>',
     parsedModel: 'Hello, World!',
@@ -18,6 +22,9 @@ const expectations = [
     title: 'empty',
     create() {
       return new StringXform({tag: 'string', attr: 'val'});
+    },
+    createParser() {
+      return new StringXformParser({tag: 'string', attr: 'val'});
     },
     preparedModel: '',
     xml: '<string val=""/>',

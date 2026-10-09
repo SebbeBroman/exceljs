@@ -1,3 +1,4 @@
+import StaticXformParser from '../../../../lib/xlsx/parser/static-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from './test-xform-helper.js';
 
@@ -8,6 +9,9 @@ const expectations = [
     title: 'Leaf',
     create() {
       return new StaticXform({tag: 'root', $: {attr: 'val'}});
+    },
+    createParser() {
+      return new StaticXformParser({tag: 'root'});
     },
     preparedModel: undefined,
     get parsedModel() {
@@ -28,6 +32,9 @@ const expectations = [
         ],
       });
     },
+    createParser() {
+      return new StaticXformParser({tag: 'root'});
+    },
     preparedModel: undefined,
     get parsedModel() {
       return this.preparedModel;
@@ -43,6 +50,9 @@ const expectations = [
         $: {attr: 'val'},
         c: [{tag: 'child1', $: {attr: 5}, t: 'Hello, World!'}],
       });
+    },
+    createParser() {
+      return new StaticXformParser({tag: 'root'});
     },
     preparedModel: undefined,
     get parsedModel() {

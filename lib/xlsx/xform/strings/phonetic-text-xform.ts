@@ -2,7 +2,7 @@ import TextXform from './text-xform.js';
 import RichTextXform from './rich-text-xform.js';
 import type {RichTextModel} from './rich-text-xform.js';
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode} from '../base-xform.js';
+import type {XmlStreamLike} from '../base-xform.js';
 
 // <rPh sb="0" eb="1">
 //   <t>(its pronounciation in KATAKANA)</t>
@@ -46,63 +46,6 @@ class PhoneticTextXform extends BaseXform<PhoneticTextModel> {
       this.map.t.render(xmlStream, model.text);
     }
     xmlStream.closeNode();
-  }
-
-  override parseOpen(node: XmlNode): boolean {
-    const {name} = node;
-    if (this.parser) {
-      this.parser.parseOpen(node);
-      return true;
-    }
-    if (name === this.tag) {
-      this.model = {
-        sb: parseInt(node.attributes.sb, 10),
-        eb: parseInt(node.attributes.eb, 10),
-      };
-      return true;
-    }
-    this.parser = this.map[name as keyof typeof this.map];
-    if (this.parser) {
-      this.parser.parseOpen(node);
-      return true;
-    }
-    return false;
-  }
-
-  override parseText(text: string): void {
-    if (this.parser) {
-      this.parser.parseText(text);
-    }
-  }
-
-  override parseClose(name?: string): boolean {
-    if (this.parser) {
-      if (!this.parser.parseClose(name)) {
-        switch (name) {
-          case 'r': {
-            let rt = (this.model as PhoneticTextModel).richText;
-            if (!rt) {
-              rt = (this.model as PhoneticTextModel).richText = [];
-            }
-            rt.push(this.parser.model as RichTextModel);
-            break;
-          }
-          case 't':
-            (this.model as PhoneticTextModel).text = this.parser.model as string;
-            break;
-          default:
-            break;
-        }
-        this.parser = undefined;
-      }
-      return true;
-    }
-    switch (name) {
-      case this.tag:
-        return false;
-      default:
-        return true;
-    }
   }
 }
 

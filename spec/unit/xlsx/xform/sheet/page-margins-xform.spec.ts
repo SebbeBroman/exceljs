@@ -1,3 +1,4 @@
+import PageMarginsXformParser from '../../../../../lib/xlsx/parser/sheet/page-margins-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -8,6 +9,9 @@ const expectations = [
     title: 'normal',
     create() {
       return new PageMarginsXform();
+    },
+    createParser() {
+      return new PageMarginsXformParser();
     },
     preparedModel: {
       left: 0.7,

@@ -1,5 +1,5 @@
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode} from '../base-xform.js';
+import type {XmlStreamLike} from '../base-xform.js';
 
 export interface PrintOptionsModel {
   showRowColHeaders?: boolean;
@@ -27,27 +27,6 @@ class PrintOptionsXform extends BaseXform<PrintOptionsModel> {
         xmlStream.leafNode(this.tag, attributes);
       }
     }
-  }
-
-  override parseOpen(node: XmlNode): boolean {
-    switch (node.name) {
-      case this.tag:
-        this.model = {
-          showRowColHeaders: node.attributes.headings === '1',
-          showGridLines: node.attributes.gridLines === '1',
-          horizontalCentered: node.attributes.horizontalCentered === '1',
-          verticalCentered: node.attributes.verticalCentered === '1',
-        };
-        return true;
-      default:
-        return false;
-    }
-  }
-
-  override parseText(): void {}
-
-  override parseClose(): boolean {
-    return false;
   }
 }
 

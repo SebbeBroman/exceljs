@@ -10,7 +10,7 @@
  * This module fuses all three stages, emitting *reconciled* row models —
  * same shapes and semantics as RowXform/CellXform parse + reconcile
  * (style/date/shared-string/formula/hyperlink/comment handling) — which
- * hydrate through the unchanged `Row.model` setter. The caller still parses
+ * project directly into plain worksheet snapshots. The caller still parses
  * sheet head/tail (cols, merges, validations, CF, page setup, …) with
  * WorksheetXform; only `<sheetData>` content is fused, and
  * WorksheetXform.reconcile skips `sheetData` for flagged models. (An

@@ -1,5 +1,5 @@
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode} from '../base-xform.js';
+import type {XmlStreamLike} from '../base-xform.js';
 
 export interface HyperlinkXformModel {
   address: string;
@@ -29,29 +29,6 @@ class HyperlinkXform extends BaseXform<HyperlinkXformModel> {
         tooltip: model.tooltip,
       });
     }
-  }
-
-  override parseOpen(node: XmlNode): boolean {
-    if (node.name === 'hyperlink') {
-      this.model = {
-        address: node.attributes.ref,
-        rId: node.attributes['r:id'],
-        tooltip: node.attributes.tooltip,
-      };
-
-      // This is an internal link
-      if (node.attributes.location) {
-        this.model.target = node.attributes.location;
-      }
-      return true;
-    }
-    return false;
-  }
-
-  override parseText(): void {}
-
-  override parseClose(): boolean {
-    return false;
   }
 
   isInternalLink(model: HyperlinkXformModel): boolean {

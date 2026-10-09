@@ -1,3 +1,4 @@
+import CustomFilterXformParser from '../../../../../lib/xlsx/parser/table/custom-filter-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -9,6 +10,9 @@ const expectations = [
     create() {
       return new CustomFilterXform();
     },
+    createParser() {
+      return new CustomFilterXformParser();
+    },
     preparedModel: {val: '*brandywine*'},
     xml: '<customFilter val="*brandywine*"/>',
     parsedModel: {val: '*brandywine*'},
@@ -18,6 +22,9 @@ const expectations = [
     title: 'custom filter with operator',
     create() {
       return new CustomFilterXform();
+    },
+    createParser() {
+      return new CustomFilterXformParser();
     },
     preparedModel: {operator: 'notEqual', val: '4'},
     xml: '<customFilter operator="notEqual" val="4"/>',

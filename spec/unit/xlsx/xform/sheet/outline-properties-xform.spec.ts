@@ -1,3 +1,4 @@
+import OutlinePropertiesXformParser from '../../../../../lib/xlsx/parser/sheet/outline-properties-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -19,6 +20,9 @@ const expectations = [
     create() {
       return new OutlinePropertiesXform();
     },
+    createParser() {
+      return new OutlinePropertiesXformParser();
+    },
     preparedModel: {summaryBelow: false},
     xml: '<outlinePr summaryBelow="0"/>',
     parsedModel: {summaryBelow: false},
@@ -29,6 +33,9 @@ const expectations = [
     create() {
       return new OutlinePropertiesXform();
     },
+    createParser() {
+      return new OutlinePropertiesXformParser();
+    },
     preparedModel: {summaryRight: false},
     xml: '<outlinePr summaryRight="0"/>',
     parsedModel: {summaryRight: false},
@@ -38,6 +45,9 @@ const expectations = [
     title: 'summaryRight',
     create() {
       return new OutlinePropertiesXform();
+    },
+    createParser() {
+      return new OutlinePropertiesXformParser();
     },
     preparedModel: {summaryBelow: true, summaryRight: false},
     xml: '<outlinePr summaryBelow="1" summaryRight="0"/>',

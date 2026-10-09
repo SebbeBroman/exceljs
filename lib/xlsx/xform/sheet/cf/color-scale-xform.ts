@@ -1,5 +1,5 @@
 import CompositeXform from '../../composite-xform.js';
-import type {XmlStreamLike, XmlNode} from '../../base-xform.js';
+import type {XmlStreamLike} from '../../base-xform.js';
 import ColorXform from '../../style/color-xform.js';
 import type {ColorModel} from '../../style/color-xform.js';
 import CfvoXform from './cfvo-xform.js';
@@ -39,17 +39,6 @@ class ColorScaleXform extends CompositeXform<ColorScaleModel> {
     });
 
     xmlStream.closeNode();
-  }
-
-  override createNewModel(_node?: XmlNode): ColorScaleModel {
-    return {
-      cfvo: [],
-      color: [],
-    };
-  }
-
-  override onParserClose(name: string, parser: {model: unknown}): void {
-    (this.model as ColorScaleModel)[name as 'cfvo' | 'color'].push(parser.model as never);
   }
 }
 

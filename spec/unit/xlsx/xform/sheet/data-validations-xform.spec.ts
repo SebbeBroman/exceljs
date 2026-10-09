@@ -1,3 +1,4 @@
+import DataValidationsXformParser from '../../../../../lib/xlsx/parser/sheet/data-validations-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -7,6 +8,7 @@ const expectations = [
   {
     title: 'list type',
     create: () => new DataValidationsXform(),
+    createParser: () => new DataValidationsXformParser(),
     preparedModel: {
       E1: {
         type: 'list',
@@ -31,6 +33,7 @@ const expectations = [
   {
     title: 'whole type',
     create: () => new DataValidationsXform(),
+    createParser: () => new DataValidationsXformParser(),
     preparedModel: {
       A1: {
         type: 'whole',
@@ -57,6 +60,7 @@ const expectations = [
   {
     title: 'decimal type',
     create: () => new DataValidationsXform(),
+    createParser: () => new DataValidationsXformParser(),
     preparedModel: {
       A1: {
         type: 'decimal',
@@ -83,6 +87,7 @@ const expectations = [
   {
     title: 'custom type',
     create: () => new DataValidationsXform(),
+    createParser: () => new DataValidationsXformParser(),
     preparedModel: {
       A1: {
         type: 'custom',
@@ -107,6 +112,7 @@ const expectations = [
   {
     title: 'parse open office',
     create: () => new DataValidationsXform(),
+    createParser: () => new DataValidationsXformParser(),
     xml: `
       <dataValidations count="1">
         <dataValidation type="whole" allowBlank="true" showInputMessage="false" sqref="A1">
@@ -129,6 +135,7 @@ const expectations = [
   {
     title: 'optimised',
     create: () => new DataValidationsXform(),
+    createParser: () => new DataValidationsXformParser(),
     preparedModel: {
       A1: {type: 'whole', operator: 'between', formulae: [5, 10]},
       A2: {type: 'whole', operator: 'between', formulae: [5, 10]},

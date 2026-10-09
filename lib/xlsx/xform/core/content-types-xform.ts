@@ -130,16 +130,6 @@ class ContentTypesXform extends BaseXform<ContentTypesModel> {
     xmlStream.closeNode();
   }
 
-  override parseOpen(): boolean {
-    return false;
-  }
-
-  override parseText(): void {}
-
-  override parseClose(): boolean {
-    return false;
-  }
-
   static PROPERTY_ATTRIBUTES: Record<string, string> = {
     xmlns: 'http://schemas.openxmlformats.org/package/2006/content-types',
   };

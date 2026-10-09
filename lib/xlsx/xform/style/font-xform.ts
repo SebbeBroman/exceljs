@@ -4,7 +4,7 @@ import IntegerXform from '../simple/integer-xform.js';
 import StringXform from '../simple/string-xform.js';
 import UnderlineXform from './underline-xform.js';
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode} from '../base-xform.js';
+import type {XmlStreamLike} from '../base-xform.js';
 
 export interface FontXformOptions {
   tagName: string;
@@ -58,47 +58,6 @@ class FontXform extends BaseXform<Record<string, unknown>> {
       map[tag].xform.render(xmlStream, model![defn.prop]);
     }
     xmlStream.closeNode();
-  }
-
-  override parseOpen(node: XmlNode): boolean {
-    if (this.parser) {
-      this.parser.parseOpen(node);
-      return true;
-    }
-    if (this.map[node.name]) {
-      this.parser = this.map[node.name].xform;
-      return this.parser.parseOpen(node) as boolean;
-    }
-    switch (node.name) {
-      case this.options.tagName:
-        this.model = {};
-        return true;
-      default:
-        return false;
-    }
-  }
-
-  override parseText(text: string): void {
-    if (this.parser) {
-      this.parser.parseText(text);
-    }
-  }
-
-  override parseClose(name?: string): boolean {
-    if (this.parser && !this.parser.parseClose(name)) {
-      const item = this.map[name as string];
-      if (this.parser.model) {
-        (this.model as Record<string, unknown>)[item.prop] = this.parser.model;
-      }
-      this.parser = undefined;
-      return true;
-    }
-    switch (name) {
-      case this.options.tagName:
-        return false;
-      default:
-        return true;
-    }
   }
 
   static OPTIONS: FontXformOptions = {

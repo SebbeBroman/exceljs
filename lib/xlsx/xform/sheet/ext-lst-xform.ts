@@ -46,14 +46,6 @@ class ExtXform extends CompositeXform<ExtLstModel> {
 
     xmlStream.closeNode();
   }
-
-  override createNewModel(): ExtLstModel {
-    return {};
-  }
-
-  override onParserClose(name: string, parser: {model: unknown}): void {
-    (this.model as ExtLstModel)[name] = parser.model;
-  }
 }
 
 class ExtLstXform extends CompositeXform<ExtLstModel> {
@@ -85,14 +77,6 @@ class ExtLstXform extends CompositeXform<ExtLstModel> {
     xmlStream.openNode('extLst');
     this.ext.render(xmlStream, model);
     xmlStream.closeNode();
-  }
-
-  override createNewModel(): ExtLstModel {
-    return {};
-  }
-
-  override onParserClose(_name: string, parser: {model: unknown}): void {
-    Object.assign(this.model as ExtLstModel, parser.model);
   }
 }
 

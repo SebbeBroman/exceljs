@@ -1,3 +1,4 @@
+import CfRuleXformParser from '../../../../../../lib/xlsx/parser/sheet/cf/cf-rule-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../../test-xform-helper.js';
 
@@ -8,6 +9,9 @@ const expectations = [
     title: 'Expression',
     create() {
       return new CfRuleXform();
+    },
+    createParser() {
+      return new CfRuleXformParser();
     },
     preparedModel: {
       type: 'expression',
@@ -32,6 +36,9 @@ const expectations = [
     title: 'Cell Is',
     create() {
       return new CfRuleXform();
+    },
+    createParser() {
+      return new CfRuleXformParser();
     },
     preparedModel: {
       type: 'cellIs',
@@ -59,6 +66,9 @@ const expectations = [
     create() {
       return new CfRuleXform();
     },
+    createParser() {
+      return new CfRuleXformParser();
+    },
     preparedModel: {type: 'top10', dxfId: 1, priority: 1, rank: 10},
     xml: '<cfRule type="top10" dxfId="1" priority="1" rank="10" />',
     parsedModel: {type: 'top10', dxfId: 1, priority: 1, rank: 10},
@@ -68,6 +78,9 @@ const expectations = [
     title: 'Top 10%',
     create() {
       return new CfRuleXform();
+    },
+    createParser() {
+      return new CfRuleXformParser();
     },
     preparedModel: {
       type: 'top10',
@@ -91,6 +104,9 @@ const expectations = [
     create() {
       return new CfRuleXform();
     },
+    createParser() {
+      return new CfRuleXformParser();
+    },
     preparedModel: {
       type: 'top10',
       dxfId: 1,
@@ -107,6 +123,9 @@ const expectations = [
     create() {
       return new CfRuleXform();
     },
+    createParser() {
+      return new CfRuleXformParser();
+    },
     preparedModel: {type: 'aboveAverage', dxfId: 1, priority: 1},
     xml: '<cfRule type="aboveAverage" dxfId="1" priority="1" />',
     parsedModel: {type: 'aboveAverage', dxfId: 1, priority: 1},
@@ -116,6 +135,9 @@ const expectations = [
     title: 'Below Average',
     create() {
       return new CfRuleXform();
+    },
+    createParser() {
+      return new CfRuleXformParser();
     },
     preparedModel: {
       type: 'aboveAverage',
@@ -137,6 +159,9 @@ const expectations = [
     title: 'Colour Scale',
     create() {
       return new CfRuleXform();
+    },
+    createParser() {
+      return new CfRuleXformParser();
     },
     preparedModel: {
       type: 'colorScale',
@@ -165,6 +190,9 @@ const expectations = [
     title: 'Icon Set',
     create() {
       return new CfRuleXform();
+    },
+    createParser() {
+      return new CfRuleXformParser();
     },
     preparedModel: {
       type: 'iconSet',

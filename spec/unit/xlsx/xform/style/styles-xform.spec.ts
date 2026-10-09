@@ -1,3 +1,4 @@
+import StylesXformParser from '../../../../../lib/xlsx/parser/style/styles-xform.js';
 import {describe, it, expect} from 'vite-plus/test';
 import {normalizeXml} from '../../../../utils/normalize-xml.js';
 import fs from 'node:fs';
@@ -17,6 +18,9 @@ const expectations = [
     title: 'Styles with fonts',
     create() {
       return new StylesXform();
+    },
+    createParser() {
+      return new StylesXformParser();
     },
     preparedModel: __json_0,
     xml: fs.readFileSync(`${__dirname}/data/styles.1.2.xml`).toString(),

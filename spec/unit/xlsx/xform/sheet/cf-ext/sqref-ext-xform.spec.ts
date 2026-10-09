@@ -1,3 +1,4 @@
+import SqrefExtXformParser from '../../../../../../lib/xlsx/parser/sheet/cf-ext/sqref-ext-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../../test-xform-helper.js';
 
@@ -8,6 +9,9 @@ const expectations = [
     title: 'range',
     create() {
       return new SqrefExtXform();
+    },
+    createParser() {
+      return new SqrefExtXformParser();
     },
     preparedModel: 'A1:C3',
     xml: '<xm:sqref>A1:C3</xm:sqref>',

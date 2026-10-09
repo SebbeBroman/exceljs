@@ -1,3 +1,4 @@
+import RelationshipsXformParser from '../../../../../lib/xlsx/parser/core/relationships-xform.js';
 import {describe} from 'vite-plus/test';
 import fs from 'node:fs';
 import testXformHelper from '../test-xform-helper.js';
@@ -15,6 +16,9 @@ const expectations = [
     title: 'worksheet.rels',
     create() {
       return new RelationshipsXform();
+    },
+    createParser() {
+      return new RelationshipsXformParser();
     },
     preparedModel: __json_0,
     xml: fs

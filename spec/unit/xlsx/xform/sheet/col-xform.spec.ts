@@ -1,3 +1,4 @@
+import ColXformParser from '../../../../../lib/xlsx/parser/sheet/col-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -7,6 +8,7 @@ const expectations = [
   {
     title: 'Best Fit',
     create: () => new ColXform(),
+    createParser: () => new ColXformParser(),
     preparedModel: {min: 2, max: 2, width: 10.15625, bestFit: true},
     get parsedModel() {
       return this.preparedModel;
@@ -17,6 +19,7 @@ const expectations = [
   {
     title: 'Outline',
     create: () => new ColXform(),
+    createParser: () => new ColXformParser(),
     preparedModel: {
       min: 2,
       max: 2,

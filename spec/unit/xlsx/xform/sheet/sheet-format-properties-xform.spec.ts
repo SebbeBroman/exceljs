@@ -1,3 +1,4 @@
+import SheetFormatPropertiesXformParser from '../../../../../lib/xlsx/parser/sheet/sheet-format-properties-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -8,6 +9,9 @@ const expectations = [
     title: 'full',
     create() {
       return new SheetFormatPropertiesXform();
+    },
+    createParser() {
+      return new SheetFormatPropertiesXformParser();
     },
     preparedModel: {
       defaultRowHeight: 14.4,
@@ -31,6 +35,9 @@ const expectations = [
     title: 'default',
     create() {
       return new SheetFormatPropertiesXform();
+    },
+    createParser() {
+      return new SheetFormatPropertiesXformParser();
     },
     preparedModel: {defaultRowHeight: 14.4, dyDescent: 0.55},
     xml:

@@ -1,3 +1,4 @@
+import DateXformParser from '../../../../../lib/xlsx/parser/simple/date-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -9,6 +10,9 @@ const expectations = [
     create() {
       return new DateXform({tag: 'date', attr: 'val'});
     },
+    createParser() {
+      return new DateXformParser({tag: 'date', attr: 'val'});
+    },
     preparedModel: new Date('2016-07-13T00:00:00Z'),
     xml: '<date val="2016-07-13T00:00:00.000Z"/>',
     parsedModel: new Date('2016-07-13T00:00:00Z'),
@@ -18,6 +22,18 @@ const expectations = [
     title: 'iso-date',
     create() {
       return new DateXform({
+        tag: 'date',
+        attr: 'val',
+        format(dt) {
+          return dt.toISOString().split('T')[0];
+        },
+        parse(value) {
+          return new Date(value.replace('13', '14'));
+        },
+      });
+    },
+    createParser() {
+      return new DateXformParser({
         tag: 'date',
         attr: 'val',
         format(dt) {

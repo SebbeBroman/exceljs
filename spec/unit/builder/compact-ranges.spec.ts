@@ -2,7 +2,8 @@ import {describe, it, expect} from 'vite-plus/test';
 import {readFile} from 'node:fs/promises';
 
 import {workbook, writeBuffer, load} from '../../../excel.js';
-import DataValidationsXform from '../../../lib/xlsx/xform/sheet/data-validations-xform.js';
+import DataValidationsXform from '../../../lib/xlsx/parser/sheet/data-validations-xform.js';
+import DataValidationsWriter from '../../../lib/xlsx/xform/sheet/data-validations-xform.js';
 import Range from '../../../lib/model/range.js';
 import {normalizeWorkbook} from '../../utils/normalize-workbook.js';
 
@@ -52,7 +53,7 @@ describe('compact validation ranges', () => {
     const copy = new DataValidationsXform();
     await copy.parseStream(
       (async function* () {
-        yield xform.toXml(xform.model);
+        yield new DataValidationsWriter().toXml(xform.model);
       })(),
     );
     expect(normalizeWorkbook({dataValidations: copy.model})).toBe(

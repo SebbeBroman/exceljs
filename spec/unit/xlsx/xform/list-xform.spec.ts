@@ -1,3 +1,5 @@
+import ListXformParser from '../../../../lib/xlsx/parser/list-xform.js';
+import IntegerXformParser from '../../../../lib/xlsx/parser/simple/integer-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from './test-xform-helper.js';
 
@@ -11,6 +13,12 @@ const expectations = [
       return new ListXform({
         tag: 'ints',
         childXform: new IntegerXform({tag: 'int', attr: 'val'}),
+      });
+    },
+    createParser() {
+      return new ListXformParser({
+        tag: 'ints',
+        childXform: new IntegerXformParser({tag: 'int', attr: 'val'}),
       });
     },
     preparedModel: [1, 2, 3],
@@ -27,6 +35,13 @@ const expectations = [
         tag: 'ints',
         count: true,
         childXform: new IntegerXform({tag: 'int', attr: 'val'}),
+      });
+    },
+    createParser() {
+      return new ListXformParser({
+        tag: 'ints',
+        count: true,
+        childXform: new IntegerXformParser({tag: 'int', attr: 'val'}),
       });
     },
     preparedModel: [1, 2, 3],

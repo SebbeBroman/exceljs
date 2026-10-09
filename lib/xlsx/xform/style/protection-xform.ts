@@ -1,5 +1,5 @@
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode} from '../base-xform.js';
+import type {XmlStreamLike} from '../base-xform.js';
 
 export interface ProtectionModel {
   locked?: boolean;
@@ -40,24 +40,6 @@ class ProtectionXform extends BaseXform<ProtectionModel | null> {
     } else {
       xmlStream.rollback();
     }
-  }
-
-  override parseOpen(node: XmlNode): void {
-    const model = {
-      locked: !(node.attributes.locked === '0'),
-      hidden: node.attributes.hidden === '1',
-    };
-
-    // only want to record models that differ from defaults
-    const isSignificant = !model.locked || model.hidden;
-
-    this.model = isSignificant ? model : null;
-  }
-
-  override parseText(): void {}
-
-  override parseClose(): boolean {
-    return false;
   }
 }
 

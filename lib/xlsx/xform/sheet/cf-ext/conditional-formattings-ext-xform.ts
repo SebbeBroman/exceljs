@@ -47,17 +47,6 @@ class ConditionalFormattingsExtXform extends CompositeXform<ConditionalFormattin
       xmlStream.closeNode();
     }
   }
-
-  override createNewModel(): ConditionalFormattingsExtModel {
-    return [] as ConditionalFormattingsExtModel;
-  }
-
-  override onParserClose(_name: string, parser: {model: unknown}): void {
-    // model is array of conditional formatting objects
-    (this.model as ConditionalFormattingsExtModel).push(
-      parser.model as ConditionalFormattingExtModel,
-    );
-  }
 }
 
 export default ConditionalFormattingsExtXform;

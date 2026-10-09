@@ -1,3 +1,4 @@
+import ColorScaleXformParser from '../../../../../../lib/xlsx/parser/sheet/cf/color-scale-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../../test-xform-helper.js';
 
@@ -8,6 +9,9 @@ const expectations = [
     title: 'Colour Scale',
     create() {
       return new ColorScaleXform();
+    },
+    createParser() {
+      return new ColorScaleXformParser();
     },
     preparedModel: {
       cfvo: [{type: 'min'}, {type: 'percentile', value: 50}, {type: 'max'}],

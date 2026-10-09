@@ -1,5 +1,5 @@
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode} from '../base-xform.js';
+import type {XmlStreamLike} from '../base-xform.js';
 
 export interface FilterModel {
   val?: string;
@@ -12,22 +12,6 @@ class FilterXform extends BaseXform<FilterModel> {
     xmlStream.leafNode(this.tag, {
       val: model!.val,
     });
-  }
-
-  override parseOpen(node: XmlNode): boolean {
-    if (node.name === this.tag) {
-      this.model = {
-        val: node.attributes.val,
-      };
-      return true;
-    }
-    return false;
-  }
-
-  override parseText(): void {}
-
-  override parseClose(): boolean {
-    return false;
   }
 }
 

@@ -1,5 +1,5 @@
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode} from '../base-xform.js';
+import type {XmlStreamLike} from '../base-xform.js';
 import AlignmentXform from './alignment-xform.js';
 import BorderXform from './border-xform.js';
 import FillXform from './fill-xform.js';
@@ -68,54 +68,6 @@ class DxfXform extends BaseXform<DxfModel> {
     }
 
     xmlStream.closeNode();
-  }
-
-  override parseOpen(node: XmlNode): boolean {
-    if (this.parser) {
-      this.parser.parseOpen(node);
-      return true;
-    }
-
-    switch (node.name) {
-      case this.tag:
-        // this node is often repeated. Need to reset children
-        this.reset();
-        return true;
-      default:
-        this.parser = this.map[node.name as keyof typeof this.map];
-        if (this.parser) {
-          this.parser.parseOpen(node);
-        }
-        return true;
-    }
-  }
-
-  override parseText(text: string): void {
-    if (this.parser) {
-      this.parser.parseText(text);
-    }
-  }
-
-  override parseClose(name?: string): boolean {
-    if (this.parser) {
-      if (!this.parser.parseClose(name)) {
-        this.parser = undefined;
-      }
-      return true;
-    }
-    if (name === this.tag) {
-      this.model = {
-        alignment: this.map.alignment.model,
-        border: this.map.border.model,
-        fill: this.map.fill.model,
-        font: this.map.font.model,
-        numFmt: this.map.numFmt.model as unknown as string,
-        protection: this.map.protection.model,
-      };
-      return false;
-    }
-
-    return true;
   }
 }
 

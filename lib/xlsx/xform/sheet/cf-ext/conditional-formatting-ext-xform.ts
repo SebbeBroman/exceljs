@@ -49,24 +49,6 @@ class ConditionalFormattingExtXform extends CompositeXform<ConditionalFormatting
 
     xmlStream.closeNode();
   }
-
-  override createNewModel(): ConditionalFormattingExtModel {
-    return {
-      rules: [],
-    };
-  }
-
-  override onParserClose(name: string, parser: {model: unknown}): void {
-    switch (name) {
-      case 'xm:sqref':
-        (this.model as ConditionalFormattingExtModel).ref = parser.model as string;
-        break;
-
-      case 'x14:cfRule':
-        (this.model as ConditionalFormattingExtModel).rules.push(parser.model as CfRuleExtModel);
-        break;
-    }
-  }
 }
 
 export default ConditionalFormattingExtXform;

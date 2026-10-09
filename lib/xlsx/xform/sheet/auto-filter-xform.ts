@@ -1,6 +1,6 @@
 import colCache from '../../../utils/col-cache.js';
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode} from '../base-xform.js';
+import type {XmlStreamLike} from '../base-xform.js';
 
 export interface AutoFilterAddress {
   row: number;
@@ -36,12 +36,6 @@ class AutoFilterXform extends BaseXform<string> {
           xmlStream.leafNode('autoFilter', {ref: `${firstAddress}:${secondAddress}`});
         }
       }
-    }
-  }
-
-  override parseOpen(node: XmlNode): void {
-    if (node.name === 'autoFilter') {
-      this.model = node.attributes.ref;
     }
   }
 }

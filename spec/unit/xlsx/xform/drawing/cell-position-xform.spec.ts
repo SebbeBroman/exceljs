@@ -1,3 +1,4 @@
+import CellPositionXformParser from '../../../../../lib/xlsx/parser/drawing/cell-position-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -8,6 +9,9 @@ const expectations = [
     title: 'integers',
     create() {
       return new CellPositionXform({tag: 'xdr:from'});
+    },
+    createParser() {
+      return new CellPositionXformParser({tag: 'xdr:from'});
     },
     preparedModel: {
       nativeRow: 5,
@@ -29,6 +33,9 @@ const expectations = [
     title: 'halves',
     create() {
       return new CellPositionXform({tag: 'xdr:to'});
+    },
+    createParser() {
+      return new CellPositionXformParser({tag: 'xdr:to'});
     },
     preparedModel: {
       nativeRow: 5,

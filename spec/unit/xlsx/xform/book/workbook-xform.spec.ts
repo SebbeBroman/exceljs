@@ -1,3 +1,4 @@
+import WorkbookXformParser from '../../../../../lib/xlsx/parser/book/workbook-xform.js';
 import {describe} from 'vite-plus/test';
 import fs from 'node:fs';
 import testXformHelper from '../test-xform-helper.js';
@@ -18,6 +19,9 @@ const expectations = [
     create() {
       return new WorkbookXform();
     },
+    createParser() {
+      return new WorkbookXformParser();
+    },
     preparedModel: __json_0,
     xml: fs
       .readFileSync(`${__dirname}/data/book.1.2.xml`)
@@ -30,6 +34,9 @@ const expectations = [
     title: 'book.2 - no properties',
     create() {
       return new WorkbookXform();
+    },
+    createParser() {
+      return new WorkbookXformParser();
     },
     xml: fs
       .readFileSync(`${__dirname}/data/book.2.2.xml`)

@@ -1,3 +1,4 @@
+import FontXformParser from '../../../../../lib/xlsx/parser/style/font-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -8,6 +9,9 @@ const expectations = [
     title: 'green bold',
     create() {
       return new FontXform();
+    },
+    createParser() {
+      return new FontXformParser();
     },
     preparedModel: {
       bold: true,
@@ -28,6 +32,9 @@ const expectations = [
     title: 'rPr tag',
     create() {
       return new FontXform({tagName: 'rPr', fontNameTag: 'rFont'});
+    },
+    createParser() {
+      return new FontXformParser({tagName: 'rPr', fontNameTag: 'rFont'});
     },
     preparedModel: {
       italic: true,

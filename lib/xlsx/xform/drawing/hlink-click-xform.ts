@@ -1,5 +1,5 @@
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode} from '../base-xform.js';
+import type {XmlStreamLike} from '../base-xform.js';
 
 export interface HLinkClickModel {
   hyperlinks?: {
@@ -20,27 +20,6 @@ class HLinkClickXform extends BaseXform<HLinkClickModel> {
       'r:id': model.hyperlinks.rId,
       tooltip: model.hyperlinks.tooltip,
     });
-  }
-
-  override parseOpen(node: XmlNode): boolean {
-    switch (node.name) {
-      case this.tag:
-        this.model = {
-          hyperlinks: {
-            rId: node.attributes['r:id'],
-            tooltip: node.attributes.tooltip,
-          },
-        };
-        return true;
-      default:
-        return true;
-    }
-  }
-
-  override parseText(): void {}
-
-  override parseClose(): boolean {
-    return false;
   }
 }
 

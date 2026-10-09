@@ -1,7 +1,7 @@
 import Enums from '../../../model/enums.js';
 import XmlStream from '../../../utils/xml-stream.js';
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode} from '../base-xform.js';
+import type {XmlStreamLike} from '../base-xform.js';
 import StaticXform from '../static-xform.js';
 import ListXform from '../list-xform.js';
 import FontXform from './font-xform.js';
@@ -25,7 +25,7 @@ export interface StylesModel {
   dxfs: DxfModel[];
 }
 
-interface StylesIndex {
+export interface StylesIndex {
   style?: Record<string, number>;
   numFmt?: Record<string | number, number | string>;
   numFmtNextId?: number;
@@ -36,7 +36,7 @@ interface StylesIndex {
 }
 
 // =============================================================================
-// StylesXform is used to generate and parse the styles.xml file
+// StylesXform is used to generate the styles.xml file
 // it manages the collections of fonts, number formats, alignments, etc
 class StylesXform extends BaseXform<StylesModel> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -191,74 +191,6 @@ class StylesXform extends BaseXform<StylesModel> {
     xmlStream.closeNode();
   }
 
-  override parseOpen(node: XmlNode): boolean {
-    if (this.parser) {
-      this.parser.parseOpen(node);
-      return true;
-    }
-    switch (node.name) {
-      case 'styleSheet':
-        this.initIndex();
-        return true;
-      default:
-        this.parser = this.map[node.name] as BaseXform;
-        if (this.parser) {
-          this.parser.parseOpen(node);
-        }
-        return true;
-    }
-  }
-
-  override parseText(text: string): void {
-    if (this.parser) {
-      this.parser.parseText(text);
-    }
-  }
-
-  override parseClose(name?: string): boolean {
-    if (this.parser) {
-      if (!this.parser.parseClose(name)) {
-        this.parser = undefined;
-      }
-      return true;
-    }
-    switch (name) {
-      case 'styleSheet': {
-        this.model = {} as StylesModel;
-        const add = (propName: keyof StylesModel, xform: BaseXform): void => {
-          if (xform.model && (xform.model as unknown[]).length) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (this.model as any)[propName] = xform.model;
-          }
-        };
-        add('numFmts', this.map.numFmts as BaseXform);
-        add('fonts', this.map.fonts as BaseXform);
-        add('fills', this.map.fills as BaseXform);
-        add('borders', this.map.borders as BaseXform);
-        add('styles', this.map.cellXfs as BaseXform);
-        add('dxfs', this.map.dxfs as BaseXform);
-
-        // index numFmts
-        this.index = {
-          model: [],
-          numFmt: {},
-        };
-        if (this.model.numFmts) {
-          const numFmtIndex = this.index.numFmt as Record<string | number, string | number>;
-          this.model.numFmts.forEach(numFmt => {
-            const nf = numFmt as {id: number; formatCode: string};
-            numFmtIndex[nf.id] = nf.formatCode;
-          });
-        }
-
-        return false;
-      }
-      default:
-        // not quite sure how we get here!
-        return true;
-    }
-  }
-
   // add a cell's style model to the collection
   // each style property is processed and cross-referenced, etc.
   // the styleId is returned. Note: cellType is used when numFmt not defined
@@ -323,63 +255,6 @@ class StylesXform extends BaseXform<StylesModel> {
     return styleId;
   }
 
-  // given a styleId (i.e. s="n"), get the cell's style model
-  // objects are shared where possible.
-  getStyleModel(id: number): Record<string, unknown> | null {
-    // if the style doesn't exist return null
-    const style = this.model!.styles[id] as StyleModel | undefined;
-    if (!style) return null;
-
-    // have we built this model before?
-    let model = this.index!.model![id];
-    if (model) return model;
-
-    // build a new model
-    model = this.index!.model![id] = {};
-
-    // -------------------------------------------------------
-    // number format
-    if (style.numFmtId) {
-      const numFmt =
-        (this.index!.numFmt as Record<string | number, string | number>)[style.numFmtId] ||
-        NumFmtXform.getDefaultFmtCode(style.numFmtId);
-      if (numFmt) {
-        model.numFmt = numFmt;
-      }
-    }
-
-    const addStyle = (
-      name: string,
-      group: unknown[] | undefined,
-      styleId: number | undefined,
-    ): void => {
-      if (styleId || styleId === 0) {
-        const part = group?.[styleId];
-        if (part) {
-          model![name] = part;
-        }
-      }
-    };
-
-    addStyle('font', this.model!.fonts, style.fontId);
-    addStyle('border', this.model!.borders, style.borderId);
-    addStyle('fill', this.model!.fills, style.fillId);
-
-    // -------------------------------------------------------
-    // alignment
-    if (style.alignment) {
-      model.alignment = style.alignment;
-    }
-
-    // -------------------------------------------------------
-    // protection
-    if (style.protection) {
-      model.protection = style.protection;
-    }
-
-    return model;
-  }
-
   addDxfStyle(style: DxfModel): number {
     if (style.numFmt) {
       // register numFmtId to use it during dxf-xform rendering
@@ -388,10 +263,6 @@ class StylesXform extends BaseXform<StylesModel> {
 
     this.model!.dxfs.push(style);
     return this.model!.dxfs.length - 1;
-  }
-
-  getDxfStyle(id: number): DxfModel {
-    return this.model!.dxfs[id];
   }
 
   // =========================================================================

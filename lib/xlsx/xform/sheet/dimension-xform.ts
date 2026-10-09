@@ -1,5 +1,5 @@
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode} from '../base-xform.js';
+import type {XmlStreamLike} from '../base-xform.js';
 
 class DimensionXform extends BaseXform<string> {
   override tag = 'dimension';
@@ -8,20 +8,6 @@ class DimensionXform extends BaseXform<string> {
     if (model) {
       xmlStream.leafNode('dimension', {ref: model});
     }
-  }
-
-  override parseOpen(node: XmlNode): boolean {
-    if (node.name === 'dimension') {
-      this.model = node.attributes.ref;
-      return true;
-    }
-    return false;
-  }
-
-  override parseText(): void {}
-
-  override parseClose(): boolean {
-    return false;
   }
 }
 

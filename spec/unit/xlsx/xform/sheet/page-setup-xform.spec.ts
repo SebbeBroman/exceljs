@@ -1,3 +1,4 @@
+import PageSetupXformParser from '../../../../../lib/xlsx/parser/sheet/page-setup-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -22,6 +23,7 @@ const expectations = [
   {
     title: 'normal',
     create: () => new PageSetupXform(),
+    createParser: () => new PageSetupXformParser(),
     preparedModel: {
       paperSize: 9,
       orientation: 'portrait',
@@ -53,6 +55,7 @@ const expectations = [
   {
     title: 'options',
     create: () => new PageSetupXform(),
+    createParser: () => new PageSetupXformParser(),
     preparedModel: {
       paperSize: 119,
       pageOrder: 'overThenDown',
@@ -87,6 +90,7 @@ const expectations = [
   {
     title: 'defaults',
     create: () => new PageSetupXform(),
+    createParser: () => new PageSetupXformParser(),
     preparedModel: {
       pageOrder: 'downThenOver',
       orientation: 'portrait',
@@ -116,6 +120,7 @@ const expectations = [
   {
     title: 'scale and fit',
     create: () => new PageSetupXform(),
+    createParser: () => new PageSetupXformParser(),
     preparedModel: {
       paperSize: 119,
       scale: 95,

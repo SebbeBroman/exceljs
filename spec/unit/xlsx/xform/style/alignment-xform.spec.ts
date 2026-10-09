@@ -1,3 +1,4 @@
+import AlignmentXformParser from '../../../../../lib/xlsx/parser/style/alignment-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -14,6 +15,7 @@ const expectations = [
   {
     title: 'Top Left',
     create: () => new AlignmentXform(),
+    createParser: () => new AlignmentXformParser(),
     preparedModel: {horizontal: 'left', vertical: 'top'},
     xml: '<alignment horizontal="left" vertical="top"/>',
     get parsedModel() {
@@ -24,6 +26,7 @@ const expectations = [
   {
     title: 'Middle Centre',
     create: () => new AlignmentXform(),
+    createParser: () => new AlignmentXformParser(),
     preparedModel: {horizontal: 'center', vertical: 'middle'},
     xml: '<alignment horizontal="center" vertical="center"/>',
     get parsedModel() {
@@ -34,6 +37,7 @@ const expectations = [
   {
     title: 'Bottom Right',
     create: () => new AlignmentXform(),
+    createParser: () => new AlignmentXformParser(),
     preparedModel: {horizontal: 'right', vertical: 'bottom'},
     xml: '<alignment horizontal="right" vertical="bottom"/>',
     get parsedModel() {
@@ -44,6 +48,7 @@ const expectations = [
   {
     title: 'Wrap Text',
     create: () => new AlignmentXform(),
+    createParser: () => new AlignmentXformParser(),
     preparedModel: {wrapText: true},
     xml: '<alignment wrapText="1"/>',
     get parsedModel() {
@@ -54,6 +59,7 @@ const expectations = [
   {
     title: 'Indent 1',
     create: () => new AlignmentXform(),
+    createParser: () => new AlignmentXformParser(),
     preparedModel: {indent: 1},
     xml: '<alignment indent="1"/>',
     get parsedModel() {
@@ -64,6 +70,7 @@ const expectations = [
   {
     title: 'Indent 2',
     create: () => new AlignmentXform(),
+    createParser: () => new AlignmentXformParser(),
     preparedModel: {indent: 2},
     xml: '<alignment indent="2"/>',
     get parsedModel() {
@@ -74,6 +81,7 @@ const expectations = [
   {
     title: 'Rotate 15',
     create: () => new AlignmentXform(),
+    createParser: () => new AlignmentXformParser(),
     preparedModel: {
       horizontal: 'right',
       vertical: 'bottom',
@@ -88,6 +96,7 @@ const expectations = [
   {
     title: 'Rotate 30',
     create: () => new AlignmentXform(),
+    createParser: () => new AlignmentXformParser(),
     preparedModel: {
       horizontal: 'right',
       vertical: 'bottom',
@@ -102,6 +111,7 @@ const expectations = [
   {
     title: 'Rotate 45',
     create: () => new AlignmentXform(),
+    createParser: () => new AlignmentXformParser(),
     preparedModel: {
       horizontal: 'right',
       vertical: 'bottom',
@@ -116,6 +126,7 @@ const expectations = [
   {
     title: 'Rotate 60',
     create: () => new AlignmentXform(),
+    createParser: () => new AlignmentXformParser(),
     preparedModel: {
       horizontal: 'right',
       vertical: 'bottom',
@@ -130,6 +141,7 @@ const expectations = [
   {
     title: 'Rotate 75',
     create: () => new AlignmentXform(),
+    createParser: () => new AlignmentXformParser(),
     preparedModel: {
       horizontal: 'right',
       vertical: 'bottom',
@@ -144,6 +156,7 @@ const expectations = [
   {
     title: 'Rotate 90',
     create: () => new AlignmentXform(),
+    createParser: () => new AlignmentXformParser(),
     preparedModel: {
       horizontal: 'right',
       vertical: 'bottom',
@@ -158,6 +171,7 @@ const expectations = [
   {
     title: 'Rotate -15',
     create: () => new AlignmentXform(),
+    createParser: () => new AlignmentXformParser(),
     preparedModel: {
       horizontal: 'right',
       vertical: 'bottom',
@@ -172,6 +186,7 @@ const expectations = [
   {
     title: 'Rotate -30',
     create: () => new AlignmentXform(),
+    createParser: () => new AlignmentXformParser(),
     preparedModel: {
       horizontal: 'right',
       vertical: 'bottom',
@@ -186,6 +201,7 @@ const expectations = [
   {
     title: 'Rotate -45',
     create: () => new AlignmentXform(),
+    createParser: () => new AlignmentXformParser(),
     preparedModel: {
       horizontal: 'right',
       vertical: 'bottom',
@@ -200,6 +216,7 @@ const expectations = [
   {
     title: 'Rotate -60',
     create: () => new AlignmentXform(),
+    createParser: () => new AlignmentXformParser(),
     preparedModel: {
       horizontal: 'right',
       vertical: 'bottom',
@@ -214,6 +231,7 @@ const expectations = [
   {
     title: 'Rotate -75',
     create: () => new AlignmentXform(),
+    createParser: () => new AlignmentXformParser(),
     preparedModel: {
       horizontal: 'right',
       vertical: 'bottom',
@@ -228,6 +246,7 @@ const expectations = [
   {
     title: 'Rotate -90',
     create: () => new AlignmentXform(),
+    createParser: () => new AlignmentXformParser(),
     preparedModel: {
       horizontal: 'right',
       vertical: 'bottom',
@@ -242,6 +261,7 @@ const expectations = [
   {
     title: 'Reading Order [Left To Right]',
     create: () => new AlignmentXform(),
+    createParser: () => new AlignmentXformParser(),
     preparedModel: {readingOrder: 'ltr'},
     xml: '<alignment readingOrder="1"/>',
     get parsedModel() {
@@ -252,6 +272,7 @@ const expectations = [
   {
     title: 'Reading Order [Right To Left]',
     create: () => new AlignmentXform(),
+    createParser: () => new AlignmentXformParser(),
     preparedModel: {readingOrder: 'rtl'},
     xml: '<alignment readingOrder="2"/>',
     get parsedModel() {
@@ -262,6 +283,7 @@ const expectations = [
   {
     title: 'Vertical Text',
     create: () => new AlignmentXform(),
+    createParser: () => new AlignmentXformParser(),
     preparedModel: {
       horizontal: 'right',
       vertical: 'bottom',

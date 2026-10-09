@@ -1,3 +1,4 @@
+import BooleanXformParser from '../../../../../lib/xlsx/parser/simple/boolean-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -8,6 +9,9 @@ const expectations = [
     title: 'true',
     create() {
       return new BooleanXform({tag: 'boolean', attr: 'val'});
+    },
+    createParser() {
+      return new BooleanXformParser({tag: 'boolean', attr: 'val'});
     },
     preparedModel: true,
     get parsedModel() {

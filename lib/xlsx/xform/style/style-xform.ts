@@ -1,5 +1,5 @@
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode} from '../base-xform.js';
+import type {XmlStreamLike} from '../base-xform.js';
 import AlignmentXform from './alignment-xform.js';
 import type {AlignmentModel} from './alignment-xform.js';
 import ProtectionXform from './protection-xform.js';
@@ -83,58 +83,6 @@ class StyleXform extends BaseXform<StyleModel> {
     }
 
     xmlStream.closeNode();
-  }
-
-  override parseOpen(node: XmlNode): boolean {
-    if (this.parser) {
-      this.parser.parseOpen(node);
-      return true;
-    }
-    // used during sax parsing of xml to build font object
-    switch (node.name) {
-      case 'xf':
-        this.model = {
-          numFmtId: parseInt(node.attributes.numFmtId, 10),
-          fontId: parseInt(node.attributes.fontId, 10),
-          fillId: parseInt(node.attributes.fillId, 10),
-          borderId: parseInt(node.attributes.borderId, 10),
-        };
-        if (this.xfId) {
-          this.model.xfId = parseInt(node.attributes.xfId, 10);
-        }
-        return true;
-      case 'alignment':
-        this.parser = this.map.alignment;
-        this.parser.parseOpen(node);
-        return true;
-      case 'protection':
-        this.parser = this.map.protection;
-        this.parser.parseOpen(node);
-        return true;
-      default:
-        return false;
-    }
-  }
-
-  override parseText(text: string): void {
-    if (this.parser) {
-      this.parser.parseText(text);
-    }
-  }
-
-  override parseClose(name?: string): boolean {
-    if (this.parser) {
-      if (!this.parser.parseClose(name)) {
-        if (this.map.protection === this.parser) {
-          this.model!.protection = this.parser.model as ProtectionModel | null;
-        } else {
-          this.model!.alignment = this.parser.model as AlignmentModel | null;
-        }
-        this.parser = undefined;
-      }
-      return true;
-    }
-    return name !== 'xf';
   }
 }
 

@@ -1,3 +1,4 @@
+import WorksheetXformParser from '../../../../../lib/xlsx/parser/sheet/worksheet-xform.js';
 import {describe, it, expect} from 'vite-plus/test';
 import fs from 'node:fs';
 import testXformHelper from '../test-xform-helper.js';
@@ -75,6 +76,7 @@ const expectations = [
   {
     title: 'Sheet 1',
     create: () => new WorksheetXform(),
+    createParser: () => new WorksheetXformParser(),
     initialModel: fixDate(__json_0),
     preparedModel: fixDate(__json_1),
     xml: fs.readFileSync(`${__dirname}/data/sheet.1.2.xml`).toString(),
@@ -120,6 +122,7 @@ const expectations = [
   {
     title: 'Sheet 5 - Shared Formulas',
     create: () => new WorksheetXform(),
+    createParser: () => new WorksheetXformParser(),
     initialModel: __json_7,
     preparedModel: __json_8,
     xml: fs.readFileSync(`${__dirname}/data/sheet.5.2.xml`).toString(),
@@ -138,6 +141,7 @@ const expectations = [
   {
     title: 'Sheet 6 - AutoFilter',
     create: () => new WorksheetXform(),
+    createParser: () => new WorksheetXformParser(),
     preparedModel: __json_11,
     xml: fs.readFileSync(`${__dirname}/data/sheet.6.2.xml`).toString(),
     parsedModel: __json_12,

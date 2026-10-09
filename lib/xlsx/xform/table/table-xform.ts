@@ -1,6 +1,6 @@
 import XmlStream from '../../../utils/xml-stream.js';
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode, XformOptions} from '../base-xform.js';
+import type {XmlStreamLike, XformOptions} from '../base-xform.js';
 import ListXform from '../list-xform.js';
 import AutoFilterXform from './auto-filter-xform.js';
 import TableColumnXform from './table-column-xform.js';
@@ -67,74 +67,6 @@ class TableXform extends BaseXform<TableModel> {
     this.map.tableStyleInfo.render(xmlStream, model!.style);
 
     xmlStream.closeNode();
-  }
-
-  override parseOpen(node: XmlNode): boolean {
-    if (this.parser) {
-      this.parser.parseOpen(node);
-      return true;
-    }
-    const {name, attributes} = node;
-    switch (name) {
-      case this.tag:
-        this.reset();
-        this.model = {
-          name: attributes.name,
-          displayName: attributes.displayName || attributes.name,
-          tableRef: attributes.ref,
-          totalsRow: attributes.totalsRowCount === '1',
-          headerRow: attributes.headerRowCount === '1',
-        };
-        break;
-      default:
-        this.parser = this.map[node.name as keyof typeof this.map];
-        if (this.parser) {
-          this.parser.parseOpen(node);
-        }
-        break;
-    }
-    return true;
-  }
-
-  override parseText(text: string): void {
-    if (this.parser) {
-      this.parser.parseText(text);
-    }
-  }
-
-  override parseClose(name?: string): boolean {
-    if (this.parser) {
-      if (!this.parser.parseClose(name)) {
-        this.parser = undefined;
-      }
-      return true;
-    }
-    switch (name) {
-      case this.tag:
-        this.model!.columns = this.map.tableColumns.model as TableColumnModel[] | undefined;
-        if (this.map.autoFilter.model) {
-          this.model!.autoFilterRef = this.map.autoFilter.model.autoFilterRef;
-          this.map.autoFilter.model.columns.forEach((column, index) => {
-            this.model!.columns![index].filterButton = column.filterButton;
-          });
-        }
-        this.model!.style = this.map.tableStyleInfo.model;
-        return false;
-      default:
-        // could be some unrecognised tags
-        return true;
-    }
-  }
-
-  override reconcile(model?: TableModel | null, options?: XformOptions): void {
-    // fetch the dfxs from styles
-    model!.columns!.forEach(column => {
-      if (column.dxfId !== undefined) {
-        column.style = (
-          options as {styles: {getDxfStyle(id: string | number): unknown}}
-        ).styles.getDxfStyle(column.dxfId);
-      }
-    });
   }
 
   static TABLE_ATTRIBUTES: Record<string, string> = {

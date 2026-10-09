@@ -1,3 +1,4 @@
+import DefinedNameXformParser from '../../../../../lib/xlsx/parser/book/defined-name-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -9,6 +10,9 @@ const expectations = [
     create() {
       return new DefinedNameXform();
     },
+    createParser() {
+      return new DefinedNameXformParser();
+    },
     preparedModel: {name: 'foo', ranges: ['bar!$A$1:$C$1']},
     xml: '<definedName name="foo">bar!$A$1:$C$1</definedName>',
     parsedModel: {name: 'foo', ranges: ['bar!$A$1:$C$1']},
@@ -18,6 +22,9 @@ const expectations = [
     title: 'Print Area',
     create() {
       return new DefinedNameXform();
+    },
+    createParser() {
+      return new DefinedNameXformParser();
     },
     preparedModel: {
       name: '_xlnm.Print_Area',
@@ -37,6 +44,9 @@ const expectations = [
     title: 'String with something that looks like a range',
     create() {
       return new DefinedNameXform();
+    },
+    createParser() {
+      return new DefinedNameXformParser();
     },
     preparedModel: {name: 'foo', ranges: []},
     xml: '<definedName name="foo">"OFFSET($A$10;0;0;0;1)"</definedName>',

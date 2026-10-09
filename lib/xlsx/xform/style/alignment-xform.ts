@@ -1,7 +1,7 @@
 import Enums from '../../../model/enums.js';
-import {parseBoolean, validInt} from '../../../utils/utils.js';
+import {validInt} from '../../../utils/utils.js';
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode} from '../base-xform.js';
+import type {XmlStreamLike} from '../base-xform.js';
 
 export interface AlignmentModel {
   horizontal?: string;
@@ -144,45 +144,6 @@ class AlignmentXform extends BaseXform<AlignmentModel | null> {
     } else {
       xmlStream.rollback();
     }
-  }
-
-  override parseOpen(node: XmlNode): void {
-    const model: AlignmentModel = {};
-
-    let valid = false;
-    function add(truthy: unknown, name: keyof AlignmentModel, value: unknown): void {
-      if (truthy) {
-        (model as Record<string, unknown>)[name] = value;
-        valid = true;
-      }
-    }
-    add(node.attributes.horizontal, 'horizontal', node.attributes.horizontal);
-    add(
-      node.attributes.vertical,
-      'vertical',
-      node.attributes.vertical === 'center' ? 'middle' : node.attributes.vertical,
-    );
-    add(node.attributes.wrapText, 'wrapText', parseBoolean(node.attributes.wrapText));
-    add(node.attributes.shrinkToFit, 'shrinkToFit', parseBoolean(node.attributes.shrinkToFit));
-    add(node.attributes.indent, 'indent', parseInt(node.attributes.indent, 10));
-    add(
-      node.attributes.textRotation,
-      'textRotation',
-      textRotationXform.toModel(node.attributes.textRotation),
-    );
-    add(
-      node.attributes.readingOrder,
-      'readingOrder',
-      node.attributes.readingOrder === '2' ? 'rtl' : 'ltr',
-    );
-
-    this.model = valid ? model : null;
-  }
-
-  override parseText(): void {}
-
-  override parseClose(): boolean {
-    return false;
   }
 }
 

@@ -1,3 +1,4 @@
+import StyleXformParser from '../../../../../lib/xlsx/parser/style/style-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -8,6 +9,9 @@ const expectations = [
     title: 'Default',
     create() {
       return new StyleXform();
+    },
+    createParser() {
+      return new StyleXformParser();
     },
     preparedModel: {numFmtId: 0, fontId: 0, fillId: 0, borderId: 0},
     xml: '<xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>',
@@ -21,6 +25,9 @@ const expectations = [
     create() {
       return new StyleXform({xfId: true});
     },
+    createParser() {
+      return new StyleXformParser({xfId: true});
+    },
     preparedModel: {numFmtId: 0, fontId: 0, fillId: 0, borderId: 0, xfId: 0},
     xml: '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>',
     get parsedModel() {
@@ -32,6 +39,9 @@ const expectations = [
     title: 'Aligned',
     create() {
       return new StyleXform({xfId: true});
+    },
+    createParser() {
+      return new StyleXformParser({xfId: true});
     },
     preparedModel: {
       numFmtId: 0,
@@ -53,6 +63,9 @@ const expectations = [
     create() {
       return new StyleXform({xfId: true});
     },
+    createParser() {
+      return new StyleXformParser({xfId: true});
+    },
     preparedModel: {numFmtId: 0, fontId: 5, fillId: 0, borderId: 0, xfId: 0},
     xml:
       '<xf numFmtId="0" fontId="5" fillId="0" borderId="0" xfId="0" applyFont="1"/>',
@@ -65,6 +78,9 @@ const expectations = [
     title: 'Border',
     create() {
       return new StyleXform({xfId: true});
+    },
+    createParser() {
+      return new StyleXformParser({xfId: true});
     },
     preparedModel: {numFmtId: 0, fontId: 0, fillId: 0, borderId: 7, xfId: 0},
     xml:
@@ -79,6 +95,9 @@ const expectations = [
     create() {
       return new StyleXform({xfId: true});
     },
+    createParser() {
+      return new StyleXformParser({xfId: true});
+    },
     preparedModel: {numFmtId: 1, fontId: 0, fillId: 0, borderId: 0, xfId: 0},
     xml:
       '<xf numFmtId="1" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>',
@@ -92,6 +111,9 @@ const expectations = [
     create() {
       return new StyleXform({xfId: true});
     },
+    createParser() {
+      return new StyleXformParser({xfId: true});
+    },
     preparedModel: {numFmtId: 0, fontId: 0, fillId: 2, borderId: 0, xfId: 0},
     xml:
       '<xf numFmtId="0" fontId="0" fillId="2" borderId="0" xfId="0" applyFill="1"/>',
@@ -104,6 +126,9 @@ const expectations = [
     title: 'Protected',
     create() {
       return new StyleXform({xfId: true});
+    },
+    createParser() {
+      return new StyleXformParser({xfId: true});
     },
     preparedModel: {
       numFmtId: 0,

@@ -32,7 +32,7 @@ function build(xmlStream: XmlStreamLike, model: StaticXmlModel): void {
 }
 
 class StaticXform extends BaseXform {
-  // Static tree model (separate from BaseXform.parse `model`)
+  // Static tree model (separate from the transform model)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   _model: any;
   _xml?: string;
@@ -40,12 +40,7 @@ class StaticXform extends BaseXform {
   constructor(model: StaticXmlModel) {
     super();
 
-    // This class is an optimisation for static (unimportant and unchanging) xml
-    // It is stateless - apart from its static model and so can be used as a singleton
-    // Being stateless - it will only track entry to and exit from it's root xml tag during parsing and nothing else
-    // Known issues:
-    //    since stateless - parseOpen always returns true. Parent xform must know when to start using this xform
-    //    if the root tag is recursive, the parsing will behave unpredictably
+    // Cache the serialization of an unchanging XML tree.
     this._model = model;
   }
 
@@ -56,21 +51,6 @@ class StaticXform extends BaseXform {
       this._xml = stream.xml;
     }
     xmlStream.writeXml(this._xml);
-  }
-
-  override parseOpen(): boolean {
-    return true;
-  }
-
-  override parseText(): void {}
-
-  override parseClose(name?: string): boolean {
-    switch (name) {
-      case this._model.tag:
-        return false;
-      default:
-        return true;
-    }
   }
 }
 

@@ -1,6 +1,6 @@
 import XmlStream from '../../../utils/xml-stream.js';
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode} from '../base-xform.js';
+import type {XmlStreamLike} from '../base-xform.js';
 import CommentXform from './comment-xform.js';
 import type {CommentXformModel} from './comment-xform.js';
 
@@ -42,48 +42,6 @@ class CommentsXform extends BaseXform<CommentsModel> {
     });
     xmlStream.closeNode();
     xmlStream.closeNode();
-  }
-
-  override parseOpen(node: XmlNode): boolean {
-    if (this.parser) {
-      this.parser.parseOpen(node);
-      return true;
-    }
-    switch (node.name) {
-      case 'commentList':
-        this.model = {
-          comments: [],
-        };
-        return true;
-      case 'comment':
-        this.parser = this.map.comment;
-        this.parser.parseOpen(node);
-        return true;
-      default:
-        return false;
-    }
-  }
-
-  override parseText(text: string): void {
-    if (this.parser) {
-      this.parser.parseText(text);
-    }
-  }
-
-  override parseClose(name?: string): boolean {
-    switch (name) {
-      case 'commentList':
-        return false;
-      case 'comment':
-        this.model!.comments.push(this.parser!.model as CommentXformModel);
-        this.parser = undefined;
-        return true;
-      default:
-        if (this.parser) {
-          this.parser.parseClose(name);
-        }
-        return true;
-    }
   }
 }
 

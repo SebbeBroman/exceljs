@@ -1,3 +1,4 @@
+import CellXformParser from '../../../../../lib/xlsx/parser/sheet/cell-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -32,6 +33,9 @@ const expectations = [
     create() {
       return new CellXform();
     },
+    createParser() {
+      return new CellXformParser();
+    },
     preparedModel: {address: 'A1', type: Enums.ValueType.Null, styleId: 1},
     xml: '<c r="A1" s="1" />',
     parsedModel: {address: 'A1', type: Enums.ValueType.Null, styleId: 1},
@@ -41,6 +45,9 @@ const expectations = [
     title: 'Number',
     create() {
       return new CellXform();
+    },
+    createParser() {
+      return new CellXformParser();
     },
     preparedModel: {address: 'A1', type: Enums.ValueType.Number, value: 5},
     parsedModel: {address: 'A1', type: Enums.ValueType.Number, value: 5},
@@ -52,6 +59,9 @@ const expectations = [
     create() {
       return new CellXform();
     },
+    createParser() {
+      return new CellXformParser();
+    },
     preparedModel: {address: 'A1', type: Enums.ValueType.Boolean, value: true},
     parsedModel: {address: 'A1', type: Enums.ValueType.Boolean, value: true},
     xml: '<c r="A1" t="b"><v>1</v></c>',
@@ -61,6 +71,9 @@ const expectations = [
     title: 'Error',
     create() {
       return new CellXform();
+    },
+    createParser() {
+      return new CellXformParser();
     },
     preparedModel: {
       address: 'A1',
@@ -80,6 +93,9 @@ const expectations = [
     create() {
       return new CellXform();
     },
+    createParser() {
+      return new CellXformParser();
+    },
     initialModel: {address: 'A1', type: Enums.ValueType.String, value: 'Foo'},
     preparedModel: {address: 'A1', type: Enums.ValueType.String, value: 'Foo'},
     xml: '<c r="A1" t="str"><v>Foo</v></c>',
@@ -96,6 +112,9 @@ const expectations = [
     title: 'String with Invalid Number',
     create() {
       return new CellXform();
+    },
+    createParser() {
+      return new CellXformParser();
     },
     initialModel: {
       address: 'A1',
@@ -125,6 +144,9 @@ const expectations = [
     create() {
       return new CellXform();
     },
+    createParser() {
+      return new CellXformParser();
+    },
     xml: '<c r="A1" t="inlineStr"><is><t>Foo</t></is></c>',
     parsedModel: {address: 'A1', type: Enums.ValueType.String, value: 'Foo'},
     reconciledModel: {
@@ -139,6 +161,9 @@ const expectations = [
     title: 'Inline String with RichText',
     create() {
       return new CellXform();
+    },
+    createParser() {
+      return new CellXformParser();
     },
     initialModel: {
       address: 'A1',
@@ -190,6 +215,9 @@ const expectations = [
     create() {
       return new CellXform();
     },
+    createParser() {
+      return new CellXformParser();
+    },
     initialModel: {address: 'A1', type: Enums.ValueType.String, value: 'Foo'},
     preparedModel: {
       address: 'A1',
@@ -215,6 +243,9 @@ const expectations = [
     title: 'Shared String with RichText',
     create() {
       return new CellXform();
+    },
+    createParser() {
+      return new CellXformParser();
     },
     initialModel: {
       address: 'A1',
@@ -265,6 +296,9 @@ const expectations = [
     create() {
       return new CellXform();
     },
+    createParser() {
+      return new CellXformParser();
+    },
     initialModel: {
       address: 'A1',
       type: Enums.ValueType.Date,
@@ -302,6 +336,9 @@ const expectations = [
     create() {
       return new CellXform();
     },
+    createParser() {
+      return new CellXformParser();
+    },
     initialModel: {
       address: 'H1',
       type: Enums.ValueType.Hyperlink,
@@ -335,6 +372,9 @@ const expectations = [
     title: 'String Formula',
     create() {
       return new CellXform();
+    },
+    createParser() {
+      return new CellXformParser();
     },
     initialModel: {
       address: 'A1',
@@ -376,6 +416,9 @@ const expectations = [
     create() {
       return new CellXform();
     },
+    createParser() {
+      return new CellXformParser();
+    },
     preparedModel: {
       address: 'A1',
       type: Enums.ValueType.Formula,
@@ -396,6 +439,9 @@ const expectations = [
     title: 'Master Shared Formula',
     create() {
       return new CellXform();
+    },
+    createParser() {
+      return new CellXformParser();
     },
     preparedModel: {
       address: 'A2',
@@ -437,6 +483,9 @@ const expectations = [
     title: 'Shared Formula Slave',
     create() {
       return new CellXform();
+    },
+    createParser() {
+      return new CellXformParser();
     },
     initialModel: {
       address: 'A2',
@@ -487,6 +536,9 @@ const expectations = [
     title: 'Array Shared Formula',
     create() {
       return new CellXform();
+    },
+    createParser() {
+      return new CellXformParser();
     },
     preparedModel: {
       address: 'A2',

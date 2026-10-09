@@ -1,3 +1,4 @@
+import BlipFillXformParser from '../../../../../lib/xlsx/parser/drawing/blip-fill-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -8,6 +9,9 @@ const expectations = [
     title: 'normal',
     create() {
       return new BlipFillXform();
+    },
+    createParser() {
+      return new BlipFillXformParser();
     },
     preparedModel: {rId: 'rId1'},
     xml:

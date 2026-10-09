@@ -1,3 +1,4 @@
+import HyperlinkXformParser from '../../../../../lib/xlsx/parser/sheet/hyperlink-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -8,6 +9,9 @@ const expectations = [
     title: 'Web Link',
     create() {
       return new HyperlinkXform();
+    },
+    createParser() {
+      return new HyperlinkXformParser();
     },
     preparedModel: {address: 'B6', rId: 'rId1'},
     get parsedModel() {
@@ -20,6 +24,9 @@ const expectations = [
     title: 'Internal Link',
     create() {
       return new HyperlinkXform();
+    },
+    createParser() {
+      return new HyperlinkXformParser();
     },
     preparedModel: {address: 'B6', rId: 'rId1', target: 'sheet1!B2'},
     get parsedModel() {

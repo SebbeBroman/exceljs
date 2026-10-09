@@ -12,18 +12,6 @@ class X14IdXform extends BaseXform<string> {
   override render(xmlStream: XmlStreamLike, model?: string | null): void {
     xmlStream.leafNode(this.tag, undefined, model);
   }
-
-  override parseOpen(): void {
-    this.model = '';
-  }
-
-  override parseText(text: string): void {
-    this.model = (this.model || '') + text;
-  }
-
-  override parseClose(name?: string): boolean {
-    return name !== this.tag;
-  }
 }
 
 class ExtXform extends CompositeXform<ExtLstRefModel> {
@@ -52,14 +40,6 @@ class ExtXform extends CompositeXform<ExtLstRefModel> {
 
     xmlStream.closeNode();
   }
-
-  override createNewModel(): ExtLstRefModel {
-    return {};
-  }
-
-  override onParserClose(_name: string, parser: {model: unknown}): void {
-    (this.model as ExtLstRefModel).x14Id = parser.model as string;
-  }
 }
 
 class ExtLstRefXform extends CompositeXform<ExtLstRefModel> {
@@ -76,14 +56,6 @@ class ExtLstRefXform extends CompositeXform<ExtLstRefModel> {
     xmlStream.openNode(this.tag);
     this.map.ext.render(xmlStream, model);
     xmlStream.closeNode();
-  }
-
-  override createNewModel(): ExtLstRefModel {
-    return {};
-  }
-
-  override onParserClose(_name: string, parser: {model: unknown}): void {
-    Object.assign(this.model as ExtLstRefModel, parser.model);
   }
 }
 

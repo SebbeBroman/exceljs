@@ -1,3 +1,4 @@
+import FilterColumnXformParser from '../../../../../lib/xlsx/parser/table/filter-column-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -8,6 +9,9 @@ const expectations = [
     title: 'showing filter',
     create() {
       return new FilterColumnXform();
+    },
+    createParser() {
+      return new FilterColumnXformParser();
     },
     initialModel: {filterButton: true},
     preparedModel: {colId: '0', filterButton: true},
@@ -23,6 +27,9 @@ const expectations = [
     create() {
       return new FilterColumnXform();
     },
+    createParser() {
+      return new FilterColumnXformParser();
+    },
     initialModel: {filterButton: false},
     preparedModel: {colId: '1', filterButton: false},
     xml: '<filterColumn colId="1" hiddenButton="1" />',
@@ -36,6 +43,9 @@ const expectations = [
     title: 'with custom filter',
     create() {
       return new FilterColumnXform();
+    },
+    createParser() {
+      return new FilterColumnXformParser();
     },
     initialModel: {filterButton: false, customFilters: [{val: '*brandywine*'}]},
     preparedModel: {

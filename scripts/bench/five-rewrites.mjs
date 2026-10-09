@@ -53,6 +53,17 @@ for (const [name, contents] of Object.entries(cases)) {
       if (!dep.external && dep.kind !== 'dynamic-import') visit(dep.path);
   };
   visit(entry);
+  const reachable = new Set();
+  const visitAll = path => {
+    if (reachable.has(path)) return;
+    reachable.add(path);
+    for (const dep of outputs[path].imports) if (!dep.external) visitAll(dep.path);
+  };
+  visitAll(entry);
+  writeFileSync(
+    join(root, 'build/five-rewrites', `${stage}-${name}-metafile.json`),
+    JSON.stringify(split.metafile, null, 2),
+  );
   const sum = (paths, gzip) =>
     paths.reduce((total, path) => {
       const bytes = split.outputFiles.find(file => file.path === resolve(root, path)).contents;
@@ -65,6 +76,10 @@ for (const [name, contents] of Object.entries(cases)) {
     initialMinified: sum([...initial], false),
     initialGzip: sum([...initial], true),
     splitTotal: sum(Object.keys(outputs), false),
+    splitReachableMinified: sum([...reachable], false),
+    splitReachableGzip: sum([...reachable], true),
+    emittedChunks: Object.keys(outputs).length,
+    reachableChunks: reachable.size,
   };
 }
 const {workbook, load, readRows} = await import(pathToFileURL(join(directory, 'excel.js')));

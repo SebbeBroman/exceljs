@@ -1,5 +1,5 @@
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode} from '../base-xform.js';
+import type {XmlStreamLike} from '../base-xform.js';
 
 export interface BooleanXformOptions {
   tag: string;
@@ -21,18 +21,6 @@ class BooleanXform extends BaseXform<boolean> {
       xmlStream.openNode(this.tag);
       xmlStream.closeNode();
     }
-  }
-
-  override parseOpen(node: XmlNode): void {
-    if (node.name === this.tag) {
-      this.model = true;
-    }
-  }
-
-  override parseText(): void {}
-
-  override parseClose(): boolean {
-    return false;
   }
 }
 

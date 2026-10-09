@@ -1,5 +1,5 @@
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode} from '../base-xform.js';
+import type {XmlStreamLike} from '../base-xform.js';
 
 export interface OutlinePropertiesModel {
   summaryBelow?: boolean;
@@ -19,27 +19,6 @@ class OutlinePropertiesXform extends BaseXform<OutlinePropertiesModel> {
       });
       return true;
     }
-    return false;
-  }
-
-  override parseOpen(node: XmlNode): boolean {
-    if (node.name === this.tag) {
-      this.model = {
-        summaryBelow: isDefined(node.attributes.summaryBelow)
-          ? Boolean(Number(node.attributes.summaryBelow))
-          : undefined,
-        summaryRight: isDefined(node.attributes.summaryRight)
-          ? Boolean(Number(node.attributes.summaryRight))
-          : undefined,
-      };
-      return true;
-    }
-    return false;
-  }
-
-  override parseText(): void {}
-
-  override parseClose(): boolean {
     return false;
   }
 }

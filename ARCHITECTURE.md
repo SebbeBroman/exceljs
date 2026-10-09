@@ -53,7 +53,7 @@ writeBuffer(plain | builder)
 load(bytes) / readFile(path)
         │
         ▼
-   XLSX.decode                 lib/xlsx/xlsx-reader.ts + xforms
+   XLSX.decode                 lib/xlsx/xlsx-reader.ts + parsers
         │
         ▼
    reconciled encoder model
@@ -62,12 +62,12 @@ load(bytes) / readFile(path)
    plain { meta, sheets }     lib/compile/xlsx-model-to-plain.ts
 ```
 
-Edit loop: `workbook(await load(buf)).sheet(…).cell(…).writeBuffer()`. Loaded tables reconstruct their top-left reference and body values from the worksheet, including totals metadata. Reader and writer orchestration live in separate modules so bundlers can discard the unused direction.
+Edit loop: `workbook(await load(buf)).sheet(…).cell(…).writeBuffer()`. Loaded tables reconstruct their top-left reference and body values from the worksheet, including totals metadata. Reader and writer orchestration and OOXML transforms have separate dependency trees. `lib/xlsx/parser/` contains parsing and reconciliation; `lib/xlsx/xform/` contains preparation and rendering. A small shared `xform-state.ts` holds model/reset utilities and the child contract. Parser type imports from writer modules are erased, so loading retains no XML rendering engine. Optional feature parsers and writers load automatically. `scripts/smoke-directional-bundles.mjs` guards the separation.
 
 Model-loading `load` runs in two phases: package parts first (workbook,
 SST, styles, rels, …), then sheets — each sheet flows parse → reconcile-ready
 without waiting on other sheets. Sheets eligible for the fused fast path
-(`lib/xlsx/xform/sheet/fast-sheet-data.ts`) parse + reconcile `sheetData`
+(`lib/xlsx/parser/sheet/fast-sheet-data.ts`) parse + reconcile `sheetData`
 in one saxen pass (style/date/shared-string/formula/hyperlink/comment
 resolution inline, per-sheet style caches); sheet head/tail still parses
 with WorksheetXform. Public `load` projects reconciled cell models directly

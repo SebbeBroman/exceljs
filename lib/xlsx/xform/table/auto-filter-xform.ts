@@ -1,5 +1,5 @@
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode} from '../base-xform.js';
+import type {XmlStreamLike} from '../base-xform.js';
 import FilterColumnXform from './filter-column-xform.js';
 import type {FilterColumnModel} from './filter-column-xform.js';
 
@@ -38,51 +38,6 @@ class AutoFilterXform extends BaseXform<AutoFilterModel> {
 
     xmlStream.closeNode();
     return true;
-  }
-
-  override parseOpen(node: XmlNode): boolean {
-    if (this.parser) {
-      this.parser.parseOpen(node);
-      return true;
-    }
-    switch (node.name) {
-      case this.tag:
-        this.model = {
-          autoFilterRef: node.attributes.ref,
-          columns: [],
-        };
-        return true;
-
-      default:
-        this.parser = this.map[node.name as keyof typeof this.map];
-        if (this.parser) {
-          this.parseOpen(node);
-          return true;
-        }
-        throw new Error(`Unexpected xml node in parseOpen: ${JSON.stringify(node)}`);
-    }
-  }
-
-  override parseText(text: string): void {
-    if (this.parser) {
-      this.parser.parseText(text);
-    }
-  }
-
-  override parseClose(name?: string): boolean {
-    if (this.parser) {
-      if (!this.parser.parseClose(name)) {
-        this.model!.columns.push(this.parser.model as FilterColumnModel);
-        this.parser = undefined;
-      }
-      return true;
-    }
-    switch (name) {
-      case this.tag:
-        return false;
-      default:
-        throw new Error(`Unexpected xml node in parseClose: ${name}`);
-    }
   }
 }
 

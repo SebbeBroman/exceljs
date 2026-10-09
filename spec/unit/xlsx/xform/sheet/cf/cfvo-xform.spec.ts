@@ -1,3 +1,4 @@
+import CfvoXformParser from '../../../../../../lib/xlsx/parser/sheet/cf/cfvo-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../../test-xform-helper.js';
 
@@ -8,6 +9,9 @@ const expectations = [
     title: 'min',
     create() {
       return new CfvoXform();
+    },
+    createParser() {
+      return new CfvoXformParser();
     },
     preparedModel: {type: 'min'},
     xml: '<cfvo type="min" />',
@@ -20,6 +24,9 @@ const expectations = [
     title: 'percent',
     create() {
       return new CfvoXform();
+    },
+    createParser() {
+      return new CfvoXformParser();
     },
     preparedModel: {type: 'percent', value: 12.5},
     xml: '<cfvo type="percent" val="12.5" />',

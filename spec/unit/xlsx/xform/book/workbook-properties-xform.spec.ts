@@ -1,3 +1,4 @@
+import WorkbookPropertiesXformParser from '../../../../../lib/xlsx/parser/book/workbook-properties-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -19,6 +20,9 @@ const expectations = [
     title: 'date1904',
     create() {
       return new WorkbookPropertiesXform();
+    },
+    createParser() {
+      return new WorkbookPropertiesXformParser();
     },
     preparedModel: {date1904: true},
     xml:

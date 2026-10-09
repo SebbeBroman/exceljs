@@ -1,5 +1,5 @@
 import BaseXform from '../../base-xform.js';
-import type {XmlStreamLike, XmlNode} from '../../base-xform.js';
+import type {XmlStreamLike} from '../../base-xform.js';
 
 export interface CfIconExtModel {
   iconSet?: string;
@@ -17,18 +17,6 @@ class CfIconExtXform extends BaseXform<CfIconExtModel> {
       iconSet: model.iconSet,
       iconId: model.iconId,
     });
-  }
-
-  override parseOpen(node: XmlNode): void {
-    const {attributes} = node;
-    this.model = {
-      iconSet: attributes.iconSet,
-      iconId: BaseXform.toIntValue(attributes.iconId),
-    };
-  }
-
-  override parseClose(name?: string): boolean {
-    return name !== this.tag;
   }
 }
 

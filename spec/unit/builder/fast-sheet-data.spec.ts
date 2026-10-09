@@ -7,7 +7,7 @@ import {
   isFastSheetDataEnabled,
   setFastSheetDataEnabled,
   splitSheetData,
-} from '../../../lib/xlsx/xform/sheet/fast-sheet-data.js';
+} from '../../../lib/xlsx/parser/sheet/fast-sheet-data.js';
 import {entryToString, unzipToFiles} from '../../../lib/utils/zip-reader.js';
 
 async function sheetXmlOf(buf: Uint8Array): Promise<string> {

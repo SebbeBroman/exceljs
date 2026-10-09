@@ -1,3 +1,5 @@
+import SheetViewXformParser from '../../../../../lib/xlsx/parser/sheet/sheet-view-xform.js';
+import ListXformParser from '../../../../../lib/xlsx/parser/list-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -8,6 +10,7 @@ const expectations = [
   {
     title: 'Normal',
     create: () => new SheetViewXform(),
+    createParser: () => new SheetViewXformParser(),
     preparedModel: {workbookViewId: 0, state: 'normal', activeCell: 'G4'},
     xml:
       '<sheetView workbookViewId="0">' +
@@ -29,6 +32,7 @@ const expectations = [
   {
     title: 'Normal Zoom',
     create: () => new SheetViewXform(),
+    createParser: () => new SheetViewXformParser(),
     preparedModel: {
       workbookViewId: 0,
       state: 'normal',
@@ -56,6 +60,7 @@ const expectations = [
   {
     title: 'Normal unruly noliney nohdr',
     create: () => new SheetViewXform(),
+    createParser: () => new SheetViewXformParser(),
     preparedModel: {
       workbookViewId: 0,
       state: 'normal',
@@ -84,6 +89,7 @@ const expectations = [
   {
     title: 'Page Break Preview',
     create: () => new SheetViewXform(),
+    createParser: () => new SheetViewXformParser(),
     preparedModel: {
       workbookViewId: 0,
       state: 'normal',
@@ -111,6 +117,7 @@ const expectations = [
   {
     title: 'Split',
     create: () => new SheetViewXform(),
+    createParser: () => new SheetViewXformParser(),
     preparedModel: {
       workbookViewId: 0,
       state: 'split',
@@ -145,6 +152,7 @@ const expectations = [
   {
     title: 'Split Top Left',
     create: () => new SheetViewXform(),
+    createParser: () => new SheetViewXformParser(),
     preparedModel: {
       workbookViewId: 0,
       state: 'split',
@@ -179,6 +187,7 @@ const expectations = [
   {
     title: 'Frozen',
     create: () => new SheetViewXform(),
+    createParser: () => new SheetViewXformParser(),
     preparedModel: {
       workbookViewId: 0,
       state: 'frozen',
@@ -215,6 +224,12 @@ const expectations = [
         tag: 'sheetViews',
         count: false,
         childXform: new SheetViewXform(),
+      }),
+    createParser: () =>
+      new ListXformParser({
+        tag: 'sheetViews',
+        count: false,
+        childXform: new SheetViewXformParser(),
       }),
     preparedModel: [
       {workbookViewId: 0, state: 'normal', activeCell: 'G4'},
@@ -269,6 +284,7 @@ const expectations = [
   {
     title: 'Right To Left',
     create: () => new SheetViewXform(),
+    createParser: () => new SheetViewXformParser(),
     preparedModel: {rightToLeft: true},
     xml: '<sheetView workbookViewId="0" rightToLeft="1"></sheetView>',
     parsedModel: {

@@ -1,3 +1,4 @@
+import ProtectionXformParser from '../../../../../lib/xlsx/parser/style/protection-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -22,6 +23,7 @@ const expectations = [
   {
     title: 'Unlocked',
     create: () => new ProtectionXform(),
+    createParser: () => new ProtectionXformParser(),
     preparedModel: {locked: false, hidden: false},
     xml: '<protection locked="0"/>',
     get parsedModel() {
@@ -32,6 +34,7 @@ const expectations = [
   {
     title: 'Hidden',
     create: () => new ProtectionXform(),
+    createParser: () => new ProtectionXformParser(),
     preparedModel: {locked: true, hidden: true},
     xml: '<protection hidden="1"/>',
     get parsedModel() {
@@ -42,6 +45,7 @@ const expectations = [
   {
     title: 'Unlocked and Hidden',
     create: () => new ProtectionXform(),
+    createParser: () => new ProtectionXformParser(),
     preparedModel: {locked: false, hidden: true},
     xml: '<protection locked="0" hidden="1"/>',
     get parsedModel() {

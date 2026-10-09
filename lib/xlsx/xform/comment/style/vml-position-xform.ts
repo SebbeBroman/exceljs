@@ -1,5 +1,5 @@
 import BaseXform from '../../base-xform.js';
-import type {XmlStreamLike, XmlNode} from '../../base-xform.js';
+import type {XmlStreamLike} from '../../base-xform.js';
 
 export interface VmlPositionXformOptions {
   tag: string;
@@ -23,23 +23,6 @@ class VmlPositionXform extends BaseXform<Record<string, boolean>> {
     } else if (this.tag === 'x:SizeWithCells' && model === type![1]) {
       xmlStream.leafNode(this.tag);
     }
-  }
-
-  override parseOpen(node: XmlNode): boolean {
-    switch (node.name) {
-      case this.tag:
-        this.model = {};
-        this.model[this.tag] = true;
-        return true;
-      default:
-        return false;
-    }
-  }
-
-  override parseText(): void {}
-
-  override parseClose(): boolean {
-    return false;
   }
 }
 

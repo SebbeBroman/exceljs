@@ -1,6 +1,5 @@
-import BaseXform from '../../base-xform.js';
 import CompositeXform from '../../composite-xform.js';
-import type {XmlStreamLike, XmlNode, XformOptions} from '../../base-xform.js';
+import type {XmlStreamLike, XformOptions} from '../../base-xform.js';
 import DatabarExtXform from './databar-ext-xform.js';
 import IconSetExtXform from './icon-set-ext-xform.js';
 
@@ -95,19 +94,6 @@ class CfRuleExtXform extends CompositeXform<CfRuleExtModel> {
     this.iconSetXform.render(xmlStream, model as never);
 
     xmlStream.closeNode();
-  }
-
-  override createNewModel(node?: XmlNode): CfRuleExtModel {
-    const attributes = node?.attributes || {};
-    return {
-      type: attributes.type,
-      x14Id: attributes.id,
-      priority: BaseXform.toIntValue(attributes.priority),
-    };
-  }
-
-  override onParserClose(_name: string, parser: {model: unknown}): void {
-    Object.assign(this.model as CfRuleExtModel, parser.model);
   }
 }
 

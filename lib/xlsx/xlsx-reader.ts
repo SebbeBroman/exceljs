@@ -8,19 +8,19 @@ import {
   toPublic,
   toString as bytesToString,
 } from '../utils/bytes.js';
-import StylesXform from './xform/style/styles-xform.js';
-import CoreXform from './xform/core/core-xform.js';
-import SharedStringsXform from './xform/strings/shared-strings-xform.js';
-import RelationshipsXform from './xform/core/relationships-xform.js';
-import AppXform from './xform/core/app-xform.js';
-import WorkbookXform from './xform/book/workbook-xform.js';
-import WorksheetXform, {buildSheetRelMaps} from './xform/sheet/worksheet-xform.js';
+import StylesXform from './parser/style/styles-xform.js';
+import CoreXform from './parser/core/core-xform.js';
+import SharedStringsXform from './parser/strings/shared-strings-xform.js';
+import RelationshipsXform from './parser/core/relationships-xform.js';
+import AppXform from './parser/core/app-xform.js';
+import WorkbookXform from './parser/book/workbook-xform.js';
+import WorksheetXform, {buildSheetRelMaps} from './parser/sheet/worksheet-xform.js';
 import {
   loadDrawingXform,
   loadTableXform,
   loadCommentsXform,
   loadVmlNotesXform,
-} from './lazy-xforms.js';
+} from './lazy-parsers.js';
 
 /** Workbook host that owns the model XLSX reads into / writes from */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -46,9 +46,9 @@ function sheetNeedsCf(worksheet: XlsxModel): boolean {
 
 // The fused cell reader is never needed when exporting a workbook.
 // Cache the import promise so concurrent worksheet reads share its first load.
-let fastSheetDataPromise: Promise<typeof import('./xform/sheet/fast-sheet-data.js')> | undefined;
-function loadFastSheetData(): Promise<typeof import('./xform/sheet/fast-sheet-data.js')> {
-  return (fastSheetDataPromise ??= import('./xform/sheet/fast-sheet-data.js'));
+let fastSheetDataPromise: Promise<typeof import('./parser/sheet/fast-sheet-data.js')> | undefined;
+function loadFastSheetData(): Promise<typeof import('./parser/sheet/fast-sheet-data.js')> {
+  return (fastSheetDataPromise ??= import('./parser/sheet/fast-sheet-data.js'));
 }
 
 class XlsxReader {

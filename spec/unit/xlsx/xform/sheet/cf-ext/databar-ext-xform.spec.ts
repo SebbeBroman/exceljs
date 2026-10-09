@@ -1,3 +1,4 @@
+import DatabarExtXformParser from '../../../../../../lib/xlsx/parser/sheet/cf-ext/databar-ext-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../../test-xform-helper.js';
 
@@ -8,6 +9,9 @@ const expectations = [
     title: 'Default Set',
     create() {
       return new DatabarExtXform();
+    },
+    createParser() {
+      return new DatabarExtXformParser();
     },
     preparedModel: {
       cfvo: [
@@ -41,6 +45,9 @@ const expectations = [
     title: 'Non Default Set',
     create() {
       return new DatabarExtXform();
+    },
+    createParser() {
+      return new DatabarExtXformParser();
     },
     preparedModel: {
       minLength: 5,

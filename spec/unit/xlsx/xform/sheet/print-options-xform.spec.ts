@@ -1,3 +1,4 @@
+import PrintOptionsXformParser from '../../../../../lib/xlsx/parser/sheet/print-options-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -19,6 +20,9 @@ const expectations = [
     create() {
       return new PrintOptionsXform();
     },
+    createParser() {
+      return new PrintOptionsXformParser();
+    },
     preparedModel: {showGridLines: true},
     xml: '<printOptions gridLines="1"/>',
     parsedModel: {
@@ -34,6 +38,9 @@ const expectations = [
     create() {
       return new PrintOptionsXform();
     },
+    createParser() {
+      return new PrintOptionsXformParser();
+    },
     preparedModel: {showRowColHeaders: true},
     xml: '<printOptions headings="1"/>',
     parsedModel: {
@@ -48,6 +55,9 @@ const expectations = [
     title: 'centered',
     create() {
       return new PrintOptionsXform();
+    },
+    createParser() {
+      return new PrintOptionsXformParser();
     },
     preparedModel: {horizontalCentered: true, verticalCentered: true},
     xml: '<printOptions horizontalCentered="1" verticalCentered="1"/>',

@@ -1,7 +1,7 @@
 import TextXform from './text-xform.js';
 import FontXform from '../style/font-xform.js';
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode} from '../base-xform.js';
+import type {XmlStreamLike} from '../base-xform.js';
 
 // <r>
 //   <rPr>
@@ -48,54 +48,6 @@ class RichTextXform extends BaseXform<RichTextModel> {
     }
     this.textXform.render(xmlStream, model?.text);
     xmlStream.closeNode();
-  }
-
-  override parseOpen(node: XmlNode): boolean {
-    if (this.parser) {
-      this.parser.parseOpen(node);
-      return true;
-    }
-    switch (node.name) {
-      case 'r':
-        this.model = {};
-        return true;
-      case 't':
-        this.parser = this.textXform;
-        this.parser.parseOpen(node);
-        return true;
-      case 'rPr':
-        this.parser = this.fontXform;
-        this.parser.parseOpen(node);
-        return true;
-      default:
-        return false;
-    }
-  }
-
-  override parseText(text: string): void {
-    if (this.parser) {
-      this.parser.parseText(text);
-    }
-  }
-
-  override parseClose(name?: string): boolean {
-    switch (name) {
-      case 'r':
-        return false;
-      case 't':
-        (this.model as RichTextModel).text = this.parser!.model as string;
-        this.parser = undefined;
-        return true;
-      case 'rPr':
-        (this.model as RichTextModel).font = this.parser!.model;
-        this.parser = undefined;
-        return true;
-      default:
-        if (this.parser) {
-          this.parser.parseClose(name);
-        }
-        return true;
-    }
   }
 
   static FONT_OPTIONS = {

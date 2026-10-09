@@ -1,3 +1,4 @@
+import AutoFilterXformParser from '../../../../../lib/xlsx/parser/table/auto-filter-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -8,6 +9,9 @@ const expectations = [
     title: 'showing filter',
     create() {
       return new AutoFilterXform();
+    },
+    createParser() {
+      return new AutoFilterXformParser();
     },
     initialModel: {
       autoFilterRef: 'A1:B10',

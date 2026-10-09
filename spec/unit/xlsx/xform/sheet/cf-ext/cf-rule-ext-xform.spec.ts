@@ -1,3 +1,4 @@
+import CfRuleExtXformParser from '../../../../../../lib/xlsx/parser/sheet/cf-ext/cf-rule-ext-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../../test-xform-helper.js';
 
@@ -8,6 +9,9 @@ const expectations = [
     title: 'Icon Set',
     create() {
       return new CfRuleExtXform();
+    },
+    createParser() {
+      return new CfRuleExtXformParser();
     },
     preparedModel: {
       type: 'iconSet',
@@ -48,6 +52,9 @@ const expectations = [
     title: 'Databar',
     create() {
       return new CfRuleExtXform();
+    },
+    createParser() {
+      return new CfRuleExtXformParser();
     },
     preparedModel: {
       type: 'dataBar',

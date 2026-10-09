@@ -1,5 +1,5 @@
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode} from '../base-xform.js';
+import type {XmlStreamLike} from '../base-xform.js';
 import IntegerXform from '../simple/integer-xform.js';
 
 export interface CellPositionModel {
@@ -44,53 +44,6 @@ class CellPositionXform extends BaseXform<CellPositionModel> {
     this.map['xdr:rowOff'].render(xmlStream, model!.nativeRowOff);
 
     xmlStream.closeNode();
-  }
-
-  override parseOpen(node: XmlNode): boolean {
-    if (this.parser) {
-      this.parser.parseOpen(node);
-      return true;
-    }
-    switch (node.name) {
-      case this.tag:
-        this.reset();
-        break;
-      default:
-        this.parser = this.map[node.name as keyof typeof this.map];
-        if (this.parser) {
-          this.parser.parseOpen(node);
-        }
-        break;
-    }
-    return true;
-  }
-
-  override parseText(text: string): void {
-    if (this.parser) {
-      this.parser.parseText(text);
-    }
-  }
-
-  override parseClose(name?: string): boolean {
-    if (this.parser) {
-      if (!this.parser.parseClose(name)) {
-        this.parser = undefined;
-      }
-      return true;
-    }
-    switch (name) {
-      case this.tag:
-        this.model = {
-          nativeCol: this.map['xdr:col'].model as number,
-          nativeColOff: this.map['xdr:colOff'].model as number,
-          nativeRow: this.map['xdr:row'].model as number,
-          nativeRowOff: this.map['xdr:rowOff'].model as number,
-        };
-        return false;
-      default:
-        // not quite sure how we get here!
-        return true;
-    }
   }
 }
 

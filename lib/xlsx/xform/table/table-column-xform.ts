@@ -1,5 +1,5 @@
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode, XformOptions} from '../base-xform.js';
+import type {XmlStreamLike, XformOptions} from '../base-xform.js';
 
 export interface TableColumnModel {
   id?: number;
@@ -27,26 +27,6 @@ class TableColumnXform extends BaseXform<TableColumnModel> {
       dxfId: model!.dxfId,
     });
     return true;
-  }
-
-  override parseOpen(node: XmlNode): boolean {
-    if (node.name === this.tag) {
-      const {attributes} = node;
-      this.model = {
-        name: attributes.name,
-        totalsRowLabel: attributes.totalsRowLabel,
-        totalsRowFunction: attributes.totalsRowFunction,
-        dxfId: attributes.dxfId,
-      };
-      return true;
-    }
-    return false;
-  }
-
-  override parseText(): void {}
-
-  override parseClose(): boolean {
-    return false;
   }
 }
 

@@ -1,6 +1,6 @@
 import BaseXform from '../../base-xform.js';
 import CompositeXform from '../../composite-xform.js';
-import type {XmlStreamLike, XmlNode} from '../../base-xform.js';
+import type {XmlStreamLike} from '../../base-xform.js';
 import ColorXform from '../../style/color-xform.js';
 import type {ColorModel} from '../../style/color-xform.js';
 import CfvoExtXform from './cfvo-ext-xform.js';
@@ -85,40 +85,6 @@ class DatabarExtXform extends CompositeXform<DatabarExtModel> {
     this.axisColorXform.render(xmlStream, model.axisColor);
 
     xmlStream.closeNode();
-  }
-
-  override createNewModel(node?: XmlNode): DatabarExtModel {
-    const attributes = node?.attributes || {};
-    return {
-      cfvo: [],
-      minLength: BaseXform.toIntValue(attributes.minLength, 0),
-      maxLength: BaseXform.toIntValue(attributes.maxLength, 100),
-      border: BaseXform.toBoolValue(attributes.border, false),
-      gradient: BaseXform.toBoolValue(attributes.gradient, true),
-      negativeBarColorSameAsPositive: BaseXform.toBoolValue(
-        attributes.negativeBarColorSameAsPositive,
-        true,
-      ),
-      negativeBarBorderColorSameAsPositive: BaseXform.toBoolValue(
-        attributes.negativeBarBorderColorSameAsPositive,
-        true,
-      ),
-      axisPosition: BaseXform.toStringValue(attributes.axisPosition, 'auto'),
-      direction: BaseXform.toStringValue(attributes.direction, 'leftToRight'),
-    };
-  }
-
-  override onParserClose(name: string, parser: {model: unknown}): void {
-    const [, prop] = name.split(':');
-    switch (prop) {
-      case 'cfvo':
-        (this.model as DatabarExtModel).cfvo.push(parser.model as CfvoExtModel);
-        break;
-
-      default:
-        (this.model as DatabarExtModel)[prop] = parser.model;
-        break;
-    }
   }
 }
 

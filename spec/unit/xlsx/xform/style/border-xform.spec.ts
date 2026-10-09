@@ -1,3 +1,4 @@
+import BorderXformParser from '../../../../../lib/xlsx/parser/style/border-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -8,6 +9,9 @@ const expectations = [
     title: 'Empty',
     create() {
       return new BorderXform();
+    },
+    createParser() {
+      return new BorderXformParser();
     },
     preparedModel: {},
     xml: '<border><left/><right/><top/><bottom/><diagonal/></border>',
@@ -20,6 +24,9 @@ const expectations = [
     title: 'Thin Red Box',
     create() {
       return new BorderXform();
+    },
+    createParser() {
+      return new BorderXformParser();
     },
     preparedModel: {
       left: {color: {argb: 'FFFF0000'}, style: 'thin'},
@@ -39,6 +46,9 @@ const expectations = [
     create() {
       return new BorderXform();
     },
+    createParser() {
+      return new BorderXformParser();
+    },
     preparedModel: {
       left: {style: 'dotted'},
       right: {style: 'dotted'},
@@ -56,6 +66,9 @@ const expectations = [
     title: 'Cross',
     create() {
       return new BorderXform();
+    },
+    createParser() {
+      return new BorderXformParser();
     },
     preparedModel: {diagonal: {style: 'thin', up: true, down: true}},
     xml:
@@ -84,6 +97,9 @@ const expectations = [
     title: 'Missing Style',
     create() {
       return new BorderXform();
+    },
+    createParser() {
+      return new BorderXformParser();
     },
     xml:
       '<border><left><color rgb="FFFF0000"/></left><right><color rgb="FFFF0000"/></right><top style="medium"><color rgb="FFFF0000"/></top><bottom style="medium"><color rgb="FFFF0000"/></bottom><diagonal/></border>',

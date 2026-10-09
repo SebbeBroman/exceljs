@@ -1,3 +1,4 @@
+import SheetProtectionXformParser from '../../../../../lib/xlsx/parser/sheet/sheet-protection-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -18,6 +19,9 @@ const expectations = [
     title: 'Protected (Default)',
     create() {
       return new SheetProtectionXform();
+    },
+    createParser() {
+      return new SheetProtectionXformParser();
     },
     preparedModel: {
       algorithmName: 'SHA-512',
@@ -48,6 +52,9 @@ const expectations = [
     create() {
       return new SheetProtectionXform();
     },
+    createParser() {
+      return new SheetProtectionXformParser();
+    },
     preparedModel: {
       selectLockedCells: false,
       selectUnlockedCells: false,
@@ -63,6 +70,9 @@ const expectations = [
     title: 'Protected (All false)',
     create() {
       return new SheetProtectionXform();
+    },
+    createParser() {
+      return new SheetProtectionXformParser();
     },
     preparedModel: {
       algorithmName: 'SHA-512',

@@ -1,3 +1,4 @@
+import TableXformParser from '../../../../../lib/xlsx/parser/table/table-xform.js';
 import {describe} from 'vite-plus/test';
 import __req_0 from './data/table.1.1.json' with {type: 'json'};
 import __req_1 from './data/table.1.3.json' with {type: 'json'};
@@ -16,6 +17,9 @@ const expectations = [
     title: 'showing filter',
     create() {
       return new TableXform();
+    },
+    createParser() {
+      return new TableXformParser();
     },
     initialModel: null,
     preparedModel: __req_0,

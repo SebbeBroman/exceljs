@@ -1,3 +1,4 @@
+import CfIconExtXformParser from '../../../../../../lib/xlsx/parser/sheet/cf-ext/cf-icon-ext-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../../test-xform-helper.js';
 
@@ -8,6 +9,9 @@ const expectations = [
     title: 'range',
     create() {
       return new CfIconExtXform();
+    },
+    createParser() {
+      return new CfIconExtXformParser();
     },
     preparedModel: {iconSet: '3Triangles', iconId: 7},
     xml: '<x14:cfIcon iconSet="3Triangles" iconId="7" />',

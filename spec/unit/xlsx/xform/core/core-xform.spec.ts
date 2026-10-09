@@ -1,3 +1,4 @@
+import CoreXformParser from '../../../../../lib/xlsx/parser/core/core-xform.js';
 import {describe} from 'vite-plus/test';
 import fs from 'node:fs';
 import testXformHelper from '../test-xform-helper.js';
@@ -13,6 +14,7 @@ const expectations = [
   {
     title: 'core.xml',
     create: () => new CoreXform(),
+    createParser: () => new CoreXformParser(),
     preparedModel: {
       creator: 'Guyon Roche',
       lastModifiedBy: 'Guyon Roche',
@@ -31,6 +33,7 @@ const expectations = [
   {
     title: 'core.xml',
     create: () => new CoreXform(),
+    createParser: () => new CoreXformParser(),
     preparedModel: {
       creator: 'Guyon Roche',
       title: 'My Little Xlsx',
@@ -55,6 +58,7 @@ const expectations = [
   {
     title: 'core.xml - with cp:lastPrinted',
     create: () => new CoreXform(),
+    createParser: () => new CoreXformParser(),
     preparedModel: {
       creator: 'Guyon Roche',
       lastModifiedBy: 'Guyon Roche',
@@ -74,6 +78,7 @@ const expectations = [
   {
     title: 'core.xml - with cp:contentStatus',
     create: () => new CoreXform(),
+    createParser: () => new CoreXformParser(),
     preparedModel: {
       creator: 'Guyon Roche',
       lastModifiedBy: 'Guyon Roche',
@@ -93,6 +98,7 @@ const expectations = [
   {
     title: 'core.xml - with empty cp:version',
     create: () => new CoreXform(),
+    createParser: () => new CoreXformParser(),
     xml: fs
       .readFileSync(`${__dirname}/data/core.05.xml`)
       .toString()
@@ -110,6 +116,7 @@ const expectations = [
   {
     title: 'core.xml - without namespace for coreProperties node',
     create: () => new CoreXform(),
+    createParser: () => new CoreXformParser(),
     xml: fs
       .readFileSync(`${__dirname}/data/core.06.xml`)
       .toString()

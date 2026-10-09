@@ -38,23 +38,6 @@ class DatabarXform extends CompositeXform<DatabarModel> {
 
     xmlStream.closeNode();
   }
-
-  override createNewModel(): DatabarModel {
-    return {
-      cfvo: [],
-    };
-  }
-
-  override onParserClose(name: string, parser: {model: unknown}): void {
-    switch (name) {
-      case 'cfvo':
-        (this.model as DatabarModel).cfvo.push(parser.model as CfvoModel);
-        break;
-      case 'color':
-        (this.model as DatabarModel).color = parser.model as ColorModel;
-        break;
-    }
-  }
 }
 
 export default DatabarXform;

@@ -1,5 +1,5 @@
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode} from '../base-xform.js';
+import type {XmlStreamLike} from '../base-xform.js';
 
 export interface PageSetupModel {
   paperSize?: number;
@@ -50,9 +50,6 @@ function errorsToXml(model: string | undefined): string | undefined {
       return undefined;
   }
 }
-function pageSizeToModel(value: string | undefined): number | undefined {
-  return value !== undefined ? parseInt(value, 10) : undefined;
-}
 
 class PageSetupXform extends BaseXform<PageSetupModel> {
   override tag = 'pageSetup';
@@ -81,39 +78,6 @@ class PageSetupXform extends BaseXform<PageSetupModel> {
         xmlStream.leafNode(this.tag, attributes);
       }
     }
-  }
-
-  override parseOpen(node: XmlNode): boolean {
-    switch (node.name) {
-      case this.tag:
-        this.model = {
-          paperSize: pageSizeToModel(node.attributes.paperSize),
-          orientation: node.attributes.orientation || 'portrait',
-          horizontalDpi: parseInt(node.attributes.horizontalDpi || '4294967295', 10),
-          verticalDpi: parseInt(node.attributes.verticalDpi || '4294967295', 10),
-          pageOrder: node.attributes.pageOrder || 'downThenOver',
-          blackAndWhite: node.attributes.blackAndWhite === '1',
-          draft: node.attributes.draft === '1',
-          cellComments: node.attributes.cellComments || 'None',
-          errors: node.attributes.errors || 'displayed',
-          scale: parseInt(node.attributes.scale || '100', 10),
-          fitToWidth: parseInt(node.attributes.fitToWidth || '1', 10),
-          fitToHeight: parseInt(node.attributes.fitToHeight || '1', 10),
-          firstPageNumber: parseInt(node.attributes.firstPageNumber || '1', 10),
-          useFirstPageNumber: node.attributes.useFirstPageNumber === '1',
-          usePrinterDefaults: node.attributes.usePrinterDefaults === '1',
-          copies: parseInt(node.attributes.copies || '1', 10),
-        };
-        return true;
-      default:
-        return false;
-    }
-  }
-
-  override parseText(): void {}
-
-  override parseClose(): boolean {
-    return false;
   }
 }
 

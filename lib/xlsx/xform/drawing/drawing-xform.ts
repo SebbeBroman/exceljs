@@ -1,7 +1,7 @@
 import colCache from '../../../utils/col-cache.js';
 import XmlStream from '../../../utils/xml-stream.js';
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode, XformOptions} from '../base-xform.js';
+import type {XmlStreamLike} from '../base-xform.js';
 import TwoCellAnchorXform from './two-cell-anchor-xform.js';
 import type {TwoCellAnchorModel} from './two-cell-anchor-xform.js';
 import OneCellAnchorXform from './one-cell-anchor-xform.js';
@@ -64,61 +64,6 @@ class DrawingXform extends BaseXform<DrawingModel> {
     });
 
     xmlStream.closeNode();
-  }
-
-  override parseOpen(node: XmlNode): boolean {
-    if (this.parser) {
-      this.parser.parseOpen(node);
-      return true;
-    }
-    switch (node.name) {
-      case this.tag:
-        this.reset();
-        this.model = {
-          anchors: [],
-        };
-        break;
-      default:
-        this.parser = this.map[node.name as keyof typeof this.map];
-        if (this.parser) {
-          this.parser.parseOpen(node);
-        }
-        break;
-    }
-    return true;
-  }
-
-  override parseText(text: string): void {
-    if (this.parser) {
-      this.parser.parseText(text);
-    }
-  }
-
-  override parseClose(name?: string): boolean {
-    if (this.parser) {
-      if (!this.parser.parseClose(name)) {
-        this.model!.anchors.push(this.parser.model as DrawingAnchorModel);
-        this.parser = undefined;
-      }
-      return true;
-    }
-    switch (name) {
-      case this.tag:
-        return false;
-      default:
-        // could be some unrecognised tags
-        return true;
-    }
-  }
-
-  override reconcile(model?: DrawingModel | null, options?: XformOptions): void {
-    model!.anchors.forEach(anchor => {
-      if (anchor.br) {
-        this.map['xdr:twoCellAnchor'].reconcile(anchor as TwoCellAnchorModel, options);
-      } else {
-        this.map['xdr:oneCellAnchor'].reconcile(anchor as OneCellAnchorModel, options);
-      }
-    });
   }
 }
 

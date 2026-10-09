@@ -1,3 +1,4 @@
+import DrawingXformParser from '../../../../../lib/xlsx/parser/drawing/drawing-xform.js';
 import {describe} from 'vite-plus/test';
 import __req_0 from './data/drawing.1.0.js';
 import __req_1 from './data/drawing.1.1.js';
@@ -27,6 +28,9 @@ const expectations = [
     title: 'Drawing 1',
     create() {
       return new DrawingXform();
+    },
+    createParser() {
+      return new DrawingXformParser();
     },
     initialModel: __req_0,
     preparedModel: __req_1,

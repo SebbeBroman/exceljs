@@ -1,3 +1,4 @@
+import PhoneticTextXformParser from '../../../../../lib/xlsx/parser/strings/phonetic-text-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -9,6 +10,9 @@ const expectations = [
     create() {
       return new PhoneticTextXform();
     },
+    createParser() {
+      return new PhoneticTextXformParser();
+    },
     preparedModel: {text: 'Hello, World!', sb: 0, eb: 1},
     xml: '<rPh sb="0" eb="1"><t>Hello, World!</t></rPh>',
     parsedModel: {text: 'Hello, World!', sb: 0, eb: 1},
@@ -18,6 +22,9 @@ const expectations = [
     title: 'Katakana',
     create() {
       return new PhoneticTextXform();
+    },
+    createParser() {
+      return new PhoneticTextXformParser();
     },
     preparedModel: {sb: 0, eb: 2, text: 'ヤクワリ'},
     xml: '<rPh sb="0" eb="2"><t>ヤクワリ</t></rPh>',

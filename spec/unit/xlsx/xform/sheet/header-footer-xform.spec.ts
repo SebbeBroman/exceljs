@@ -1,3 +1,4 @@
+import HeaderFooterXformParser from '../../../../../lib/xlsx/parser/sheet/header-footer-xform.js';
 import {describe} from 'vite-plus/test';
 import testXformHelper from '../test-xform-helper.js';
 
@@ -7,6 +8,7 @@ const expectations = [
   {
     title: 'set oddHeader',
     create: () => new HeaderFooterXform(),
+    createParser: () => new HeaderFooterXformParser(),
     preparedModel: {
       oddHeader: '&CExceljs',
     },
@@ -19,6 +21,7 @@ const expectations = [
   {
     title: 'set oddFooter',
     create: () => new HeaderFooterXform(),
+    createParser: () => new HeaderFooterXformParser(),
     preparedModel: {
       oddFooter: '&CExceljs',
     },
@@ -31,6 +34,7 @@ const expectations = [
   {
     title: 'set oddHeader position',
     create: () => new HeaderFooterXform(),
+    createParser: () => new HeaderFooterXformParser(),
     preparedModel: {
       oddHeader: '&LExceljs',
     },
@@ -43,6 +47,7 @@ const expectations = [
   {
     title: 'set firstFooter',
     create: () => new HeaderFooterXform(),
+    createParser: () => new HeaderFooterXformParser(),
     preparedModel: {
       differentFirst: true,
       oddHeader: '&CExceljs',
@@ -64,6 +69,7 @@ const expectations = [
   {
     title: 'set differentOddEven',
     create: () => new HeaderFooterXform(),
+    createParser: () => new HeaderFooterXformParser(),
     preparedModel: {
       differentOddEven: true,
       oddHeader: '&Codd Header',
@@ -85,6 +91,7 @@ const expectations = [
   {
     title: 'set font style',
     create: () => new HeaderFooterXform(),
+    createParser: () => new HeaderFooterXformParser(),
     preparedModel: {
       oddFooter: '&C&B&KFF0000Red Bold',
     },

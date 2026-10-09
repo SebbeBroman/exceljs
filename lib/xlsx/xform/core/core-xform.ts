@@ -1,6 +1,6 @@
 import XmlStream from '../../../utils/xml-stream.js';
 import BaseXform from '../base-xform.js';
-import type {XmlStreamLike, XmlNode} from '../base-xform.js';
+import type {XmlStreamLike} from '../base-xform.js';
 import DateXform from '../simple/date-xform.js';
 import StringXform from '../simple/string-xform.js';
 import IntegerXform from '../simple/integer-xform.js';
@@ -81,64 +81,6 @@ class CoreXform extends BaseXform<CoreModel> {
     this.map['dcterms:modified'].render(xmlStream, model!.modified);
 
     xmlStream.closeNode();
-  }
-
-  override parseOpen(node: XmlNode): boolean {
-    if (this.parser) {
-      this.parser.parseOpen(node);
-      return true;
-    }
-    switch (node.name) {
-      case 'cp:coreProperties':
-      case 'coreProperties':
-        return true;
-      default:
-        this.parser = this.map[node.name];
-        if (this.parser) {
-          this.parser.parseOpen(node);
-          return true;
-        }
-        throw new Error(`Unexpected xml node in parseOpen: ${JSON.stringify(node)}`);
-    }
-  }
-
-  override parseText(text: string): void {
-    if (this.parser) {
-      this.parser.parseText(text);
-    }
-  }
-
-  override parseClose(name?: string): boolean {
-    if (this.parser) {
-      if (!this.parser.parseClose(name)) {
-        this.parser = undefined;
-      }
-      return true;
-    }
-    switch (name) {
-      case 'cp:coreProperties':
-      case 'coreProperties':
-        this.model = {
-          creator: this.map['dc:creator'].model as string | undefined,
-          title: this.map['dc:title'].model as string | undefined,
-          subject: this.map['dc:subject'].model as string | undefined,
-          description: this.map['dc:description'].model as string | undefined,
-          identifier: this.map['dc:identifier'].model as string | undefined,
-          language: this.map['dc:language'].model as string | undefined,
-          keywords: this.map['cp:keywords'].model as string | undefined,
-          category: this.map['cp:category'].model as string | undefined,
-          lastModifiedBy: this.map['cp:lastModifiedBy'].model as string | undefined,
-          lastPrinted: this.map['cp:lastPrinted'].model as Date | undefined,
-          revision: this.map['cp:revision'].model as number | undefined,
-          contentStatus: this.map['cp:contentStatus'].model as string | undefined,
-          contentType: this.map['cp:contentType'].model as string | undefined,
-          created: this.map['dcterms:created'].model as Date | undefined,
-          modified: this.map['dcterms:modified'].model as Date | undefined,
-        };
-        return false;
-      default:
-        throw new Error(`Unexpected xml node in parseClose: ${name}`);
-    }
   }
 
   static DateFormat(dt: Date): string {
