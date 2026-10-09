@@ -320,16 +320,18 @@ Contenders (browser): **@sebbebroman/exceljs** esbuild browser bundle vs **excel
 > line — multi-row headers are not supported and extra lines are dropped
 > consistently across `build()` / `writeBuffer()` / `streamWrite()`.
 
-### Bundle size (indicative — write-only fixture)
+### Browser bundle sizes (indicative)
 
-Measured by `pnpm test:browser-bundle` (esbuild minify, write-only builder path, CSV excluded; advanced features automatic, 2-cell fixture):
+Measured by `pnpm test:bundle-size` using esbuild browser ESM single-file minification. Advanced XLSX features remain automatic; CSV and password hashing are optional imports.
 
-| Build | Size |
-|-------|------|
-| Single-file minified | ~238 KiB (gzip ~66 KiB) |
-| Code-split entry | ~141 KiB (excludes shared/async chunks; total ~235 KiB) |
+| Entry | Minified | Gzip |
+| --- | ---: | ---: |
+| Basic write | ~157.1 KiB | ~45.6 KiB |
+| Full `load` | ~130.2 KiB | ~36.9 KiB |
+| `readRows` | ~33.8 KiB | ~13.6 KiB |
+| `viewWorkbook` | ~33.3 KiB | ~13.5 KiB |
 
-Not representative of `load`/styles/tables/comments/CSV builds. Quote with fixture + flags + commit hash.
+Sizes depend on the imported API, bundler and options. Regression budgets also cover the complete initial static import closure and reachable async chunks. `pnpm test:work-budgets` checks deterministic work counts without timing thresholds.
 
 Re-run after encoder changes. Details: [ARCHITECTURE.md](./ARCHITECTURE.md).
 
