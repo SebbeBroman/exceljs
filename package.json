@@ -90,6 +90,8 @@
     "test:integration": "vp test run spec/integration",
     "test:esm": "pnpm build && node scripts/smoke-esm.mjs",
     "test:browser-bundle": "pnpm build && node scripts/smoke-browser-bundle.mjs && node scripts/smoke-directional-bundles.mjs",
+    "test:bundle-size": "pnpm build && node scripts/smoke-directional-bundles.mjs",
+    "test:work-budgets": "vp test run spec/unit/regression/work-budgets.spec.ts",
     "check:asset-size": "node scripts/check-asset-size.mjs",
     "check": "vp check",
     "lint": "vp lint .",

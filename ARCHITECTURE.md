@@ -173,3 +173,35 @@ pnpm test:esm
 | `excel.d.ts`                      | Public TypeScript types              |
 
 See [the CSV bundle comparison](scripts/bench/csv-split-results.md).
+
+## Deterministic regression budgets
+
+`pnpm test:bundle-size` builds fresh browser bundles for basic writing, full
+`load`, `readRows` and `viewWorkbook`. Each entry checks minified and gzip sizes
+for a single-file bundle, its complete initial static import closure, and all
+reachable static/dynamic chunks. Unreachable chunks emitted for unused barrel
+exports do not count. The budgets in `scripts/browser-bundle-budgets.json` leave
+roughly 5–8% headroom; review intended growth before raising them. Dependency
+checks also forbid parsers in writing, rendering in loading, and full transforms,
+CSV or protection crypto in lightweight XLSX reads. The same checks run through
+`test:browser-bundle` in CI and before publishing. Measurements are saved to
+`build/bundle-regression/sizes.json`; they never depend on an earlier smoke run.
+
+`pnpm test:work-budgets` runs clock-free work regression tests, also included in
+`pnpm test` across the CI Node/OS matrix:
+
+- Basic writing: one cell render per populated cell, one buffered ZIP pass, and
+  no full style-manager calls when styles are disabled.
+- Full loading: at most four style lookups for two repeated styles, independent
+  of row count, and no classic per-cell parser calls on an eligible sheet.
+- Dense row slicing: parsing a two-row slice visits exactly 16 cell tags in an
+  eight-column fixture, even as the rest of the worksheet grows.
+- Address caching: immediate lookups reuse objects; a wide scan evicts old
+  objects rather than retaining the entire scanned address space.
+
+The workload tests use 32- and 128-row fixtures and verify returned data. Spies
+and a wrapper around the real SAX parser count work only in tests; production
+has no instrumentation. These metrics catch repeated passes, lost caching and
+missed early exits. They do not measure CPU time, GC pauses or compression
+speed; timing benchmarks still serve that purpose. Bundle bytes can change with
+toolchain versions, so dependency upgrades may require reviewing the budgets.
